@@ -6,15 +6,40 @@ namespace PhysicsThief.Enemies
     /// <summary>Guerriero con scudo di foglie: spara chicchi di mais.</summary>
     public class CornSoldier : EnemyBase
     {
-        [SerializeField] private Projectile kernelPrefab;
         [SerializeField] private Transform firePoint;
-        [SerializeField] private bool hasShield = true;
+        private CornSoldierData cornData;
+        private bool hasShield;
+        private float nextBurstTime;
 
-        public override void Attack() { }
-        public void FireKernelBurst() { }
-        public void Defend() { }
+        protected override void Awake()
+        {
+            base.Awake();
 
-        /// <summary>TODO: se Magnetism e' alto, hasShield = false.</summary>
-        public override void OnPhysicsAltered(AttributeType type, float newValue) { }
-    }
+            cornData = data as CornSoldierData;
+            if(cornData == null){
+                Debug.LogError($"{name}: serve un CornSoldierData!", this);
+                enabled = false;
+                return;
+            }
+            hasShield = cornData.StartsWithShield;
+        }
+
+        public override void Attack(){
+            //TODO: if in range (cornData.attackRange) e Time.time >= nextBurstTime ==> FireKernelBurst
+        }
+
+        public void FireKernelBurst(){
+            //TODO: spara cornData.KernelsPerBurst proiettili da firePoint(cornData.KernelPrefab),
+            // distanziati di cornData.TimeBetweenKernels
+            //nextBurstTime = Time.time + cornData.BurstCooldown
+        }
+
+        public void Defend(){
+            //TODO: comportamento diensivo quando hasShield è true
+        }
+
+        public override void OnPhysicsAltered(AttributeType type, float newValue){
+            //TODO: se type è Magnetism e newValue > cornData.ShieldBreakMagnetism, has shield = false
+        } 
+    }         
 }

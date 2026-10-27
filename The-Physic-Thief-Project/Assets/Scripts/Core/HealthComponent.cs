@@ -9,8 +9,8 @@ namespace PhysicsThief.Core
     /// </summary>
     public class HealthComponent : MonoBehaviour
     {
-        [SerializeField] private float maxHP = 100f;
-        [SerializeField] private float currentHP = 100f;
+        [SerializeField] private float maxHP;
+        [SerializeField] private float currentHP;
 
         public float MaxHP => maxHP;
         public float CurrentHP => currentHP;
@@ -19,6 +19,13 @@ namespace PhysicsThief.Core
         /// <summary>Argomenti: HP correnti, HP massimi.</summary>
         public event Action<float, float> OnHealthChanged;
         public event Action OnDied;
+
+        public void Initialize(float HP){
+            maxHP = Mathf.Max(1.0f, HP);
+            currentHP = maxHP; 
+            IsDead = false;
+            OnHealthChanged?.Invoke(currentHP, maxHP);
+        }
 
         /// <summary>TODO: sottrai HP, notifica OnHealthChanged, chiama Die() se arriva a 0.</summary>
         public void TakeDamage(float amount) { }

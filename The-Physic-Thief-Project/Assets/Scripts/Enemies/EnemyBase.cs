@@ -13,27 +13,30 @@ namespace PhysicsThief.Enemies
     {
         [SerializeField] protected HealthComponent healthComp;
         [SerializeField] protected PhysicalObject physObj;
-        [SerializeField] protected float attackDamage = 10f;
-        [SerializeField] protected float detectionRange = 15f;
-
+        [SerializeField] protected EnemyData data;
         protected EnemyStateMachine stateMachine = new EnemyStateMachine();
         protected Transform target;
 
         public bool IsDead { get; protected set; }
 
         /// <summary>TODO: recupera i riferimenti mancanti con GetComponent.</summary>
-        protected virtual void Awake() { }
+        protected virtual void Awake() { 
+            if(healthComp == null) healthComp = GetComponent<HealthComponent>();
+            healthComp.Initialize(data.MaxHP);
+        }
 
         /// <summary>TODO: iscriviti a physObj.OnPropertyValueChanged e healthComp.OnDied.</summary>
-        protected virtual void OnEnable() { }
+        protected virtual void OnEnable() { healthComp.OnDied += Die; }
 
-        protected virtual void OnDisable() { }
+        protected virtual void OnDisable() { healthComp.OnDied -=Die; }
 
         /// <summary>TODO: stateMachine.Tick(this).</summary>
         protected virtual void Update() { }
 
         /// <summary>TODO: applica eventuali riduzioni (scudo, armatura) e poi healthComp.TakeDamage.</summary>
-        public virtual void TakeDamage(float amount) { }
+        public virtual void TakeDamage(float amount) { 
+            healthComp.TakeDamage(data.ApplyDamageReduction(amount));
+        }
 
         public abstract void Attack();
 
