@@ -8,7 +8,6 @@ namespace PhysicsThief.Core
         Playing,
         Paused,
         Cutscene,
-        Sandbox,
         GameOver
     }
 }
