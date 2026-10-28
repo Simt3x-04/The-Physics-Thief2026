@@ -8,13 +8,33 @@ namespace PhysicsThief.Enemies
         [SerializeField] private Projectile venomDartPrefab;
         [SerializeField] private Transform firePoint;
         [SerializeField] private float hoverHeight = 3f;
+        private HornetData hornetData;
         private bool isStalled;
 
-        public override void Attack() { }
-        public void HoverOutRanged() { }
-        public void FireVenomDart() { }
+        protected override void Awake()
+        {
+            base.Awake();
+            hornetData = data as HornetData;
+            if(hornetData == null){
+                Debug.LogError($"No hornetData", this);
+                enabled = false;
+            }
+        }
 
-        /// <summary>TODO: il calabrone perde quota e precipita (es. dopo un cambio di proprieta').</summary>
-        public void StallAndCrash() { }
+        public override void Attack()
+        {
+            //TODO: if in range then attack
+        }
+        public void HoverOutRanged(){
+
+        }
+        public void FireVenomDart(){
+            //TODO instance hornetData.VenomDartPrefab da firePoint verso target
+        }
+
+        
+        public void StallAndCrash(){
+            /// <summary>TODO: il calabrone perde quota e precipita (es. dopo un cambio di proprieta').</summary>
+        }
     }
 }
