@@ -9,7 +9,6 @@ namespace PhysicsThief.Level
     {
         [SerializeField] private PlayerController player;
         [SerializeField] private Transform currentCheckpoint;
-        [SerializeField] private List<PuzzleRoom> puzzleRooms = new List<PuzzleRoom>();
         [SerializeField] private List<Gate> gates = new List<Gate>();
 
         public Transform CurrentCheckpoint => currentCheckpoint;

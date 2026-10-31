@@ -1,6 +1,6 @@
 namespace PhysicsThief.Properties
 {
-    /// <summary>Le grandezze fisiche che si possono scansionare, copiare e incollare.</summary>
+    /// <summary>physic properties that an object has</summary>
     public enum AttributeType
     {
         Mass,

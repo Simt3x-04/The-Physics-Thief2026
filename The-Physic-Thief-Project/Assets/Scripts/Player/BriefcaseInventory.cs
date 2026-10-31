@@ -1,31 +1,25 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
-using PhysicsThief.Properties;
 
 namespace PhysicsThief.Player
 {
-    /// <summary>MonoBehaviour sottile: delega le regole a BriefcaseModel e inoltra gli eventi alla UI.</summary>
+    /// <summary>
+    /// Guscio MonoBehaviour della valigetta: tiene un BriefcaseModel (le regole) e ne inoltra l'evento Changed.
+    /// Chi scansiona/incolla usa Model (es. inventory.Model.TryAdd(...), inventory.Model.ConsumeSelected()).
+    /// </summary>
     public class BriefcaseInventory : MonoBehaviour
     {
-        private BriefcaseModel model = new BriefcaseModel();
+        [SerializeField] private int startingSlots = 2;
 
-        public int MaxSlots => model.MaxSlots;
-        public float PropertyDuration => model.PropertyDuration;
-        public int ActiveSlotIndex => model.ActiveSlotIndex;
-        public IReadOnlyList<PropertyValue> Slots => model.Slots;
+        private BriefcaseModel model;
 
-        public event Action<IReadOnlyList<PropertyValue>> OnSlotsChanged;
-        public event Action<int> OnActiveSlotChanged;
+        /// <summary>Creato al primo accesso: sicuro anche se l'HUD si iscrive prima dell'Awake di questo oggetto.</summary>
+        public BriefcaseModel Model => model ??= new BriefcaseModel(startingSlots);
 
-        /// <summary>TODO: iscriviti a model.Changed e inoltra OnSlotsChanged.</summary>
-        private void Awake() { }
-
-        public bool AddProperty(PropertyValue prop) { return default; }
-        public PropertyValue ConsumeSlot(int index) { return default; }
-        public void TrashProperty(int index) { }
-        public void SelectSlot(int index) { }
-        public void UpgradeCapacity(int addedSlots) { }
-        public void UpgradeDuration(float addedSeconds) { }
+        public event Action Changed
+        {
+            add { Model.Changed += value; }
+            remove { Model.Changed -= value; }
+        }
     }
 }

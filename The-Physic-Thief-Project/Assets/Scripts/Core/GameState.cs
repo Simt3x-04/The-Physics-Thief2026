@@ -1,6 +1,6 @@
 namespace PhysicsThief.Core
 {
-    /// <summary>Stati globali del gioco gestiti da GameManager.</summary>
+    /// <summary>Stati globali del gioco gestiti da GameManager (cambiano solo tramite SetState).</summary>
     public enum GameState
     {
         MainMenu,
@@ -8,6 +8,7 @@ namespace PhysicsThief.Core
         Playing,
         Paused,
         Cutscene,
-        GameOver
+        GameOver,
+        Ending
     }
 }
