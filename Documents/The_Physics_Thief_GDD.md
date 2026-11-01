@@ -322,15 +322,15 @@ Starting values, to be tuned in Unity (for example as ScriptableObjects). Ambien
 
 ### 10.4 Job subdivision
 
-| Area | Owner |
-|---|---|
-| First-Person Character Controls | Davide Lasagni |
-| Attributes and physics of objects | Aigerim turazhanova |
-| Enemy AI and bosses | Marcostefano Debernardi |
-| Level design and art integration | Lucia Xiong Xiao |
-| UI and menus | Davide Palazzi |
-| Audio (later) | Davide Lasagni, TBD |
-| Playtesting and balancing | Everyone |
+| Area | Owner | Deadline |
+|---|---|---|
+| First-Person Character Controls | Davide Lasagni | 17/11/26 |
+| Attributes and physics of objects | Aigerim turazhanova | 17/11/26 |
+| Enemy AI and bosses | Marcostefano Debernardi | 17/11/26 |
+| Level design and art integration | Lucia Xiong Xiao | 17/11/26 |
+| UI and menus | Davide Palazzi | 17/11/26 |
+| Audio (later) | Davide Lasagni, TBD | 17/11/26 |
+| Playtesting and balancing | Everyone | 24/11/26 |
 
 ### 10.5 Main risks
 
