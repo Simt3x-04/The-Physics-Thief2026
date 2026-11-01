@@ -320,7 +320,7 @@ Starting values, to be tuned in Unity (for example as ScriptableObjects). Ambien
 - **Should have:** Area 4, apples and melee, reset control, stacking and multi-paste.
 - **Nice to have:** Overclock Modules, audio and Gino's voice, extra objects, extra solutions per puzzle.
 
-### 10.4 Job subdivision (to be filled in)
+### 10.4 Job subdivision
 
 | Area | Owner |
 |---|---|
