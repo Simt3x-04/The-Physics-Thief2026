@@ -324,11 +324,12 @@ Starting values, to be tuned in Unity (for example as ScriptableObjects). Ambien
 
 | Area | Owner |
 |---|---|
-| Scanner, attributes and physics | TBD |
-| Enemy AI and bosses | TBD |
-| Level design and art integration | TBD |
+| First-Person Character Controls | Davide Lasagni |
+| Attributes and physics of objects | Aigerim turazhanova |
+| Enemy AI and bosses | Marcostefano Debernardi |
+| Level design and art integration | Lucia Xiong Xiao |
 | UI and menus | Davide Palazzi |
-| Audio (later) | TBD |
+| Audio (later) | Davide Lasagni, TBD |
 | Playtesting and balancing | Everyone |
 
 ### 10.5 Main risks
