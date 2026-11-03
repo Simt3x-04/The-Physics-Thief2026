@@ -1,14 +1,20 @@
 namespace PhysicsThief.Enemies
 {
-    /// <summary>Macchina a stati leggera (C# puro) usata da EnemyBase e dai boss.</summary>
-    public class EnemyStateMachine
-    {
-        public IEnemyState Current { get; private set; }
+    public class EnemyStateMachine{
+        public IEnemyState Current{
+            get; private set;
+        }
 
-        /// <summary>TODO: Exit dello stato corrente, assegna next, Enter di next.</summary>
-        public void ChangeState(IEnemyState next, EnemyBase owner) { }
+        public void ChangeState(IEnemyState next, EnemyBase owner)
+        {
+            Current?.Exit(owner);
+            Current = next;
+            Current?.Enter(owner);
+        }
 
-        /// <summary>TODO: Current?.Tick(owner).</summary>
-        public void Tick(EnemyBase owner) { }
+        public void Tick(EnemyBase owner)
+        {
+            Current?.Tick(owner);
+        }
     }
 }

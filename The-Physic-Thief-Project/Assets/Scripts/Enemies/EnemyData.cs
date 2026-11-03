@@ -30,6 +30,11 @@ namespace PhysicsThief.Enemies
  
         [Header("Fisica")]
         [SerializeField] private float mass;
+
+        [Header("Roaming")]
+        [SerializeField] private float roamRadius;
+        [SerializeField] private float roamPauseTime;
+        [SerializeField] private float turnSpeed;
  
         [Header("Feedback")]
         [SerializeField] private AudioClip hitSfx;
@@ -53,6 +58,10 @@ namespace PhysicsThief.Enemies
         public float LoseTargetRange => loseTargetRange;
  
         public float Mass => mass;
+
+        public float RoamRadius => roamRadius;
+        public float RoamPauseTime => roamPauseTime;
+        public float TurnSpeed => turnSpeed;
  
         public AudioClip HitSfx => hitSfx;
         public AudioClip DeathSfx => deathSfx;
@@ -62,6 +71,23 @@ namespace PhysicsThief.Enemies
         public float ApplyDamageReduction(float incomingDamage) { return 0f; }
  
         /// <summary>TODO: clamp dei valori (HP >= 1, cooldown >= 0, reduction 0-1, loseTargetRange >= detectionRange).</summary>
-        protected virtual void OnValidate() { }
+        protected virtual void OnValidate() {
+            maxHP = Mathf.Max(1f, maxHP);
+            moveSpeed = Mathf.Max(0f, moveSpeed);
+            damageReduction = Mathf.Clamp01(damageReduction);
+ 
+            attackDamage = Mathf.Max(0f, attackDamage);
+            attackRange = Mathf.Max(0f, attackRange);
+            attackCooldown = Mathf.Max(0f, attackCooldown);
+ 
+            detectionRange = Mathf.Max(0f, detectionRange);
+            loseTargetRange = Mathf.Max(detectionRange, loseTargetRange);
+ 
+            mass = Mathf.Max(0.01f, mass);
+ 
+            roamRadius = Mathf.Max(0.5f, roamRadius);
+            roamPauseTime = Mathf.Max(0f, roamPauseTime);
+            turnSpeed = Mathf.Max(1f, turnSpeed);
+        }
     }
 }
