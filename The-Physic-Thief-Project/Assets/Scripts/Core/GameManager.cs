@@ -108,12 +108,19 @@ namespace PhysicsThief.Core
             if (gameState == newState) return;
             gameState = newState;
 
-            bool frozen = newState == GameState.Paused || newState == GameState.GameOver;
+            // Paused, GameOver and Ending all freeze gameplay time.
+            // Fades and menu coroutines use unscaled time so they remain responsive.
+            bool frozen     = newState == GameState.Paused
+                           || newState == GameState.GameOver
+                           || newState == GameState.Ending;
             bool inGameplay = newState == GameState.Playing;
 
-            Time.timeScale = frozen ? 0f : 1f;
+            // Loading resets to 1 so async load can proceed even after a frozen state.
+            if (newState == GameState.Loading) Time.timeScale = 1f;
+            else Time.timeScale = frozen ? 0f : 1f;
+
             Cursor.lockState = inGameplay ? CursorLockMode.Locked : CursorLockMode.None;
-            Cursor.visible = !inGameplay;
+            Cursor.visible   = !inGameplay;
 
             OnGameStateChanged?.Invoke(newState);
         }

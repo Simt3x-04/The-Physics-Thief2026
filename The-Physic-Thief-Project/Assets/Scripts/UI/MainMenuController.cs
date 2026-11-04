@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using PhysicsThief.Core;
@@ -5,50 +6,88 @@ using PhysicsThief.Core;
 namespace PhysicsThief.UI
 {
     /// <summary>
-    /// Schermata iniziale. Non conosce livelli o scene: chiede tutto al GameManager.
+    /// Main Menu screen.
+    ///
+    /// Hierarchy expected:
+    ///   MainMenuCanvas
+    ///     MainPanel
+    ///       TitleLabel   (TMP_Text – "The Physics Thief")
+    ///       StartButton
+    ///       OptionsButton
+    ///       QuitButton
+    ///     OptionsPanel   (OptionsPanel component – starts inactive)
+    ///
+    /// Behaviour:
+    ///   - Start begins a new run (level 0); never continues a save.
+    ///   - Double-click protection: button disabled during load.
+    ///   - Scene validation: shows a console error if the scene isn't in Build Settings.
+    ///   - Options opens the shared OptionsPanel; Back returns to the main panel.
+    ///   - Quit works in standalone and exits play mode in the Editor.
+    ///   - Applies persisted UISettings (volume, sensitivity) on Awake.
     /// </summary>
     public class MainMenuController : MonoBehaviour
     {
-        [SerializeField] private Button playButton;
+        [Header("Panels")]
+        [SerializeField] private GameObject mainPanel;
+        [SerializeField] private OptionsPanel optionsPanel;
+
+        [Header("Buttons")]
+        [SerializeField] private Button startButton;
         [SerializeField] private Button optionsButton;
         [SerializeField] private Button quitButton;
-        [SerializeField] private GameObject optionsPanel;
 
-        private void Start()
+        // ───────────────────────────────────────────────────────────────────────
+        private void Awake()
         {
-            playButton.onClick.AddListener(OnPlayClicked);
-            optionsButton.onClick.AddListener(ToggleOptions);
+            // Apply saved preferences (volume, sensitivity) immediately.
+            UISettings.Apply();
+
+            startButton.onClick.AddListener(OnStartClicked);
+            optionsButton.onClick.AddListener(OnOptionsClicked);
             quitButton.onClick.AddListener(OnQuitClicked);
 
+            // Ensure options panel starts hidden.
             if (optionsPanel != null)
-            {
-                optionsPanel.SetActive(false);
-            }
+                optionsPanel.Close();
+
+            ShowMainPanel();
+            startButton.Select();
         }
 
         private void OnDestroy()
         {
-            playButton.onClick.RemoveListener(OnPlayClicked);
-            optionsButton.onClick.RemoveListener(ToggleOptions);
+            startButton.onClick.RemoveListener(OnStartClicked);
+            optionsButton.onClick.RemoveListener(OnOptionsClicked);
             quitButton.onClick.RemoveListener(OnQuitClicked);
         }
 
-        private void OnPlayClicked()
+        // ───────────────────────────────────────────────────────────────────────
+        private void OnStartClicked()
         {
             if (GameManager.Instance == null)
             {
-                Debug.LogError("[MainMenu] Nessun GameManager nella scena: aggiungilo come GameObject root.");
+                Debug.LogError("[MainMenu] GameManager not found in scene. " +
+                               "Add a GameManager GameObject to the MainMenu scene root.");
                 return;
             }
-            GameManager.Instance.StartGame();
+
+            // Double-click guard.
+            startButton.interactable = false;
+            optionsButton.interactable = false;
+            quitButton.interactable = false;
+
+            GameManager.Instance.StartGame();   // validates scenes internally and logs errors
         }
 
-        private void ToggleOptions()
+        private void OnOptionsClicked()
         {
-            if (optionsPanel != null)
-            {
-                optionsPanel.SetActive(!optionsPanel.activeSelf);
-            }
+            mainPanel.SetActive(false);
+            optionsPanel.Open(onBack: OnOptionsBack);
+        }
+
+        private void OnOptionsBack()
+        {
+            ShowMainPanel();
         }
 
         private void OnQuitClicked()
@@ -58,6 +97,17 @@ namespace PhysicsThief.UI
 #else
             Application.Quit();
 #endif
+        }
+
+        // ───────────────────────────────────────────────────────────────────────
+        private void ShowMainPanel()
+        {
+            mainPanel.SetActive(true);
+            // Re-enable buttons in case we returned from a failed load.
+            startButton.interactable   = true;
+            optionsButton.interactable = true;
+            quitButton.interactable    = true;
+            startButton.Select();
         }
     }
 }
