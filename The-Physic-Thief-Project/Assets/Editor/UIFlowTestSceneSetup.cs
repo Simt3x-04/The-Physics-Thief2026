@@ -55,6 +55,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using TMPro;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using PhysicsThief.Core;
@@ -112,11 +113,14 @@ public static class UIFlowTestSceneSetup
         amGO.AddComponent<AudioManager>();
 
         // ── INPUT ASSET reference (for PauseMenuController) ─────────────────
-        var inputAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.InputSystem.InputActionAsset>(
-            "Assets/InputSystem_Actions.inputactions");
+        // Find the asset by searching all .inputactions files so path casing/location doesn't matter.
+        var inputAsset = AssetDatabase.FindAssets("t:InputActionAsset")
+            .Select(g => AssetDatabase.LoadAssetAtPath<UnityEngine.InputSystem.InputActionAsset>(
+                AssetDatabase.GUIDToAssetPath(g)))
+            .FirstOrDefault(a => a != null && a.name == "InputSystem_Actions");
         if (inputAsset == null)
-            Debug.LogWarning("[UIFlowTestSetup] Could not find InputSystem_Actions.inputactions. " +
-                             "Assign it manually to PauseMenuController.");
+            Debug.LogWarning("[UIFlowTestSetup] Could not find InputSystem_Actions asset. " +
+                             "Assign it manually to PauseMenuController in the Inspector.");
 
         // ── Helpers ─────────────────────────────────────────────────────────
         Canvas MakeCanvas(string name, int sortOrder, bool worldSpace = false)
@@ -324,32 +328,30 @@ public static class UIFlowTestSceneSetup
         var deathCanvas = MakeCanvas("DeathScreenCanvas", 20);
         var deathRoot   = deathCanvas.transform;
 
-        var fadeOverlayD = Panel("FadeOverlay", deathRoot, new Color(0,0,0,0)).GetComponentInChildren<Transform>()?.GetComponent<RectTransform>();
-        // Actually Panel() returns RectTransform of the new GO directly:
-        var fadeOvD = Panel("FadeOverlayD", deathRoot, new Color(0,0,0,0.75f));
+        // FadeOverlayD: starts transparent; DeathScreenController animates alpha.
+        // raycastTarget=true so it blocks clicks to gameplay objects once faded in.
+        var fadeOvD = Panel("FadeOverlayD", deathRoot, new Color(0, 0, 0, 0));
+        var fadeImgD = fadeOvD.gameObject.GetComponent<Image>();
+        if (fadeImgD == null) fadeImgD = fadeOvD.gameObject.AddComponent<Image>();
+        fadeImgD.color         = new Color(0, 0, 0, 0);   // transparent at start
+        fadeImgD.raycastTarget = true;
 
         var deathPanelRT = Panel("DeathPanel", deathRoot, Color.clear);
         deathPanelRT.gameObject.SetActive(false);
 
-        // Gino placeholder (grey rect)
+        // Gino placeholder (grey rect) – replace with spiral-eyes art when available.
         var ginoGO = new GameObject("GinoImage");
         ginoGO.transform.SetParent(deathPanelRT, false);
         var ginoRT  = ginoGO.AddComponent<RectTransform>();
-        ginoRT.sizeDelta = new Vector2(300, 300);
+        ginoRT.sizeDelta        = new Vector2(300, 300);
         ginoRT.anchoredPosition = new Vector2(0, 80);
         var ginoImg = ginoGO.AddComponent<Image>();
-        ginoImg.color = new Color(0.4f,0.4f,0.4f);   // placeholder grey; replace with spiral-eyes art
+        ginoImg.color = new Color(0.4f, 0.4f, 0.4f);
 
         Label("NightmareLostLabel", "Nightmare lost…", deathPanelRT, 42)
             .GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -100);
-        var retryBtn     = MakeButton("RetryButton",    "Snooze and retry", deathPanelRT, new Vector2(0,-170));
-        var deathMenuBtn = MakeButton("MainMenuButton", "Main menu",        deathPanelRT, new Vector2(0,-240));
-
-        // FadeOverlay Image (full-screen, starts transparent)
-        var fadeImgD      = fadeOvD.gameObject.GetComponent<Image>();
-        if (fadeImgD == null) fadeImgD = fadeOvD.gameObject.AddComponent<Image>();
-        fadeImgD.color    = new Color(0,0,0,0);
-        fadeImgD.raycastTarget = true;
+        var retryBtn     = MakeButton("RetryButton",    "Snooze and retry", deathPanelRT, new Vector2(0, -170));
+        var deathMenuBtn = MakeButton("MainMenuButton", "Main menu",        deathPanelRT, new Vector2(0, -240));
 
         var dsc  = deathCanvas.gameObject.AddComponent<DeathScreenController>();
         var dscSO = new SerializedObject(dsc);
@@ -366,10 +368,15 @@ public static class UIFlowTestSceneSetup
         var endingCanvas = MakeCanvas("EndingScreenCanvas", 30);
         var endingRoot   = endingCanvas.transform;
 
-        var fadeOvE = Panel("FadeOverlayE", endingRoot, new Color(0,0,0,1f));
+        // FadeOverlayE: starts TRANSPARENT (alpha=0). EndingScreenController fades it
+        // from black-to-transparent when the ending triggers. Do NOT start opaque —
+        // a full-screen black Image with raycastTarget=1 would block all clicks on lower
+        // canvases while the ending has not yet been triggered.
+        var fadeOvE = Panel("FadeOverlayE", endingRoot, new Color(0, 0, 0, 0));
         var fadeImgE = fadeOvE.gameObject.GetComponent<Image>();
         if (fadeImgE == null) fadeImgE = fadeOvE.gameObject.AddComponent<Image>();
-        fadeImgE.color = new Color(0,0,0,1f);
+        fadeImgE.color         = new Color(0, 0, 0, 0);   // transparent at start
+        fadeImgE.raycastTarget = true;
 
         var endingPanelRT = Panel("EndingPanel", endingRoot, Color.clear);
         endingPanelRT.gameObject.SetActive(false);

@@ -63,9 +63,10 @@ namespace PhysicsThief.UI
             retryButton.onClick.AddListener(OnRetryClicked);
             mainMenuButton.onClick.AddListener(OnMainMenuClicked);
 
-            // Start hidden.
+            // Start hidden; overlay starts transparent and non-blocking.
             deathPanel.SetActive(false);
             SetFadeAlpha(0f);
+            SetFadeRaycast(false);  // only intercept clicks after the screen fades in
 
             // If health is pre-assigned in Inspector, bind immediately.
             if (playerHealth != null)
@@ -121,6 +122,8 @@ namespace PhysicsThief.UI
 
         private IEnumerator FadeInAndShow()
         {
+            // Enable raycast blocking now that the screen is intentionally active.
+            SetFadeRaycast(true);
             // Fade the overlay from transparent to semi-opaque (not fully black – art stays visible).
             float t = 0f;
             while (t < fadeDuration)
@@ -158,6 +161,7 @@ namespace PhysicsThief.UI
                 yield return null;
             }
             SetFadeAlpha(0f);
+            SetFadeRaycast(false);  // no longer blocking gameplay
 
             // RetryFromCheckpoint → sets state to Playing → fires OnRetryRequested
             // → LevelManager.RespawnPlayer() → player.Respawn() + playerHealth.ResetHealth()
@@ -182,6 +186,7 @@ namespace PhysicsThief.UI
                 yield return null;
             }
             SetFadeAlpha(0f);
+            SetFadeRaycast(false);
 
             // GameManager restores timeScale, cursor and fires OnGameStateChanged.
             GameManager.Instance?.LoadMainMenu();
@@ -195,6 +200,11 @@ namespace PhysicsThief.UI
             Color c = fadeOverlay.color;
             c.a = alpha;
             fadeOverlay.color = c;
+        }
+
+        private void SetFadeRaycast(bool on)
+        {
+            if (fadeOverlay != null) fadeOverlay.raycastTarget = on;
         }
     }
 }

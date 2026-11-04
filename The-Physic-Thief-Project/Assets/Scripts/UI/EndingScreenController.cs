@@ -59,9 +59,11 @@ namespace PhysicsThief.UI
         {
             mainMenuButton.onClick.AddListener(OnMainMenuClicked);
 
-            // Start hidden.
+            // Start with the overlay transparent and non-blocking.
+            // BeginEndingSequence will make it opaque when the ending triggers.
             endingPanel.SetActive(false);
             SetFadeAlpha(0f);
+            SetFadeRaycast(false);  // don't intercept clicks until the ending is active
         }
 
         private void Start()
@@ -96,6 +98,7 @@ namespace PhysicsThief.UI
         {
             // Time is frozen by GameManager.SetState(Ending).
             // Cursor is also set to visible by GameManager.
+            SetFadeRaycast(true);  // now it's intentionally blocking gameplay
             if (_fadeRoutine != null) StopCoroutine(_fadeRoutine);
             _fadeRoutine = StartCoroutine(FadeInAndShow());
         }
@@ -162,6 +165,11 @@ namespace PhysicsThief.UI
             Color c = fadeOverlay.color;
             c.a = alpha;
             fadeOverlay.color = c;
+        }
+
+        private void SetFadeRaycast(bool on)
+        {
+            if (fadeOverlay != null) fadeOverlay.raycastTarget = on;
         }
     }
 }
