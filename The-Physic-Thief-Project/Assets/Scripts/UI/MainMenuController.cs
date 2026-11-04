@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using PhysicsThief.Core;
@@ -6,24 +5,17 @@ using PhysicsThief.Core;
 namespace PhysicsThief.UI
 {
     /// <summary>
-    /// Main Menu screen.
+    /// Main Menu screen controller.
     ///
-    /// Hierarchy expected:
-    ///   MainMenuCanvas
-    ///     MainPanel
-    ///       TitleLabel   (TMP_Text – "The Physics Thief")
-    ///       StartButton
-    ///       OptionsButton
-    ///       QuitButton
-    ///     OptionsPanel   (OptionsPanel component – starts inactive)
+    /// Required serialized fields:
+    ///   mainPanel    — GameObject to hide when Options opens (can be the Canvas itself in a simple scene)
+    ///   startButton  — Button that begins a new run
+    ///   optionsButton
+    ///   quitButton
+    ///   optionsPanel — OptionsPanel component (optional; if null, Options button is hidden)
     ///
-    /// Behaviour:
-    ///   - Start begins a new run (level 0); never continues a save.
-    ///   - Double-click protection: button disabled during load.
-    ///   - Scene validation: shows a console error if the scene isn't in Build Settings.
-    ///   - Options opens the shared OptionsPanel; Back returns to the main panel.
-    ///   - Quit works in standalone and exits play mode in the Editor.
-    ///   - Applies persisted UISettings (volume, sensitivity) on Awake.
+    /// The UIFlowTest scene has a full OptionsPanel. The legacy MainMenu scene may have optionsPanel=null,
+    /// in which case the Options button is automatically hidden to prevent an unrecoverable state.
     /// </summary>
     public class MainMenuController : MonoBehaviour
     {
@@ -36,52 +28,56 @@ namespace PhysicsThief.UI
         [SerializeField] private Button optionsButton;
         [SerializeField] private Button quitButton;
 
-        // ───────────────────────────────────────────────────────────────────────
+        // ─────────────────────────────────────────────────────────────────────
         private void Awake()
         {
-            // Apply saved preferences (volume, sensitivity) immediately.
             UISettings.Apply();
 
-            startButton.onClick.AddListener(OnStartClicked);
-            optionsButton.onClick.AddListener(OnOptionsClicked);
-            quitButton.onClick.AddListener(OnQuitClicked);
+            if (startButton  != null) startButton.onClick.AddListener(OnStartClicked);
+            if (optionsButton != null) optionsButton.onClick.AddListener(OnOptionsClicked);
+            if (quitButton   != null) quitButton.onClick.AddListener(OnQuitClicked);
 
-            // Ensure options panel starts hidden.
+            // Hide Options button if there is no panel to show — prevents an unrecoverable blank state.
+            if (optionsPanel == null && optionsButton != null)
+            {
+                optionsButton.gameObject.SetActive(false);
+                Debug.Log("[MainMenu] optionsPanel not assigned — Options button hidden. " +
+                          "Assign an OptionsPanel component to enable it.");
+            }
+
             if (optionsPanel != null)
                 optionsPanel.Close();
 
             ShowMainPanel();
-            startButton.Select();
+            if (startButton != null) startButton.Select();
         }
 
         private void OnDestroy()
         {
-            startButton.onClick.RemoveListener(OnStartClicked);
-            optionsButton.onClick.RemoveListener(OnOptionsClicked);
-            quitButton.onClick.RemoveListener(OnQuitClicked);
+            if (startButton  != null) startButton.onClick.RemoveListener(OnStartClicked);
+            if (optionsButton != null) optionsButton.onClick.RemoveListener(OnOptionsClicked);
+            if (quitButton   != null) quitButton.onClick.RemoveListener(OnQuitClicked);
         }
 
-        // ───────────────────────────────────────────────────────────────────────
+        // ─────────────────────────────────────────────────────────────────────
         private void OnStartClicked()
         {
             if (GameManager.Instance == null)
             {
-                Debug.LogError("[MainMenu] GameManager not found in scene. " +
-                               "Add a GameManager GameObject to the MainMenu scene root.");
+                Debug.LogError("[MainMenu] GameManager not found. " +
+                               "Add a GameManager GameObject to this scene's root.");
                 return;
             }
 
-            // Double-click guard.
-            startButton.interactable = false;
-            optionsButton.interactable = false;
-            quitButton.interactable = false;
-
-            GameManager.Instance.StartGame();   // validates scenes internally and logs errors
+            // Double-click guard — re-enabled by ShowMainPanel() if load fails.
+            SetButtonsInteractable(false);
+            GameManager.Instance.StartGame();
         }
 
         private void OnOptionsClicked()
         {
-            mainPanel.SetActive(false);
+            if (optionsPanel == null) return;   // guarded: button is hidden when panel is null
+            if (mainPanel != null) mainPanel.SetActive(false);
             optionsPanel.Open(onBack: OnOptionsBack);
         }
 
@@ -99,15 +95,19 @@ namespace PhysicsThief.UI
 #endif
         }
 
-        // ───────────────────────────────────────────────────────────────────────
+        // ─────────────────────────────────────────────────────────────────────
         private void ShowMainPanel()
         {
-            mainPanel.SetActive(true);
-            // Re-enable buttons in case we returned from a failed load.
-            startButton.interactable   = true;
-            optionsButton.interactable = true;
-            quitButton.interactable    = true;
-            startButton.Select();
+            if (mainPanel != null) mainPanel.SetActive(true);
+            SetButtonsInteractable(true);
+            if (startButton != null) startButton.Select();
+        }
+
+        private void SetButtonsInteractable(bool on)
+        {
+            if (startButton  != null) startButton.interactable  = on;
+            if (optionsButton != null) optionsButton.interactable = on;
+            if (quitButton   != null) quitButton.interactable   = on;
         }
     }
 }

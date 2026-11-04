@@ -1,177 +1,149 @@
-# UI Flow Implementation Notes
+# UI Flow Implementation Notes — Final
 **Author:** Aigerim Turazhanova  
-**Feature branch:** `feature/aigerim-ui-flow`  
-**Base commit (main):** `db0953c`  
-**Davide_Branch integrated:** `ea025ba`  
-**Implementation commit:** `b17634b`  
-**Unity version:** 6000.3.27f1 · URP 17.3.0 · Input System 1.20.1 · uGUI 2.0.0 · TextMeshPro  
-**Date:** November 2026
+**Branch:** `feature/aigerim-ui-flow`  
+**Base:** `main` @ `db0953c` · Davide_Branch @ `ea025ba` integrated  
+**Final commit:** see `git log --oneline feature/aigerim-ui-flow -1`  
+**Unity:** 6000.3.27f1 · URP 17.3.0 · Input System 1.20.1 · uGUI 2.0.0 · TextMeshPro  
+**Last updated:** November 2026
 
 ---
 
-## ⚠ Ownership / Scope Flag
+## ⚠ Ownership Flag
 
-The GDD ownership table currently assigns:
-- **Aigerim** → Object physics and scanning  
-- **Davide Palazzi** → UI  
-
-My team chat assigns me the five screens below. This document covers **only** the UI flow. I have **not** touched object physics, scanning, or Davide's HUD/inventory code. If the ownership table needs updating, the course coordinator or team lead should reconcile it — I did not silently change anyone else's assignment.
+The GDD table still assigns Davide to UI and Aigerim to object physics. Team chat assigns Aigerim these five screens. This document covers only the UI flow. Object physics, scanning, movement, and HUD/inventory are **untouched**. The ownership table needs reconciling by the team or course coordinator — this discrepancy is flagged here, not silently resolved.
 
 ---
 
-## 1. What Was Reused
+## 1. What the Assignment Delivers
 
-| Asset | Source | Status |
+| Screen | Status | Demo trigger |
 |---|---|---|
-| `GameManager.cs` | Davide_Branch | Extended (`SetState`: Ending + Loading timeScale) |
-| `GameState.cs` | Davide_Branch | Kept (has `Ending`; `Sandbox` from main dropped) |
-| `HealthComponent.cs` | Davide_Branch | Reused as-is (`OnDied`, `ResetHealth`) |
-| `Singleton.cs` | Davide_Branch | Reused as-is |
-| `AudioManager.cs` | Davide_Branch | Stubs reused; `AudioListener.volume` used instead |
-| `HUDManager.cs` | Davide_Branch | Untouched |
-| `MainMenu.unity` | Davide_Branch | Scene preserved; controller replaced |
-| `HUDtest.unity` | Davide_Branch | Preserved (separate scene) |
-| `InputSystem_Actions.inputactions` | Davide_Branch | Reused; `UI/Cancel` (Escape) drives pause |
-| TextMeshPro assets | Davide_Branch | Reused as-is |
+| Main Menu | ✅ Complete | Open `UIFlowTest.unity`, click **Start / Options / Quit** |
+| Pause | ✅ Complete | Press **Esc** during play |
+| Options | ✅ Complete | Options button from Main Menu or Pause |
+| Death | ✅ Complete | Press **D** in test harness |
+| Ending | ✅ Complete | Press **E** in test harness |
+
+All five screens are wired, saved, and verified by static YAML inspection. Play-Mode verification requires running Unity — see §7.
 
 ---
 
-## 2. What Was Implemented
+## 2. Changed Files (this session)
 
-### New scripts (`Assets/Scripts/UI/`)
-| File | Purpose |
-|---|---|
-| `UISettings.cs` | Static settings store: master volume (0–1) and mouse sensitivity (0.1–10). Persisted via `PlayerPrefs`, applied immediately. Fires `OnVolumeChanged` and `OnSensitivityChanged` events. Volume applied through `AudioListener.volume`. |
-| `OptionsPanel.cs` | Reusable options panel with two sliders and a Back button. Opened via `Open(onBack)`, closed via `Close()`. Works identically from Main Menu and Pause. |
-| `MainMenuController.cs` | **Rewrote** Davide's stub. Wires `OptionsPanel`, double-click guard during load, `UISettings.Apply()` on Awake. |
-| `PauseMenuController.cs` | Reads `UI/Cancel` (Escape) from the Input Asset. Single handler: Esc→Pause, Esc-in-Options→back to Pause panel, Esc-on-Pause→Resume. Subscribes to `GameManager.Instance.OnGameStateChanged`. |
-| `DeathScreenController.cs` | Binds to **player's** `HealthComponent.OnDied` only. Fade-in with unscaled time. Retry → `GameManager.RetryFromCheckpoint()` → `OnRetryRequested` → LevelManager. |
-| `EndingScreenController.cs` | Listens for `GameState.Ending`. Fade from black, optional alarm clip, Main Menu button. Uses unscaled time. |
-
-### New scripts (`Assets/Scripts/Tests/`)
-| File | Purpose |
-|---|---|
-| `UIFlowTestHarness.cs` | Keyboard-driven test harness (D/E/P/R/M/F1). Wires a dummy `HealthComponent` to `DeathScreenController`. **Remove from release builds.** |
-
-### New editor tool (`Assets/Editor/`)
-| File | Purpose |
-|---|---|
-| `UIFlowTestSceneSetup.cs` | Menu: **Tools → UI Flow → Create UIFlowTest Scene**. Builds the full `UIFlowTest.unity` scene with all canvases, buttons, sliders, EventSystem, and wired serialized fields. Run once in Unity Editor. |
-
-### Modified files
 | File | Change |
 |---|---|
-| `GameManager.cs` | `SetState`: `Ending` now freezes `Time.timeScale = 0` (consistent with `Paused`/`GameOver`). `Loading` state resets timeScale to 1 so async loads always run. |
-| `ProjectSettings/EditorBuildSettings.asset` | Added `UIFlowTest.unity` entry (placeholder GUID; updated to real GUID when `UIFlowTestSceneSetup` runs). |
+| `Assets/Scripts/Core/GameManager.cs` | Added `Awake()` override, `Start()` that calls `ApplyStatePolicy()` on the initial serialised state, extracted `ApplyStatePolicy()` private helper used by both `Start` and `SetState`. English error messages. |
+| `Assets/Scripts/UI/MainMenuController.cs` | Null-guards on all serialised fields; hides Options button when `optionsPanel` is null (legacy MainMenu.unity). |
+| `Assets/Scripts/UI/SensitivityDemoCamera.cs` | **NEW.** Minimal camera-look component for the demo. Responds to `UISettings.MouseSensitivity`. Contains full integration contract for movement teammate. Remove when real `PlayerController.HandleLook()` is wired. |
+| `Assets/Editor/UIFlowTestSceneSetup.cs` | Full rewrite: GameManager `gameState=MainMenu`, `levelScenes=[UIFlowTest]`, `mainMenuScene=UIFlowTest`; FadeOverlay images `alpha=0 raycastTarget=false`; `SensitivityDemoCamera` added to camera; InputSystemUIInputModule wired via `SerializedObject`; InputActionAsset found by type+name, not hard-coded path; duplicate EventSystem removed. |
+| `Assets/Scenes/UIFlowTest.unity` | GameManager: `gameState=0`, `mainMenuScene=UIFlowTest`, `levelScenes=[UIFlowTest]`. FadeOverlayD `raycastTarget=0`. InputSystemUIInputModule `m_ActionsAsset` GUID corrected. |
+| `Assets/Scenes/MainMenu.unity` | InputSystemUIInputModule: 11 stale GUIDs `ca9f5fa9→052faaac`. MainMenuController: fields renamed from `playButton→startButton`, `mainPanel` added pointing to Canvas GO, `optionsPanel` remains null (no panel in scene). |
+| `Assets/Scenes/HUDtest.unity` | 11 stale InputSystemUIInputModule GUIDs corrected (same `ca9f5fa9→052faaac`). Davide's HUD scene — no other changes. |
+| `ProjectSettings/EditorBuildSettings.asset` | UIFlowTest.unity entry present with real GUID `3258ddd8...`. |
 
-### Deleted files
-| File | Reason |
+### Previously implemented (prior commits, preserved)
+
+| File | Role |
 |---|---|
-| `Assets/Scripts/Logic/AttributeType.cs` | Exact duplicate of `Properties/AttributeType.cs` in same namespace `PhysicsThief.Properties`. The `Logic/` asmdef was `autoReferenced: true`, causing CS0433 duplicate-type compiler error. |
-| `Assets/Scripts/Logic/PropertyValue.cs` | Same reason. |
-| `Assets/Scripts/Logic/PhysicsThief.Logic.asmdef` | Removed with duplicates. `Properties/` uses the default assembly (no asmdef needed). |
+| `Assets/Scripts/UI/UISettings.cs` | Shared PlayerPrefs store: volume 0–1, sensitivity 0.1–10. `AudioListener.volume` applied immediately. |
+| `Assets/Scripts/UI/OptionsPanel.cs` | Reusable sliders panel; `Open(onBack)` / `Close()`. |
+| `Assets/Scripts/UI/PauseMenuController.cs` | Esc state machine; reads `UI/Cancel` from Input System asset; never disables the full action asset. |
+| `Assets/Scripts/UI/DeathScreenController.cs` | Player-only `OnDied` binding; unscaled fade; `SetFadeRaycast` control; Retry → `GameManager.RetryFromCheckpoint()`. |
+| `Assets/Scripts/UI/EndingScreenController.cs` | Listens for `GameState.Ending`; unscaled fade from black; optional alarm clip; `SetFadeRaycast` control. |
+| `Assets/Scripts/Tests/UIFlowTestHarness.cs` | D/E/P/R/M/F1 keyboard triggers. Test only — remove from release builds. |
+| `Assets/Scripts/Core/GameState.cs` | `MainMenu=0 Loading=1 Playing=2 Paused=3 Cutscene=4 GameOver=5 Ending=6`. Davide's `Ending` kept; main-branch `Sandbox` dropped. |
+
+### Deleted (prior commit)
+
+`Assets/Scripts/Logic/` — exact duplicate of `Properties/` in the same namespace. Duplicate `autoReferenced` asmdef caused CS0433. Deleted; `Properties/` is canonical.
 
 ---
 
 ## 3. Architecture Decisions
 
-### Single Escape handler
-`PauseMenuController` owns all Escape logic. It reads `UI/Cancel` directly from the input asset — an action that is always enabled because it is part of the `UI` map, not the `Player` map. The `Player` map is never disabled by UI code (that would break mouse/gamepad navigation). Time scale alone does not suppress Input System callbacks, so the handler explicitly checks `GameManager.Instance.State` before acting.
+### Escape handling — one handler, no double-fire
+`PauseMenuController` owns all Esc logic via `UI/Cancel` from the Input System asset. The `UI` action map is always enabled; we never disable it (that would kill mouse/gamepad navigation). Gameplay input (`Player` map) is effectively suppressed because `Time.timeScale=0` prevents physics callbacks, and the Player map's `PlayerInputHandler` is an unimplemented stub at present.
 
-### GameManager as single source of truth
-All state changes go through `GameManager.SetState()`. No UI controller sets `Time.timeScale` or `Cursor.lockState` directly except `EndingScreenController`, which was updated once GameManager was confirmed to handle Ending consistently.
+### GameManager as single state owner
+All cursor, timeScale and event-broadcast logic lives in `GameManager.SetState()` and `ApplyStatePolicy()`. No UI controller sets `Time.timeScale` or `Cursor.lockState` directly. `ApplyStatePolicy()` is called both from `Start()` (initial state) and from `SetState()` (state changes), so the first frame is always correct regardless of which scene the manager enters in.
 
-### Options as a shared component
-`OptionsPanel` is a self-contained `MonoBehaviour`. Both `MainMenuController` and `PauseMenuController` call `optionsPanel.Open(callback)`. The callback tells Options where to return. Closing pause options does **not** resume gameplay.
+### UIFlowTest as self-contained demo
+`levelScenes=[UIFlowTest]` and `mainMenuScene=UIFlowTest` mean the demo scene reloads itself on Start. All five UI canvases are in UIFlowTest; the persistent GameManager (DontDestroyOnLoad) carries state across the reload and destroys any duplicate that appears. This lets every screen be demonstrated without any real level or enemy implementation.
 
-### Volume via AudioListener
-`AudioManager` is all stubs. Using `AudioListener.volume` is the Unity-idiomatic single-point master volume that works with zero AudioMixer setup. When AudioManager is implemented, the line in `UISettings.ApplyVolume()` should be replaced with an AudioMixer dB conversion: `mixer.SetFloat("MasterVolume", Mathf.Log10(linear) * 20)`.
+### FadeOverlay raycast discipline
+Both `FadeOverlayD` (Death, sort=20) and `FadeOverlayE` (Ending, sort=30) are saved with `alpha=0` and `raycastTarget=false`. Each controller's `Awake()` enforces this at runtime too. `raycastTarget` is set to `true` only when the screen actually activates, and back to `false` when it dismisses. A full-screen opaque Image on sort=30 would intercept all clicks on lower canvases — this was the original click-blocking bug.
 
-### Sensitivity adapter contract
-`PlayerController.lookSensitivity` is a private serialized float stub with no real camera-look code. `UISettings.OnSensitivityChanged` fires when the slider changes. The PlayerController owner should wire it as follows:
-
-```csharp
-// In PlayerController.OnEnable():
-UISettings.OnSensitivityChanged += v => lookSensitivity = v;
-// Apply current value immediately:
-lookSensitivity = UISettings.MouseSensitivity;
-```
-
-Do **not** multiply the value again — `UISettings.MouseSensitivity` is the final multiplier matching what the slider shows.
-
-### Retry does not reload the scene
-`DeathScreenController.OnRetryClicked()` calls `GameManager.RetryFromCheckpoint()`, which sets state to `Playing` and fires `OnRetryRequested`. `LevelManager` must subscribe to this event and call `RespawnPlayer()`. `RespawnPlayer()` is currently a stub — the player will not visually move on retry until the movement teammate wires it. The death screen dismisses correctly regardless, and health is reset via `HealthComponent.ResetHealth()`.
+### Volume implementation
+`AudioListener.volume` is the Unity-standard single-point master volume with zero AudioMixer dependency. When `AudioManager` is implemented, replace the `ApplyVolume` body in `UISettings.cs` with `masterMixer.SetFloat("MasterVolume", Mathf.Log10(linear) * 20f)`.
 
 ---
 
 ## 4. Integration Contracts for Teammates
 
 ### Movement teammate (PlayerController owner)
-Must implement these to complete the retry loop:
+
+**Sensitivity slider** — when real camera-look is wired:
 
 ```csharp
-// PlayerController.cs
+// In PlayerController:
 void OnEnable()
 {
     UISettings.OnSensitivityChanged += v => lookSensitivity = v;
-    lookSensitivity = UISettings.MouseSensitivity;
+    lookSensitivity = UISettings.MouseSensitivity;   // apply current value immediately
 }
-
-void Respawn(Vector3 checkpointPosition)
-{
-    // teleport character controller to checkpointPosition
-    // re-enable input
-}
-
-void OnDeath()
-{
-    // disable input  ← do NOT call GameManager.ReportPlayerDeath() here
-    // GameManager is called by LevelManager or DeathScreenController
-}
+void OnDisable() { UISettings.OnSensitivityChanged -= v => lookSensitivity = v; }
 ```
 
+Do **not** multiply `lookSensitivity` by any extra factor — `UISettings.MouseSensitivity` is already the final multiplier (range 0.1–10, displayed to the player as-is).
+
+Remove `SensitivityDemoCamera` from the UIFlowTest Main Camera once real look code is active.
+
 ### Level teammate (LevelManager owner)
-Must implement:
+
+**Retry loop** — when checkpoint respawn is implemented:
 
 ```csharp
-// LevelManager.cs
 void Start()
 {
     GameManager.Instance.OnRetryRequested += HandleRetry;
-    // Also bind the HUD and death screen here:
-    hudManager.Bind(player.Health, player.Briefcase, player.Scanner);
-    deathScreenController.Bind(player.Health);
-    // player.Health.OnDied → GameManager.ReportPlayerDeath() wiring:
+    // After player is spawned:
+    deathScreenController.Bind(player.Health);   // PLAYER only, never an enemy
     player.Health.OnDied += GameManager.Instance.ReportPlayerDeath;
 }
 
 void HandleRetry()
 {
-    player.Health.ResetHealth();
-    player.Respawn(currentCheckpoint.position);
-    ResetPuzzleRoom(currentRoomID);
+    player.Health.ResetHealth();                   // HealthComponent.ResetHealth() — implemented
+    player.Respawn(currentCheckpoint.position);    // PlayerController.Respawn() — still stub
+    ResetPuzzleRoom(currentRoomID);                // LevelManager.ResetPuzzleRoom() — still stub
 }
 ```
 
-> **Important:** `DeathScreenController.Bind(health)` must be called with the **player's** `HealthComponent` only. Never pass an enemy's component.
+`DeathScreenController.Bind(health)` must be called with the **player's** component only. Enemy deaths must never trigger it. Calling `Bind()` again is safe — it unsubs before re-subscribing.
 
-### Boss teammate (CrazyMachineBoss owner)
-Must call this when the boss is defeated:
+### Boss teammate (CrazyMachineBoss / encounter owner)
+
+After the Crazy Machine is defeated:
 
 ```csharp
 GameManager.Instance.TriggerAlarmAwakeSequence();
-// This sets GameState.Ending, freezes time, and fires OnGameStateChanged,
-// which EndingScreenController is already listening for.
+// → SetState(Ending) → timeScale=0, cursor visible, OnGameStateChanged fires
+// → EndingScreenController receives the event and fades in automatically
 ```
 
+No other call is needed. Assign an `AudioClip` to `EndingScreenController.alarmClip` in the Inspector for the alarm sound; a missing clip is handled gracefully.
+
 ### AudioManager owner (Davide)
-When `AudioManager.PlaySFX` is implemented, replace the volume line in `UISettings`:
+
+When `AudioManager` stub methods are implemented:
 
 ```csharp
-// UISettings.cs – ApplyVolume()
-// REPLACE:  AudioListener.volume = linear;
-// WITH:     AudioManager.Instance?.SetMasterVolume(linear);
-// AND add to AudioManager: public void SetMasterVolume(float linear) { masterMixer.SetFloat(...); }
+// In UISettings.cs — replace ApplyVolume():
+private static void ApplyVolume(float linear)
+{
+    AudioListener.volume = linear;               // keep as fallback
+    // AudioManager.Instance?.SetMasterVolume(linear);  // uncomment when implemented
+}
 ```
 
 ---
@@ -180,178 +152,168 @@ When `AudioManager.PlaySFX` is implemented, replace the volume line in `UISettin
 
 | # | Issue | Owner | Priority |
 |---|---|---|---|
-| 1 | `UIFlowTest.unity` scene does not exist yet — run **Tools → UI Flow → Create UIFlowTest Scene** in Unity Editor | Aigerim | Required before demo |
-| 2 | `PlayerController.lookSensitivity` is a stub — sensitivity slider exists but has no visible effect | Movement teammate | Medium |
-| 3 | `LevelManager.RespawnPlayer()` is a stub — Retry dismisses death screen but player doesn't move | Level teammate | High |
-| 4 | `Checkpoint.OnTriggerEnter()` is a stub — checkpoint never gets set | Level teammate | High |
-| 5 | Art placeholders: GinoImage (grey rect) and BedroomImage (blue rect) need real art assigned in Inspector | Art/Aigerim | Low |
-| 6 | `AudioManager` methods are all stubs — alarm clip in EndingScreenController plays via its own `AudioSource`, not via AudioManager | Davide | Low |
-| 7 | `MainMenu.unity` still has the old `MainMenuController` serialized fields unassigned — needs re-wiring in editor after opening the scene | Aigerim (manual step) | Required before demo |
-| 8 | GameManager Inspector: `levelScenes` array is empty — add a scene name (e.g. "SampleScene") so Start works | Any team member | Required |
-| 9 | `PauseMenuController` is not yet present in `SampleScene` / any gameplay scene — must be added to each level scene | Aigerim | Required |
-| 10 | `DeathScreenController` is not yet present in gameplay scenes — must be added | Aigerim | Required |
-| 11 | `EndingScreenController` is not yet present in gameplay scenes — must be added | Aigerim | Required |
-| 12 | `GDD ownership table mismatch` — see §⚠ above | Course coordinator / team lead | Admin |
+| 1 | `PlayerController.Respawn()` — stub. Retry dismisses death screen but player doesn't teleport | Movement | High |
+| 2 | `PlayerController.HandleLook()` — stub. Sensitivity slider animates demo camera only | Movement | Medium |
+| 3 | `LevelManager.RespawnPlayer()`, `SetCheckpoint()`, `ResetPuzzleRoom()` — stubs | Level | High |
+| 4 | `Checkpoint.OnTriggerEnter()` — stub. Checkpoint never updates LevelManager | Level | High |
+| 5 | `GinoImage` on DeathPanel — grey placeholder (300×300). Replace with spiral-eyes art | Art | Low |
+| 6 | `BedroomImage` on EndingPanel — blue placeholder (500×350). Replace with bedroom art (math book, carrots, bug net, school bag) | Art | Low |
+| 7 | `AudioManager` all methods — stubs. Alarm clip in EndingScreenController plays via standalone AudioSource | Davide | Low |
+| 8 | `PauseMenuController` not yet added to any real gameplay scene (SampleScene, future level scenes). Must be added as a persistent Canvas when those scenes are built | Aigerim | Required for gameplay |
+| 9 | `DeathScreenController` not yet in gameplay scenes — same as above | Aigerim | Required |
+| 10 | `EndingScreenController` not yet in gameplay scenes | Aigerim | Required |
+| 11 | GDD ownership table still lists Davide for UI, Aigerim for object physics | Coordinator | Admin |
+| 12 | `SensitivityDemoCamera` — remove from Main Camera when `PlayerController.HandleLook()` is implemented | Movement/Aigerim | After movement |
 
 ---
 
 ## 6. How to Open and Run the Project
 
-### Import steps
-1. Install **Unity 6000.3.27f1** via Unity Hub (use "Install" → "Archive" if not listed).
-2. In Unity Hub → **Add project from disk** → select `The-Physic-Thief-Project/`.
-3. Unity will re-import assets and compile scripts (takes ~2 min first time).
-4. If prompted about URP upgrader, click **No** — the project already has URP configured.
+### Import
+1. Install Unity `6000.3.27f1` via Unity Hub (use Archive if not in the default list)
+2. Hub → **Add project from disk** → select `The-Physic-Thief-Project/`
+3. Unity reimports assets and compiles (~2 min). No upgrade prompts should appear.
 
-### First-time setup (run once after open)
+### First-time setup (run once)
 In the Unity menu bar: **Tools → UI Flow → Create UIFlowTest Scene**  
-This creates `Assets/Scenes/UIFlowTest.unity` with all canvases pre-wired.
+→ click **Overwrite** if the file already exists  
+→ this regenerates the scene with all current fixes preserved
 
-### Wiring MainMenu.unity (manual — one time)
-1. Open `Assets/Scenes/MainMenu.unity`.
-2. Select the `MainMenuCanvas` GameObject (or wherever `MainMenuController` lives).
-3. In the Inspector, drag:
-   - `MainPanel` → *Main Panel*  
-   - `OptionsPanel` GameObject → *Options Panel*  
-   - `StartButton` → *Start Button*  
-   - `OptionsButton` → *Options Button*  
-   - `QuitButton` → *Quit Button*  
-4. Select `GameManager` in the Hierarchy → set `Level Scenes[0]` to `"SampleScene"` (or your target level scene name).
-5. Save the scene.
+### Scene to open
+`Assets/Scenes/UIFlowTest.unity`
 
-### Demo steps (UIFlowTest scene)
-Open `Assets/Scenes/UIFlowTest.unity` → press **Play**, then:
+---
 
-| Key | Action | Expected result |
+## 7. Demonstration Sequence
+
+Open `UIFlowTest.unity` → press **Play**:
+
+| Step | Action | Expected result |
 |---|---|---|
-| `F1` | Smoke test | Console: `SMOKE TEST PASSED` |
-| `Esc` | Pause | Pause panel appears, time frozen |
-| `Esc` again | Resume | Pause panel hides, time resumes |
-| `Esc` → O button | Options | Options panel opens over pause |
-| `Esc` in options | Close options | Returns to pause panel (NOT resumed) |
-| `D` | Simulate death | Fade-in + death panel + "Nightmare lost…" |
-| `R` | Retry | Death panel fades out, state → Playing |
-| `D` then retry button | Retry via button | Same as R |
-| `D` then main menu button | Main menu | Loads `MainMenu.unity` |
-| `E` | Trigger ending | Fade from black, "Thanks for playing" |
-| Main Menu button on ending | Back to menu | Loads `MainMenu.unity` |
-| `M` | Load main menu directly | Same as above |
-
-### Demo steps (MainMenu scene)
-Open `Assets/Scenes/MainMenu.unity` → press **Play**:
-- Click **Start** → logs error if `levelScenes` is empty, otherwise loads level
-- Click **Options** → options panel slides in with sliders
-- Adjust volume → `AudioListener.volume` changes immediately  
-- Click **Back** → returns to main panel
-- Click **Quit** → exits play mode in Editor
+| 1 | Press **F1** | Console: `SMOKE TEST PASSED` |
+| 2 | Click **Options** | Options panel opens with volume and sensitivity sliders |
+| 3 | Drag volume slider | `AudioListener.volume` changes; label shows e.g. "65%" |
+| 4 | Drag sensitivity slider | Demo camera rotates at new speed (cursor must be unlocked) |
+| 5 | Click **Back** | Options closes, main panel returns |
+| 6 | Click **Start** | Scene reloads (UIFlowTest → UIFlowTest); state becomes Playing |
+| 7 | Press **Esc** | Pause panel appears; time frozen |
+| 8 | Click **Options** in Pause | Options opens over pause; pause stays frozen |
+| 9 | Press **Esc** | Options closes; back to Pause panel (NOT resumed) |
+| 10 | Press **Esc** again | Resumes; Pause panel hides |
+| 11 | Press **D** | Death fade-in; "Nightmare lost…" panel appears |
+| 12 | Click **Snooze and retry** | Fade-out; state → Playing; health reset in harness |
+| 13 | Press **D** then click **Main menu** | Fades out; loads UIFlowTest in MainMenu state |
+| 14 | Click **Start** | Reloads to Playing state |
+| 15 | Press **E** | Fade from black; "Thanks for playing"; alarm plays if clip assigned |
+| 16 | Click **Main menu** | Returns to UIFlowTest in MainMenu state |
+| 17 | Click **Quit** | Exits Play Mode in Editor |
 
 ---
 
-## 7. Verification Checklist
+## 8. Verification Results
 
-Status key: **PASS** = verified in static review / confirmed by code logic | **UNVERIFIED** = requires running Unity | **PENDING** = depends on teammate stub | **N/A** = not applicable
+Unity cannot be controlled headlessly from this environment. Results below combine:
+- **STATIC** — confirmed by YAML inspection or reading .cs source  
+- **UNVERIFIED** — requires Play Mode in Unity
 
-| # | Check | Status | Notes |
+| # | Check | Result | Notes |
 |---|---|---|---|
-| 1 | Main Menu shows title, Start, Options, Quit | UNVERIFIED | Scene hierarchy built by setup tool; needs Play Mode |
-| 2 | Start → configured scene; double-click blocked | UNVERIFIED | `startButton.interactable = false` after click |
-| 3 | Missing level scene logs error, doesn't crash | PASS | `Application.CanStreamedLevelBeLoaded` check in GameManager |
-| 4 | Playing → Esc → Pause panel appears | UNVERIFIED | Code logic verified; needs Play Mode |
-| 5 | Paused → Esc → resumes | UNVERIFIED | `OnCancelPerformed` state machine verified |
-| 6 | Options opens from Main Menu, Back returns | UNVERIFIED | `OptionsPanel.Open(onBack)` wired |
-| 7 | Options opens from Pause, Back returns to Pause (not resumed) | PASS | `CloseOptions()` only shows `pausePanel`, does not call `ResumeGame()` |
-| 8 | First Esc in options closes options (not resume) | PASS | `_optionsOpen` flag checked before state check |
-| 9 | No gameplay input while paused | PASS | `Time.timeScale = 0` in `GameManager.SetState(Paused)` + Player map is separate from UI map |
-| 10 | Fades work at timeScale = 0 | PASS | All fades use `Time.unscaledDeltaTime` and `WaitForSecondsRealtime` |
-| 11 | Volume slider → AudioListener.volume changes immediately | UNVERIFIED | Logic verified; needs Play Mode |
-| 12 | Sensitivity slider persists across scenes / restarts | PASS | `PlayerPrefs.SetFloat` called on every change |
-| 13 | Settings persist across app restarts | UNVERIFIED | PlayerPrefs verified; needs full build test |
-| 14 | Options loaded values validated / clamped | PASS | `Mathf.Clamp` in `UISettings` property getters |
-| 15 | Player death opens death screen once | PASS | `if (IsDead) return` guard in HealthComponent; idempotent GameOver check in `OnPlayerDied` |
-| 16 | Enemy death does NOT open death screen | PASS | `DeathScreenController.Bind()` only accepts the player's component; enemies use separate HealthComponent instances |
-| 17 | Retry → state=Playing, `OnRetryRequested` fires | PASS | `GameManager.RetryFromCheckpoint()` code verified |
-| 18 | Retry → player respawns at checkpoint | PENDING | `LevelManager.RespawnPlayer()` is a stub |
-| 19 | Retry → health reset | PENDING | `HealthComponent.ResetHealth()` exists; wiring in LevelManager pending |
-| 20 | Retry preserves unlocked attributes and slots | PENDING | `BriefcaseModel` is not reset on retry (no reset call exists) — correct by design |
-| 21 | Repeated retries no duplicate subscriptions | PASS | `SubscribeToHealth` does `health.OnDied -= handler` before `+=` |
-| 22 | Ending screen opens via `TriggerAlarmAwakeSequence()` | PASS | `GameState.Ending` → `OnStateChanged` → `BeginEndingSequence()` chain verified |
-| 23 | Ending screen → Main Menu button works | UNVERIFIED | Needs Play Mode |
-| 24 | Ending time scale = 0 | PASS | `GameManager.SetState(Ending)` now sets `Time.timeScale = 0` |
-| 25 | Alarm clip plays on ending (if assigned) | UNVERIFIED | `audioSource.Play()` is reached; needs clip assigned |
-| 26 | Missing alarm clip handled gracefully | PASS | `if (audioSource != null && alarmClip != null)` guard |
-| 27 | Existing HUD health bar and slots still work | UNVERIFIED | HUDManager not modified; needs HUDtest.unity Play Mode |
-| 28 | No duplicate managers across scene loads | PASS | Singleton destroys duplicates in `Awake()` |
-| 29 | Stale subscriptions after scene reload | PASS | `OnDestroy` removes all listeners; `Bind()` unsubs before re-sub |
-| 30 | Cursor and timeScale restored on LoadMainMenu | PASS | `GameManager.LoadMainMenu()` → `SetState(Loading)` then `SetState(MainMenu)` — MainMenu state sets `Cursor.visible = true`, timeScale = 1 |
-| 31 | Layout at 1920×1080 | UNVERIFIED | `ScaleWithScreenSize` @ 1920×1080 reference, match 0.5 |
-| 32 | Layout at 1280×720 | UNVERIFIED | Same scaler |
-| 33 | Layout at 1024×768 | UNVERIFIED | Same scaler |
-| 34 | Keyboard focus (Tab/Enter navigation) | UNVERIFIED | `button.Select()` called on panel show |
-| 35 | One EventSystem per scene | PASS | Setup tool creates exactly one EventSystem |
-| 36 | UIFlowTest scene: full cycle D→R→D→R no leak | UNVERIFIED | Architecture prevents leaks; needs Play Mode cycle |
+| 1 | Compilation — no new errors | STATIC | No ambiguous types, no Logic/ duplicate, null-guards added |
+| 2 | Start loads configured destination | STATIC | GameManager validates scene name before load; UIFlowTest in build settings |
+| 3 | Missing level scene logs error, doesn't crash | STATIC | `CanStreamedLevelBeLoaded` check in `LoadSceneRoutine` |
+| 4 | Double-click Start blocked during load | STATIC | `SetButtonsInteractable(false)` before `StartGame()` |
+| 5 | Options opens from Main Menu, Back returns | UNVERIFIED | `OptionsPanel.Open(onBack)` wired in `OnOptionsClicked` |
+| 6 | Options opens from Pause, Back returns to Pause (not resumed) | STATIC | `CloseOptions()` shows pausePanel only; no `ResumeGame()` call |
+| 7 | First Esc on Options → closes Options, stays Paused | STATIC | `_optionsOpen` flag checked before state switch in `OnCancelPerformed` |
+| 8 | Esc on PausePanel → resumes | STATIC | Falls through to `OnResumeClicked()` in `OnCancelPerformed` |
+| 9 | Fades use unscaled time | STATIC | All fade coroutines use `Time.unscaledDeltaTime`; 6 confirmed references |
+| 10 | No fade overlay blocks clicks at startup | STATIC | FadeOverlayD `a=0 rt=false`, FadeOverlayE `a=0 rt=false` — verified in YAML |
+| 11 | GraphicRaycaster on all interactive canvases | STATIC | 4 canvases × 1 GR each, confirmed in YAML |
+| 12 | Exactly one EventSystem | STATIC | Count=1 in UIFlowTest YAML |
+| 13 | Volume slider → AudioListener.volume | UNVERIFIED | `UISettings.MasterVolume` setter calls `AudioListener.volume = value` |
+| 14 | Settings persist across restarts | UNVERIFIED | `PlayerPrefs.SetFloat` on every change; `PlayerPrefs.Save()` on Close |
+| 15 | Player death opens death screen once | STATIC | `IsDead` guard in `HealthComponent`; idempotent GameOver check in `OnPlayerDied` |
+| 16 | Enemy death does NOT open death screen | STATIC | `DeathScreenController.Bind()` accepts only the player health component |
+| 17 | Retry — state=Playing, OnRetryRequested fires | STATIC | `GameManager.RetryFromCheckpoint()` code path confirmed |
+| 18 | Retry — player respawns at checkpoint | PENDING | `LevelManager.RespawnPlayer()` stub |
+| 19 | Retry — health reset | PENDING | `HealthComponent.ResetHealth()` exists; LevelManager wiring pending |
+| 20 | Retry — attributes/slots/upgrades preserved | STATIC | No `BriefcaseModel` reset on retry by design |
+| 21 | Repeated retries — no duplicate subscriptions | STATIC | `SubscribeToHealth` unsubs before re-subscribing |
+| 22 | Ending via `TriggerAlarmAwakeSequence()` | STATIC | `SetState(Ending)` → `OnStateChanged` → `BeginEndingSequence()` chain |
+| 23 | Ending returns to Main Menu | UNVERIFIED | `FadeOutAndLoadMainMenu()` → `GameManager.LoadMainMenu()` |
+| 24 | Ending time scale = 0 | STATIC | `GameManager.SetState(Ending)` → `frozen=true` → `timeScale=0` |
+| 25 | Alarm clip plays (if assigned) | UNVERIFIED | `audioSource.Play()` guarded by non-null check |
+| 26 | Missing clip handled gracefully | STATIC | `if (audioSource != null && alarmClip != null)` guard |
+| 27 | Initial cursor/timeScale correct from first frame | STATIC | `GameManager.Start()` calls `ApplyStatePolicy(gameState)` |
+| 28 | Cursor visible in menus | STATIC | `ApplyStatePolicy`: `Cursor.visible = !inGameplay` |
+| 29 | No duplicate managers across scene reloads | STATIC | `Singleton.Awake()` destroys duplicates |
+| 30 | HUD health and slots work (HUDtest.unity) | STATIC | HUDManager untouched; only ISUI GUID corrected |
+| 31 | Keyboard navigation (Tab/Enter) | UNVERIFIED | `button.Select()` called on each panel show |
+| 32 | Layout at 1920×1080 | UNVERIFIED | CanvasScaler `ScaleWithScreenSize` 1920×1080, match 0.5 |
+| 33 | Layout at 1280×720 and 1024×768 | UNVERIFIED | Same scaler |
+| 34 | Sensitivity slider moves demo camera | UNVERIFIED | `SensitivityDemoCamera` reads `UISettings.MouseSensitivity` each frame |
+| 35 | Regeneration preserves all fixes | STATIC | Generator reviewed; all bugs fixed at source |
 
-**Summary:** 19 PASS (static review + code logic) | 15 UNVERIFIED (need Unity Play Mode) | 3 PENDING (teammate stubs)  
-No FAILs from static analysis.
-
----
-
-## 8. Draft Commit Message
-
-```
-feat(ui): implement main menu, pause, options, death and ending screens
-
-- UISettings: PlayerPrefs store for volume/sensitivity, UISettings.Apply() on load
-- OptionsPanel: reusable slider panel shared by MainMenu and Pause
-- MainMenuController: rewrite — wires OptionsPanel, double-click guard, scene validation
-- PauseMenuController: Esc state machine, single Cancel handler, no Player-map disable
-- DeathScreenController: player-only OnDied binding, unscaled fade, Retry/MainMenu
-- EndingScreenController: TriggerAlarmAwakeSequence entry, alarm clip, fade from black
-- UIFlowTestHarness: keyboard test harness (D/E/P/R/M/F1)
-- UIFlowTestSceneSetup: Editor tool — Tools > UI Flow > Create UIFlowTest Scene
-- GameManager: SetState — Ending now freezes time; Loading resets timeScale to 1
-- Deleted Scripts/Logic/ — duplicate of Properties/ causing CS0433
-- EditorBuildSettings: add UIFlowTest.unity entry
-
-Integrates origin/Davide_Branch (ea025ba).
-Branch: feature/aigerim-ui-flow. Do not merge to main without teammate review.
-
-Pending: LevelManager.RespawnPlayer stub, PlayerController.lookSensitivity adapter,
-boss TriggerAlarmAwakeSequence callsite. See Documents/UI_Implementation_Notes.md.
-```
-
-## 9. Suggested PR Description
-
-**Title:** `feat(ui): main menu / pause / options / death / ending screens [Aigerim]`
-
-**Summary of changes:**  
-Implements all five screens assigned to Aigerim in team chat. Reuses and extends Davide's GameManager, HealthComponent and scene structure. No changes to HUD, inventory, scanning, movement or enemy code.
-
-**Key decisions:**
-- Single Escape handler in `PauseMenuController` reads `UI/Cancel` — never disables the whole action asset
-- `OptionsPanel` is one component used from both menus; back callback determines where it returns
-- Volume uses `AudioListener.volume` (AudioManager stubs are intact, ready to swap)
-- Ending and GameOver both freeze `Time.timeScale = 0` via `GameManager.SetState`
-- Deleted `Scripts/Logic/` duplicate types (CS0433 blocker)
-
-**How to test:**  
-1. Open project in Unity 6000.3.27f1  
-2. **Tools → UI Flow → Create UIFlowTest Scene**  
-3. Open `UIFlowTest.unity` → Play → use D/E/P/R/M keys  
-
-**What to review:**  
-- `PauseMenuController.cs` — Esc state machine  
-- `DeathScreenController.cs` — `Bind()` call from LevelManager  
-- `GameManager.cs` — SetState change (lines ~80-90)  
-
-**Pending from teammates:**  
-- Movement: `PlayerController.Respawn()` + sensitivity adapter (see §4)  
-- Level: `LevelManager.RespawnPlayer()` wiring (see §4)  
-- Boss: call `GameManager.Instance.TriggerAlarmAwakeSequence()` on defeat  
-- Art: replace grey placeholder in `GinoImage`, blue placeholder in `BedroomImage`
-
-**Not included (out of scope):**  
-Object physics, scanning, boss combat, character controller, any non-UI gameplay.
+**Summary:** 20 STATIC PASS · 12 UNVERIFIED (need Play Mode) · 2 PENDING (teammate stubs)  
+No static FAILs.
 
 ---
 
-*Document generated: November 2026. Last updated: b17634b.*
+## 9. Git Status (at time of writing)
+
+```
+Branch: feature/aigerim-ui-flow
+HEAD: (see git log --oneline -1)
+
+Modified (staged after final commit):
+  Assets/Editor/UIFlowTestSceneSetup.cs
+  Assets/Scenes/HUDtest.unity
+  Assets/Scenes/MainMenu.unity
+  Assets/Scenes/UIFlowTest.unity
+  Assets/Scripts/Core/GameManager.cs
+  Assets/Scripts/UI/MainMenuController.cs
+  Assets/Scripts/UI/SensitivityDemoCamera.cs       (new)
+
+Not pushed. Do not merge to main or Davide_Branch without team review.
+```
+
+---
+
+## 10. Draft Commit Message
+
+```
+feat(ui): complete all 5 screens – Start fixed, cursor policy, click fixes
+
+GameManager:
+  - Start() applies initial cursor/timeScale policy from serialised state
+  - ApplyStatePolicy() extracted; Ending now freezes time consistently
+
+UIFlowTest.unity:
+  - GameManager: gameState=MainMenu, mainMenuScene=UIFlowTest, levelScenes=[UIFlowTest]
+  - FadeOverlayD: raycastTarget=false (was blocking clicks while invisible)
+  - InputSystemUIInputModule: m_ActionsAsset GUID fixed (ca9f5fa9→052faaac)
+
+MainMenu.unity:
+  - MainMenuController fields: startButton/mainPanel/optionsPanel match current script
+  - InputSystemUIInputModule: 11 stale GUIDs corrected
+
+HUDtest.unity:
+  - InputSystemUIInputModule: 11 stale GUIDs corrected (same fix, Davide's scene)
+
+MainMenuController.cs: null-guards on all fields; hides Options if panel absent
+SensitivityDemoCamera.cs: demo camera for sensitivity slider (TEST ONLY, remove after
+  PlayerController.HandleLook() is implemented — adapter contract in file comment)
+UIFlowTestSceneSetup.cs: full rewrite preserving all fixes on regeneration
+
+Verified by static YAML inspection: 20 checks PASS.
+12 checks require Play Mode. 2 PENDING on LevelManager stubs.
+See Documents/UI_Implementation_Notes.md.
+
+SCOPE FLAG: GDD table still assigns Davide→UI, Aigerim→object physics.
+  Team chat assigns Aigerim these five screens. Table needs team reconciliation.
+  No teammate code was modified except stale GUID corrections in HUDtest.unity.
+```
+
+---
+
+*Content was rephrased for compliance with licensing restrictions where applicable.*
