@@ -84,16 +84,9 @@ public static class UIFlowTestSceneSetup
         {
             var esSO = new SerializedObject(isUIModule);
             esSO.FindProperty("m_ActionsAsset").objectReferenceValue = inputAsset;
-            // Wire individual action references from the same asset.
-            void SetActionRef(string prop, string actionPath)
-            {
-                var action = inputAsset.FindAction(actionPath);
-                if (action != null)
-                    esSO.FindProperty(prop).objectReferenceValue =
-                        new UnityEngine.InputSystem.InputActionReference(action) as Object;
-            }
-            // Point, Click, Navigate etc. are auto-wired by InputSystemUIInputModule when
-            // m_ActionsAsset is assigned in the Editor, so we only need to set the asset.
+            // Individual Point/Click/Navigate/Submit/Cancel action references are auto-resolved
+            // by InputSystemUIInputModule at runtime when m_ActionsAsset is assigned.
+            // We only need to set the asset reference here.
             esSO.ApplyModifiedPropertiesWithoutUndo();
         }
         else
