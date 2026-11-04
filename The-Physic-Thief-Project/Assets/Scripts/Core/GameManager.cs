@@ -1,50 +1,121 @@
 using System;
-using PhysicsThief.Level;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace PhysicsThief.Core
 {
     /// <summary>
-    /// Singleton persistente: flusso globale del gioco (stato, caricamento livelli,
-    /// pausa, sequenze di risveglio dal sogno, sblocco sandbox).
-    /// Unisce GameManager (v2) e GameStateManager (UML 2).
+    /// Singleton persistente: flusso globale del gioco (stato, scene, pausa, morte, finale).
+    /// Va messo come GameObject root nella scena MainMenu (la prima della Scene List).
     /// </summary>
     public class GameManager : Singleton<GameManager>
     {
-        [UnityEngine.SerializeField] private int currentLevel;
-        [UnityEngine.SerializeField] private GameState gameState = GameState.MainMenu;
-        [UnityEngine.SerializeField] private bool isSandboxUnlocked;
+        [Header("Scene (devono essere nella Scene List di Build Profiles)")]
+        [SerializeField] private string mainMenuScene = "MainMenu";
+        [SerializeField] private string[] levelScenes;
+
+        [Header("Stato (solo lettura a runtime)")]
+        [SerializeField] private int currentLevel;
+        [SerializeField] private GameState gameState = GameState.MainMenu;
 
         public int CurrentLevel => currentLevel;
         public GameState State => gameState;
-        public bool IsSandboxUnlocked => isSandboxUnlocked;
 
+        /// <summary>Scatta a ogni cambio di stato: HUD, schermate e audio si iscrivono qui.</summary>
         public event Action<GameState> OnGameStateChanged;
 
-        /// <summary>TODO: avvia una nuova partita (carica il primo livello).</summary>
-        public void StartGame() { }
+        /// <summary>Scatta quando il giocatore sceglie "Snooze and retry": il LevelManager respawna e resetta l'area.</summary>
+        public event Action OnRetryRequested;
 
-        /// <summary>TODO: Time.timeScale = 0 e stato Paused.</summary>
-        public void PauseGame() { }
+        public void StartGame()
+        {
+            LoadLevel(0);
+        }
 
-        /// <summary>TODO: ripristina Time.timeScale e stato Playing.</summary>
-        public void ResumeGame() { }
+        public void LoadLevel(int levelId)
+        {
+            if (gameState == GameState.Loading) return;
 
-        /// <summary>TODO: carica la scena del livello (async) e aggiorna currentLevel.</summary>
-        public void LoadLevel(int levelId) { }
+            if (levelScenes == null || levelId < 0 || levelId >= levelScenes.Length)
+            {
+                Debug.LogError($"[GameManager] Livello {levelId} non configurato: controlla 'Level Scenes' nell'Inspector.");
+                return;
+            }
 
-        /// <summary>TODO: sequenza "sveglia/allarme" che chiude un sogno e riporta alla realta'.</summary>
-        public void TriggerAlarmAwakeSequence() { }
+            currentLevel = levelId;
+            StartCoroutine(LoadSceneRoutine(levelScenes[levelId], GameState.Playing));
+        }
 
-        /// <summary>TODO: fine del livello-sogno corrente, passa al successivo.</summary>
-        public void TriggerDreamEnd() { }
+        public void LoadMainMenu()
+        {
+            if (gameState == GameState.Loading) return;
+            StartCoroutine(LoadSceneRoutine(mainMenuScene, GameState.MainMenu));
+        }
 
-        /// <summary>TODO: imposta isSandboxUnlocked = true e salva il progresso.</summary>
-        public void UnlockSandbox() { }
+        private IEnumerator LoadSceneRoutine(string sceneName, GameState stateAfterLoad)
+        {
+            if (!Application.CanStreamedLevelBeLoaded(sceneName))
+            {
+                Debug.LogError($"[GameManager] La scena '{sceneName}' non e' nella Scene List (File > Build Profiles).");
+                yield break;
+            }
 
-        /// <summary>TODO: cambia stato, notifica OnGameStateChanged.</summary>
-        public void SetState(GameState newState) { }
+            SetState(GameState.Loading);
 
-        /// <summary>TODO: reagisce alla morte del player (respawn al checkpoint o GameOver).</summary>
-        private void HandlePlayerDied() { }
+            AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
+            while (!op.isDone)
+            {
+                yield return null;
+            }
+
+            SetState(stateAfterLoad);
+        }
+
+        public void PauseGame()
+        {
+            if (gameState == GameState.Playing) SetState(GameState.Paused);
+        }
+
+        public void ResumeGame()
+        {
+            if (gameState == GameState.Paused) SetState(GameState.Playing);
+        }
+
+        /// <summary>Chiamato dal LevelManager quando HealthComponent.OnDied del player scatta: mostra la death screen.</summary>
+        public void ReportPlayerDeath()
+        {
+            if (gameState == GameState.Playing) SetState(GameState.GameOver);
+        }
+
+        /// <summary>Bottone "Snooze and retry" della death screen.</summary>
+        public void RetryFromCheckpoint()
+        {
+            if (gameState != GameState.GameOver) return;
+            SetState(GameState.Playing);
+            OnRetryRequested?.Invoke();
+        }
+
+        /// <summary>Dopo la vittoria sul boss: allarme, risveglio e schermata finale. TODO: suono della sveglia e fade.</summary>
+        public void TriggerAlarmAwakeSequence()
+        {
+            SetState(GameState.Ending);
+        }
+
+        /// <summary>UNICO punto in cui cambia lo stato: gestisce tempo, cursore e notifica gli ascoltatori.</summary>
+        public void SetState(GameState newState)
+        {
+            if (gameState == newState) return;
+            gameState = newState;
+
+            bool frozen = newState == GameState.Paused || newState == GameState.GameOver;
+            bool inGameplay = newState == GameState.Playing;
+
+            Time.timeScale = frozen ? 0f : 1f;
+            Cursor.lockState = inGameplay ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !inGameplay;
+
+            OnGameStateChanged?.Invoke(newState);
+        }
     }
 }

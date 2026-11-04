@@ -5,7 +5,7 @@ using PhysicsThief.Properties;
 
 namespace PhysicsThief.Audio
 {
-    public enum MusicTrackId { None, Menu, Ambient, Boss, Sandbox }
+    public enum MusicTrackId { None, Menu, Ambient, Boss }
 
     public enum PropertyAudioEvent { Scan, Paste, Expire, Reaction }
 
