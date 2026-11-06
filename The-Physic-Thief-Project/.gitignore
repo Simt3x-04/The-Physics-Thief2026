@@ -73,3 +73,11 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Asset Store: Kinematic Character Controller
+KinematicCharacterController/
+KinematicCharacterController.meta
