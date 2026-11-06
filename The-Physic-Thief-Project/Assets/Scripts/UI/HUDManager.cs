@@ -11,24 +11,24 @@ using PhysicsThief.Properties;
 namespace PhysicsThief.UI
 {
     /// <summary>
-    /// View dell'HUD: barra vita, 5 slot della valigetta, pannello scanner, messaggi.
-    /// Si iscrive agli eventi (salute, valigetta, scanner): nessuno la chiama direttamente.
-    /// Le sorgenti si assegnano nell'Inspector OPPURE da codice con Bind(...) (es. dal LevelManager).
+    /// HUD view: health bar, 5 briefcase slots, scanner panel, messages.
+    /// Subscribes to events (health, briefcase, scanner); nothing calls it directly.
+    /// Sources are assigned in the Inspector OR via code using Bind(...) (e.g., from the LevelManager).
     /// </summary>
     public class HUDManager : MonoBehaviour
     {
-        [Header("Fonti dati")]
+        [Header("Data source")]
         [SerializeField] private HealthComponent playerHealth;
         [SerializeField] private BriefcaseInventory inventory;
         [SerializeField] private PlayerScanner scanner;
 
-        [Header("Salute")]
+        [Header("Health")]
         [SerializeField] private Slider healthBar;
         [SerializeField] private TMP_Text healthLabel;
 
-        [Header("Valigetta")]
+        [Header("Briefcase")]
         [SerializeField] private BriefcaseSlotView[] slotViews;
-        [Tooltip("Cinque icone nell'ordine: Mass, Velocity, Temperature, Magnetism, Hardness")]
+        [Tooltip("Five icons in order: Mass, Velocity, Temperature, Magnetism, Hardness")]
         [SerializeField] private Sprite[] attributeIcons;
 
         [Header("Scanner")]
@@ -36,7 +36,7 @@ namespace PhysicsThief.UI
         [SerializeField] private TMP_Text scannerTitle;
         [SerializeField] private TMP_Text scannerBody;
 
-        [Header("Messaggi")]
+        [Header("Messages")]
         [SerializeField] private TMP_Text messageLabel;
         [SerializeField] private float messageDuration = 2f;
 
@@ -53,7 +53,7 @@ namespace PhysicsThief.UI
             Unsubscribe();
         }
 
-        /// <summary>Collega l'HUD a un player (chiamato quando il player viene creato).</summary>
+        /// <summary>Connect the HUD to a player (called when the player is created).</summary>
         public void Bind(HealthComponent health, BriefcaseInventory briefcase, PlayerScanner playerScanner)
         {
             Unsubscribe();
@@ -89,8 +89,6 @@ namespace PhysicsThief.UI
             HideScannerOverlay();
         }
 
-        // ---------- salute ----------
-
         public void UpdateHealthBar(float current, float max)
         {
             healthBar.maxValue = max;
@@ -100,8 +98,6 @@ namespace PhysicsThief.UI
                 healthLabel.text = Mathf.CeilToInt(current) + " / " + Mathf.CeilToInt(max);
             }
         }
-
-        // ---------- valigetta ----------
 
         public void RefreshSlots()
         {
@@ -122,15 +118,13 @@ namespace PhysicsThief.UI
             return attributeIcons != null && index < attributeIcons.Length ? attributeIcons[index] : null;
         }
 
-        // ---------- scanner ----------
-
         private void HandleTargetChanged(PhysicalObject target)
         {
             if (target == null) HideScannerOverlay();
             else ShowScannerOverlay(target);
         }
 
-        /// <summary>Elenca i 5 attributi (con tasto 1-5). Se modificato mostra anche il valore originale; i bloccati in grigio.</summary>
+        /// <summary>List the 5 attributes (using keys 1–5). If modified, the original value is also displayed; locked items appear in gray..</summary>
         public void ShowScannerOverlay(PhysicalObject target)
         {
             scannerPanel.SetActive(true);
@@ -158,9 +152,7 @@ namespace PhysicsThief.UI
             if (scannerPanel != null) scannerPanel.SetActive(false);
         }
 
-        // ---------- messaggi ----------
-
-        /// <summary>Messaggio breve (azioni non valide, prompt). Sparisce dopo messageDuration secondi.</summary>
+        /// <summary>Short message (invalid actions, prompt). Disappears after messageDuration seconds.</summary>
         public void ShowMessage(string text)
         {
             if (messageLabel == null) return;
@@ -168,7 +160,7 @@ namespace PhysicsThief.UI
             messageRoutine = StartCoroutine(MessageRoutine(text));
         }
 
-        /// <summary>Trasforma l'esito di una copia in un messaggio (nessun messaggio se riuscita).</summary>
+        /// <summary>Converts the result of a copy operation into a message (no message if successful).</summary>
         public void ShowCopyResult(CopyResult result)
         {
             string message = result switch

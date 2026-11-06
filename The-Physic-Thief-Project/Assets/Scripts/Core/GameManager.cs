@@ -6,26 +6,26 @@ using UnityEngine.SceneManagement;
 namespace PhysicsThief.Core
 {
     /// <summary>
-    /// Singleton persistente: flusso globale del gioco (stato, scene, pausa, morte, finale).
-    /// Va messo come GameObject root nella scena MainMenu (la prima della Scene List).
+    /// Persistent singleton: manages the global game flow (state, scenes, pause, death, ending).
+    /// Must be placed as a root GameObject in the MainMenu scene (the first one in the Scene List).
     /// </summary>
     public class GameManager : Singleton<GameManager>
     {
-        [Header("Scene (devono essere nella Scene List di Build Profiles)")]
+        [Header("Scenes (must be in the Scene List of Build Profiles)")]
         [SerializeField] private string mainMenuScene = "MainMenu";
         [SerializeField] private string[] levelScenes;
 
-        [Header("Stato (solo lettura a runtime)")]
+        [Header("Status (read-only at runtime)")]
         [SerializeField] private int currentLevel;
         [SerializeField] private GameState gameState = GameState.MainMenu;
 
         public int CurrentLevel => currentLevel;
         public GameState State => gameState;
 
-        /// <summary>Scatta a ogni cambio di stato: HUD, schermate e audio si iscrivono qui.</summary>
+        /// <summary>Triggered on every state change: HUDs, screens, and audio register here.</summary>
         public event Action<GameState> OnGameStateChanged;
 
-        /// <summary>Scatta quando il giocatore sceglie "Snooze and retry": il LevelManager respawna e resetta l'area.</summary>
+        /// <summary>This is triggered when the player chooses "Snooze and retry": the LevelManager respawns the player and resets the area.</summary>
         public event Action OnRetryRequested;
 
         public void StartGame()
@@ -39,7 +39,7 @@ namespace PhysicsThief.Core
 
             if (levelScenes == null || levelId < 0 || levelId >= levelScenes.Length)
             {
-                Debug.LogError($"[GameManager] Livello {levelId} non configurato: controlla 'Level Scenes' nell'Inspector.");
+                Debug.LogError($"[GameManager] Level {levelId} not configured");
                 return;
             }
 
@@ -57,7 +57,7 @@ namespace PhysicsThief.Core
         {
             if (!Application.CanStreamedLevelBeLoaded(sceneName))
             {
-                Debug.LogError($"[GameManager] La scena '{sceneName}' non e' nella Scene List (File > Build Profiles).");
+                Debug.LogError($"[GameManager] The scene '{sceneName}' is not in the Scene List.");
                 yield break;
             }
 
@@ -81,14 +81,13 @@ namespace PhysicsThief.Core
         {
             if (gameState == GameState.Paused) SetState(GameState.Playing);
         }
-
-        /// <summary>Chiamato dal LevelManager quando HealthComponent.OnDied del player scatta: mostra la death screen.</summary>
+        /// <summary>Called by the LevelManager when the player's HealthComponent.OnDied event fires: displays the death screen.</summary>
         public void ReportPlayerDeath()
         {
             if (gameState == GameState.Playing) SetState(GameState.GameOver);
         }
 
-        /// <summary>Bottone "Snooze and retry" della death screen.</summary>
+        /// <summary>Button "Snooze and retry" of the death screen.</summary>
         public void RetryFromCheckpoint()
         {
             if (gameState != GameState.GameOver) return;
@@ -96,13 +95,13 @@ namespace PhysicsThief.Core
             OnRetryRequested?.Invoke();
         }
 
-        /// <summary>Dopo la vittoria sul boss: allarme, risveglio e schermata finale. TODO: suono della sveglia e fade.</summary>
+        /// <summary>After the victory over the boss: alarm, waking up, and final screen. TODO: alarm sound and fade.</summary>
         public void TriggerAlarmAwakeSequence()
         {
             SetState(GameState.Ending);
         }
 
-        /// <summary>UNICO punto in cui cambia lo stato: gestisce tempo, cursore e notifica gli ascoltatori.</summary>
+        /// <summary>The ONLY point where the state changes: it manages time, the cursor, and notifies listeners.</summary>
         public void SetState(GameState newState)
         {
             if (gameState == newState) return;

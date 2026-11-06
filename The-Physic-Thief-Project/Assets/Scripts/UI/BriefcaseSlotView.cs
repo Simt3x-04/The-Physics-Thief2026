@@ -5,7 +5,7 @@ using PhysicsThief.Properties;
 
 namespace PhysicsThief.UI
 {
-    /// <summary>Un singolo slot della valigetta nell'HUD: tasto, icona, valore, bloccato/attivo/selezionato.</summary>
+    /// <summary>A single briefcase slot in the HUD: key, icon, value, locked/active/selected.</summary>
     public class BriefcaseSlotView : MonoBehaviour
     {
         [SerializeField] private Image background;
@@ -19,7 +19,7 @@ namespace PhysicsThief.UI
         [SerializeField] private Color emptyColor = new Color(1f, 1f, 1f, 0.25f);
         [SerializeField] private Color filledColor = new Color(1f, 1f, 1f, 0.9f);
 
-        /// <summary>Slot vuoti in grigio, bloccati con lucchetto, attivo evidenziato.</summary>
+        /// <summary>Empty slots in gray, locked with a padlock; active slot highlighted.</summary>
         public void Render(int index, PropertyValue? content, Sprite iconSprite, bool slotUnlocked, bool isActive, bool isSelected)
         {
             keyLabel.text = (index + 1).ToString();

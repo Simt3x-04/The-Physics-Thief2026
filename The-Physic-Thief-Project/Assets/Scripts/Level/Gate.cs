@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace PhysicsThief.Level
 {
-    /// <summary>Cancello/porta sbloccabile risolvendo un puzzle.</summary>
+    /// <summary>Gate/door that can be unlocked by solving a puzzle.</summary>
     public class Gate : MonoBehaviour
     {
         [SerializeField] private int gateID;

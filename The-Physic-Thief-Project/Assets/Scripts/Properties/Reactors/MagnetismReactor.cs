@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace PhysicsThief.Properties.Reactors
 {
-    /// <summary>Effetti magnetici: attrae oggetti metallici e disarma i nemici con scudo.</summary>
+    /// <summary>Magnetic effects: attracts metal objects and disarms shielded enemies.</summary>
     public class MagnetismReactor : ReactorBase
     {
         [SerializeField] private float attractionRadius = 6f;
@@ -11,10 +11,10 @@ namespace PhysicsThief.Properties.Reactors
 
         protected override void HandlePropertyChange(AttributeType type, float newValue) { }
 
-        /// <summary>TODO: OverlapSphere sui layer metallici e applica una forza verso questo oggetto.</summary>
+        /// <summary>TODO: Use OverlapSphere on metal layers and apply a force toward this object.</summary>
         private void AttractMetallicObjects() { }
 
-        /// <summary>TODO: trova i nemici vicini e chiama enemy.OnPhysicsAltered(Magnetism, valore).</summary>
+        /// <summary>TODO: find nearby enemies and call enemy.OnPhysicsAltered(Magnetism, value).</summary>
         private void StripEnemyShields() { }
     }
 }

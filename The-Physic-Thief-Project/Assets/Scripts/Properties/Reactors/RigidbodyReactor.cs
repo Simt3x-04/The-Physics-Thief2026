@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace PhysicsThief.Properties.Reactors
 {
-    /// <summary>Applica Mass e Velocity al Rigidbody di Unity.</summary>
+    /// <summary>Apply Mass and Velocity to the Unity Rigidbody.</summary>
     [RequireComponent(typeof(Rigidbody))]
     public class RigidbodyReactor : ReactorBase
     {
@@ -13,7 +13,7 @@ namespace PhysicsThief.Properties.Reactors
         /// <summary>TODO: rb.mass = newMass.</summary>
         private void UpdateMass(float newMass) { }
 
-        /// <summary>TODO: imposta la velocita' del Rigidbody e/o lancia l'oggetto come proiettile.</summary>
+        /// <summary>TODO: sets the Rigidbody's velocity and/or launches the object as a projectile.</summary>
         private void LaunchAsProjectile(float velocity) { }
     }
 }

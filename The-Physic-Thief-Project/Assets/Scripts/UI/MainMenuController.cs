@@ -5,7 +5,7 @@ using PhysicsThief.Core;
 namespace PhysicsThief.UI
 {
     /// <summary>
-    /// Schermata iniziale. Non conosce livelli o scene: chiede tutto al GameManager.
+    /// Initial screen. It is unaware of levels or scenes; it requests everything from the GameManager.
     /// </summary>
     public class MainMenuController : MonoBehaviour
     {
@@ -37,7 +37,7 @@ namespace PhysicsThief.UI
         {
             if (GameManager.Instance == null)
             {
-                Debug.LogError("[MainMenu] Nessun GameManager nella scena: aggiungilo come GameObject root.");
+                Debug.LogError("[MainMenu] No GameManager in the scene.");
                 return;
             }
             GameManager.Instance.StartGame();

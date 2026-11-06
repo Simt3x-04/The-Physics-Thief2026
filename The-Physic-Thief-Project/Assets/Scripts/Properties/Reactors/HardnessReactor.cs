@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace PhysicsThief.Properties.Reactors
 {
-    /// <summary>Durezza: sotto soglia l'oggetto diventa fragile, sopra e' a prova di proiettile.</summary>
+    /// <summary>Hardness: below a certain threshold, the object becomes fragile; above it, it is bulletproof.</summary>
     public class HardnessReactor : ReactorBase
     {
         [SerializeField] private float fragileBelow = 2f;

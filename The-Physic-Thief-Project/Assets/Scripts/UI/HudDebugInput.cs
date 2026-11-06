@@ -7,9 +7,9 @@ using PhysicsThief.Properties;
 namespace PhysicsThief.UI
 {
     /// <summary>
-    /// TEMPORANEO: prova l'HUD senza player. Mettilo su un oggetto della scena di test e ELIMINALO a gioco collegato.
-    /// H = -10 HP | J = +25 HP | F1..F5 = copia Mass/Velocity/Temperature/Magnetism/Hardness | 1..5 = attiva+seleziona slot
-    /// Spazio = usa gli slot selezionati | X = scarta lo slot attivo | U = sblocca +1 slot | K = sblocca Temperature e Magnetism
+    /// TEMPORARY: test the HUD without a player character.
+    /// H = -10 HP | J = +25 HP | F1..F5 = copy Mass/Velocity/Temperature/Magnetism/Hardness | 1..5 = activate + select slot
+    /// Space = use selected slots | X = discard active slot | U = unlock +1 slot | K = unlock Temperature and Magnetism
     /// </summary>
     public class HudDebugInput : MonoBehaviour
     {
@@ -19,7 +19,7 @@ namespace PhysicsThief.UI
 
         private static readonly Key[] CopyKeys = { Key.F1, Key.F2, Key.F3, Key.F4, Key.F5 };
         private static readonly Key[] SlotKeys = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5 };
-        private static readonly float[] SampleValues = { 600f, 30f, 0f, 1f, 8f };   // un valore per ogni AttributeType
+        private static readonly float[] SampleValues = { 600f, 30f, 0f, 1f, 8f };   // a value for every AttributeType
 
         private void Update()
         {

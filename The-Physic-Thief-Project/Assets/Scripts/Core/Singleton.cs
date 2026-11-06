@@ -3,8 +3,8 @@ using UnityEngine;
 namespace PhysicsThief.Core
 {
     /// <summary>
-    /// Base generica per i manager globali (GameManager, AudioManager).
-    /// Garantisce una sola istanza e, se richiesto, la fa sopravvivere ai cambi di scena.
+    /// Generic base class for global managers (GameManager, AudioManager).
+    /// Ensures a single instance exists and, if requested, allows it to persist across scene changes.
     /// </summary>
     public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
@@ -13,15 +13,15 @@ namespace PhysicsThief.Core
         public static T Instance { get; private set; }
 
         /// <summary>
-        /// Le classi figlie che ridefiniscono Awake devono chiamare base.Awake() come prima istruzione
-        /// e fermarsi se l'oggetto e' un duplicato.
+        /// Child classes that override Awake must call base.Awake() as the first instruction
+        /// and stop if the object is a duplicate.
         /// </summary>
         protected virtual void Awake()
         {
-            UnityEngine.Object existing = Instance;   // confronto "alla Unity" (gestisce gli oggetti distrutti)
+            UnityEngine.Object existing = Instance;
             if (existing != null && existing != this)
             {
-                Destroy(gameObject);                  // esiste gia' un'istanza: elimina il duplicato
+                Destroy(gameObject);                  // an instance already exists: delete the duplicate
                 return;
             }
 
@@ -29,7 +29,7 @@ namespace PhysicsThief.Core
 
             if (persistAcrossScenes)
             {
-                DontDestroyOnLoad(gameObject);        // funziona solo su GameObject root della scena
+                DontDestroyOnLoad(gameObject);        // it only works on root GameObjects in the scene
             }
         }
     }

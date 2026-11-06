@@ -1,8 +1,8 @@
 namespace PhysicsThief.Properties
 {
     /// <summary>
-    /// Materiale di un oggetto: i Reactor lo usano per decidere la reazione
-    /// (es. Temperature su Water -> Ice, su Wood -> fuoco, su Metal -> fusione).
+    /// Object material: Reactors use this to determine the reaction
+    /// (e.g., temperature applied to Water -> Ice; to Wood -> fire; to Metal -> melting).
     /// </summary>
     public enum MaterialTag
     {

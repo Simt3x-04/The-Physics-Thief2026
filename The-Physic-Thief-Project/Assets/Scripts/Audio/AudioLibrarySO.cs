@@ -5,8 +5,8 @@ using PhysicsThief.Properties;
 namespace PhysicsThief.Audio
 {
     /// <summary>
-    /// ScriptableObject con tutti i clip. Unity non serializza i Dictionary: si usano List
-    /// e si costruiscono dizionari di ricerca a runtime.
+    /// ScriptableObject containing all the clips. Unity does not serialize Dictionaries; instead, use Lists
+    /// and build lookup dictionaries at runtime.
     /// </summary>
     [CreateAssetMenu(fileName = "AudioLibrary", menuName = "Physics Thief/Audio Library")]
     public class AudioLibrarySO : ScriptableObject
@@ -16,7 +16,7 @@ namespace PhysicsThief.Audio
         [SerializeField] private List<PropertySoundEntry> propertySounds = new List<PropertySoundEntry>();
         [SerializeField] private List<MusicTrackEntry> musicTracks = new List<MusicTrackEntry>();
 
-        /// <summary>TODO: costruisci i dizionari di lookup dalle liste.</summary>
+        /// <summary>TODO: build lookup dictionaries from the lists.</summary>
         private void OnEnable() { }
 
         public bool TryGetSfx(string key, out SfxEntry entry) { entry = default; return default; }
