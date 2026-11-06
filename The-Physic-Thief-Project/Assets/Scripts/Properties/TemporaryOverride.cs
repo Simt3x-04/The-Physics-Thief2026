@@ -3,7 +3,7 @@ using System;
 namespace PhysicsThief.Properties
 {
     /// <summary>
-    /// Property attached to an object with an independent timer (default 5 s).
+    /// Proprieta' incollata su un oggetto, con un timer indipendente (GDD 3.3).
     /// </summary>
     [Serializable]
     public class TemporaryOverride
@@ -14,10 +14,21 @@ namespace PhysicsThief.Properties
 
         public bool HasExpired => remainingTime <= 0f;
 
-        /// <summary>TODO: initialize property, duration, and remainingTime = duration.</summary>
-        public TemporaryOverride(PropertyValue property, float duration) { }
+        public TemporaryOverride(PropertyValue property, float duration)
+        {
+            this.property = property;
+            this.duration = duration;
+            remainingTime = duration;
+        }
 
-        /// <summary>TODO: scale remainingTime by deltaTime. Returns true if it has just expired.</summary>
-        public bool Tick(float deltaTime) { return default; }
+        /// <summary>Scala il tempo residuo. Ritorna true se il timer e' scaduto.</summary>
+        public bool Tick(float deltaTime)
+        {
+            if (!HasExpired)
+            {
+                remainingTime -= deltaTime;
+            }
+            return HasExpired;
+        }
     }
 }

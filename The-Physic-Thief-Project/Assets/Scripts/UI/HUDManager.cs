@@ -28,7 +28,7 @@ namespace PhysicsThief.UI
 
         [Header("Briefcase")]
         [SerializeField] private BriefcaseSlotView[] slotViews;
-        [Tooltip("Five icons in order: Mass, Velocity, Temperature, Magnetism, Hardness")]
+        [Tooltip("Five icons, in order: Mass, Velocity, Temperature, Magnetism, Hardness")]
         [SerializeField] private Sprite[] attributeIcons;
 
         [Header("Scanner")]
@@ -36,11 +36,12 @@ namespace PhysicsThief.UI
         [SerializeField] private TMP_Text scannerTitle;
         [SerializeField] private TMP_Text scannerBody;
 
-        [Header("Messages")]
+        [Header("Messagges")]
         [SerializeField] private TMP_Text messageLabel;
         [SerializeField] private float messageDuration = 2f;
 
         private Coroutine messageRoutine;
+        private PhysicalObject shownTarget;
 
         private void OnEnable()
         {
@@ -72,14 +73,24 @@ namespace PhysicsThief.UI
         {
             if (playerHealth != null) playerHealth.OnHealthChanged += UpdateHealthBar;
             if (inventory != null) inventory.Changed += RefreshSlots;
-            if (scanner != null) scanner.OnTargetChanged += HandleTargetChanged;
+            if (scanner != null)
+            {
+                scanner.OnTargetChanged += HandleTargetChanged;
+                scanner.OnMessage += ShowMessage;
+            }
         }
 
         private void Unsubscribe()
         {
             if (playerHealth != null) playerHealth.OnHealthChanged -= UpdateHealthBar;
             if (inventory != null) inventory.Changed -= RefreshSlots;
-            if (scanner != null) scanner.OnTargetChanged -= HandleTargetChanged;
+            if (scanner != null)
+            {
+                scanner.OnTargetChanged -= HandleTargetChanged;
+                scanner.OnMessage -= ShowMessage;
+            }
+            if (shownTarget != null) shownTarget.OnPropertyValueChanged -= HandleTargetValueChanged;
+            shownTarget = null;
         }
 
         private void RefreshAll()
@@ -88,6 +99,8 @@ namespace PhysicsThief.UI
             RefreshSlots();
             HideScannerOverlay();
         }
+
+        // health
 
         public void UpdateHealthBar(float current, float max)
         {
@@ -98,6 +111,8 @@ namespace PhysicsThief.UI
                 healthLabel.text = Mathf.CeilToInt(current) + " / " + Mathf.CeilToInt(max);
             }
         }
+
+        // briefcase
 
         public void RefreshSlots()
         {
@@ -118,17 +133,33 @@ namespace PhysicsThief.UI
             return attributeIcons != null && index < attributeIcons.Length ? attributeIcons[index] : null;
         }
 
+        // scanner
+
         private void HandleTargetChanged(PhysicalObject target)
         {
-            if (target == null) HideScannerOverlay();
-            else ShowScannerOverlay(target);
+            if (shownTarget != null) shownTarget.OnPropertyValueChanged -= HandleTargetValueChanged;
+            shownTarget = target;
+
+            if (target == null)
+            {
+                HideScannerOverlay();
+                return;
+            }
+            target.OnPropertyValueChanged += HandleTargetValueChanged;
+            ShowScannerOverlay(target);
         }
 
-        /// <summary>List the 5 attributes (using keys 1–5). If modified, the original value is also displayed; locked items appear in gray..</summary>
+        /// <summary>A value of the scanned object has changed (pasted or expired): update the panel.</summary>
+        private void HandleTargetValueChanged(AttributeType type, float value)
+        {
+            if (shownTarget != null) ShowScannerOverlay(shownTarget);
+        }
+
+        /// <summary>List the 5 attributes (using keys 1–5). If modified, the original value is also displayed; locked items appear in gray.</summary>
         public void ShowScannerOverlay(PhysicalObject target)
         {
             scannerPanel.SetActive(true);
-            scannerTitle.text = target.Definition != null ? target.Definition.displayName : target.name;
+            scannerTitle.text = target.DisplayName;
 
             var sb = new StringBuilder();
             foreach (AttributeType type in Enum.GetValues(typeof(AttributeType)))
@@ -152,6 +183,8 @@ namespace PhysicsThief.UI
             if (scannerPanel != null) scannerPanel.SetActive(false);
         }
 
+        // messages
+
         /// <summary>Short message (invalid actions, prompt). Disappears after messageDuration seconds.</summary>
         public void ShowMessage(string text)
         {
@@ -163,12 +196,7 @@ namespace PhysicsThief.UI
         /// <summary>Converts the result of a copy operation into a message (no message if successful).</summary>
         public void ShowCopyResult(CopyResult result)
         {
-            string message = result switch
-            {
-                CopyResult.AttributeLocked => "Attribute still locked",
-                CopyResult.NoFreeSlot => "No free slot - press X to trash one",
-                _ => null
-            };
+            string message = result.ToMessage();
             if (message != null) ShowMessage(message);
         }
 
