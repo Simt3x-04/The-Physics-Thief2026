@@ -1,0 +1,2 @@
+*.tga filter=lfs diff=lfs merge=lfs -text
+The-Physic-Thief-Project/Assets/Scenes/VillageScene.unity filter=lfs diff=lfs merge=lfs -text
