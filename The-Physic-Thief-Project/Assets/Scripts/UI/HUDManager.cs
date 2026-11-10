@@ -23,16 +23,6 @@ namespace PhysicsThief.UI
         private const float ScannerRefreshInterval = 0.1f;
         private static readonly Color LockedTextColor = new Color(0.39f, 0.45f, 0.55f, 1f);
 
-        // One color per attribute, in AttributeType order: Mass, Velocity, Temperature, Magnetism, Hardness.
-        private static readonly Color[] DefaultAttributeColors =
-        {
-            new Color(0.96f, 0.62f, 0.04f),   // Mass: amber
-            new Color(0.13f, 0.83f, 0.93f),   // Velocity: cyan
-            new Color(0.94f, 0.27f, 0.27f),   // Temperature: red
-            new Color(0.65f, 0.55f, 0.98f),   // Magnetism: violet
-            new Color(0.58f, 0.64f, 0.72f)    // Hardness: steel
-        };
-
         [Header("Data sources")]
         [SerializeField] private HealthComponent playerHealth;
         [SerializeField] private BriefcaseInventory inventory;
@@ -213,14 +203,25 @@ namespace PhysicsThief.UI
             if (inventory == null) return;
 
             BriefcaseModel model = inventory.Model;
+
+            // The next paste uses the selected slots, or the active slot if none is selected.
+            bool anySelected = false;
+            for (int i = 0; i < slotViews.Length; i++)
+            {
+                if (model.IsSelected(i)) anySelected = true;
+            }
+
             for (int i = 0; i < slotViews.Length; i++)
             {
                 PropertyValue? content = model.GetSlot(i);
                 AttributeType type = content.HasValue ? content.Value.type : AttributeType.Mass;
                 Sprite icon = content.HasValue ? IconFor(type) : null;
 
+                bool pasteTarget = model.IsSelected(i)
+                    || (!anySelected && i == model.ActiveSlotIndex && content.HasValue);
+
                 slotViews[i].Render(i, content, icon, GetAttributeColor(type),
-                    model.IsSlotUnlocked(i), i == model.ActiveSlotIndex, model.IsSelected(i));
+                    model.IsSlotUnlocked(i), i == model.ActiveSlotIndex, pasteTarget);
             }
         }
 
@@ -234,7 +235,7 @@ namespace PhysicsThief.UI
         public Color GetAttributeColor(AttributeType type)
         {
             int index = (int)type;
-            return attributeColors != null && index < attributeColors.Length ? attributeColors[index] : DefaultAttributeColors[index];
+            return attributeColors != null && index < attributeColors.Length ? attributeColors[index] : AttributePalette.Get(type);
         }
 
         // ---------- scanner ----------

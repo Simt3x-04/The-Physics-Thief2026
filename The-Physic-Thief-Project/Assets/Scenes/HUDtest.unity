@@ -683,9 +683,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb39e7422d450da41b59c2e0d27e8d9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.DebugTools.DebugCameraLook
-  sensitivity: 0.1
-  yaw: 0
-  pitch: 0
 --- !u!1 &1005992218
 GameObject:
   m_ObjectHideFlags: 0
@@ -731,6 +728,7 @@ GameObject:
   - component: {fileID: 1122816570}
   - component: {fileID: 1122816569}
   - component: {fileID: 1122816568}
+  - component: {fileID: 1122816573}
   m_Layer: 0
   m_Name: RockCube
   m_TagString: Untagged
@@ -845,12 +843,39 @@ Transform:
   m_GameObject: {fileID: 1122816567}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3, y: 1, z: 5}
+  m_LocalPosition: {x: -3, y: 0.5, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1122816573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122816567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7abef7da301578544996e3aef6099ba7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.UI.PropertyTimerDisplay
+  heightOffset: 0.25
+  unitsToMeters: 0.006
+  rowWidth: 170
+  rowHeight: 20
+  rowSpacing: 4
+  labelWidth: 62
+  referenceDistance: 6
+  minScaleFactor: 0.5
+  maxScaleFactor: 4
+  maxVisibleDistance: 30
+  warningTime: 1
+  flashSpeed: 8
+  warningColor: {r: 0.94, g: 0.27, b: 0.27, a: 1}
+  barBackgroundColor: {r: 0.06, g: 0.09, b: 0.16, a: 0.85}
+  flickerObject: 1
 --- !u!1 &1289151442
 GameObject:
   m_ObjectHideFlags: 0
@@ -864,6 +889,7 @@ GameObject:
   - component: {fileID: 1289151445}
   - component: {fileID: 1289151444}
   - component: {fileID: 1289151443}
+  - component: {fileID: 1289151448}
   m_Layer: 0
   m_Name: PenCube
   m_TagString: Untagged
@@ -968,7 +994,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1289151442}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &1289151447
 Transform:
   m_ObjectHideFlags: 0
@@ -984,6 +1010,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1289151448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1289151442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7abef7da301578544996e3aef6099ba7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.UI.PropertyTimerDisplay
+  heightOffset: 0.25
+  unitsToMeters: 0.006
+  rowWidth: 170
+  rowHeight: 20
+  rowSpacing: 4
+  labelWidth: 62
+  referenceDistance: 6
+  minScaleFactor: 0.5
+  maxScaleFactor: 4
+  maxVisibleDistance: 30
+  warningTime: 1
+  flashSpeed: 8
+  warningColor: {r: 0.94, g: 0.27, b: 0.27, a: 1}
+  barBackgroundColor: {r: 0.06, g: 0.09, b: 0.16, a: 0.85}
+  flickerObject: 1
 --- !u!1 &1444891418
 GameObject:
   m_ObjectHideFlags: 0
@@ -1263,6 +1316,54 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3360014196672018427, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3360014196672018427, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3360014196672018427, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3360014196672018427, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4278190080
+      objectReference: {fileID: 0}
+    - target: {fileID: 3385479472162365843, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3385479472162365843, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3385479472162365843, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3385479472162365843, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4278190080
+      objectReference: {fileID: 0}
+    - target: {fileID: 3806680049332937182, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3806680049332937182, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3806680049332937182, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3806680049332937182, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4278190080
+      objectReference: {fileID: 0}
     - target: {fileID: 3874210706711069127, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
       propertyPath: m_SizeDelta.x
       value: 100
@@ -1327,6 +1428,22 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6600941046752598616, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6600941046752598616, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6600941046752598616, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6600941046752598616, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4278190080
+      objectReference: {fileID: 0}
     - target: {fileID: 6640112394487377405, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -1366,6 +1483,22 @@ PrefabInstance:
     - target: {fileID: 8136583979535750857, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8567035822095812446, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8567035822095812446, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8567035822095812446, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8567035822095812446, guid: b4cd5a59e48a4f64ebefeaeb6cbb4e7f, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4278190080
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
