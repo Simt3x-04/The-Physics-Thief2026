@@ -147,6 +147,7 @@ namespace PhysicsThief.Enemies
             if(rb != null){
                 Vector3 v = dir*speed;
                 v.y = rb.linearVelocity.y;
+                rb.linearVelocity = v;
             }
             else{
                 transform.position += dir*speed*Time.deltaTime;
