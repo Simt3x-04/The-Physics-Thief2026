@@ -49,6 +49,11 @@ namespace PhysicsThief.Enemies
             healthComp.Initialize(data.MaxHP);
         }
 
+        protected virtual void Start(){
+            IEnemyState idle = CreateIdleState();
+            if(idle!=null) stateMachine.ChangeState(idle, this);
+        }
+
         public virtual IEnemyState CreateIdleState(){
             return null;
         }
@@ -79,7 +84,7 @@ namespace PhysicsThief.Enemies
             healthComp.TakeDamage(data.ApplyDamageReduction(amount));
         }
 
-        private void AcquireTarget(){
+        protected void AcquireTarget(){
             if(target!=null) return;
             GameObject found = GameObject.FindGameObjectWithTag(targetTag);
             if(found != null) target = found.transform;

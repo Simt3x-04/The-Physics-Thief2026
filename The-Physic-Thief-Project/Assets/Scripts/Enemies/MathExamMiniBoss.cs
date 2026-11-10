@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PhysicsThief.Enemies
 {
     /// <summary>Mini-boss che lancia voti '4' e '5'. I proiettili riflessi con alta velocita'/elasticita' lo danneggiano.</summary>
-    public class MathExamMiniBoss : EnemyBase
+    public class MathExamMiniBoss : BossBase
     {
         [SerializeField] private Transform firePoint;
 

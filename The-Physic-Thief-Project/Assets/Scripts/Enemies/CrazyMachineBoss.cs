@@ -11,7 +11,7 @@ namespace PhysicsThief.Enemies
     }
 
     /// <summary>Boss a 3 fasi. Ogni fase puo' diventare un IEnemyState dedicato quando serve.</summary>
-    public class CrazyMachineBoss : EnemyBase
+    public class CrazyMachineBoss : BossBase
     {
 
         private CrazyMachineData bossData;
