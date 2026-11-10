@@ -14,6 +14,13 @@ namespace PhysicsThief.Enemies
         [SerializeField] protected HealthComponent healthComp;
         [SerializeField] protected PhysicalObject physObj;
         [SerializeField] protected EnemyData data;
+
+        [SerializeField] protected LayerMask obstacleMask;
+        [SerializeField] protected float eyeHeight = 1f;
+        [SerializeField] protected string targetTag ="Player";
+
+        private float nextAttackTime;
+
         protected EnemyStateMachine stateMachine = new EnemyStateMachine();
         protected Transform target;
         protected Rigidbody rb;
@@ -42,6 +49,14 @@ namespace PhysicsThief.Enemies
             healthComp.Initialize(data.MaxHP);
         }
 
+        public virtual IEnemyState CreateIdleState(){
+            return null;
+        }
+
+        public virtual IEnemyState CreateCombatState(){
+            return new CombatState();
+        }
+
         /// <summary>TODO: iscriviti a physObj.OnPropertyValueChanged e healthComp.OnDied.</summary>
         protected virtual void OnEnable() { 
             if(healthComp != null) healthComp.OnDied += Die; 
@@ -62,6 +77,57 @@ namespace PhysicsThief.Enemies
         public virtual void TakeDamage(float amount) { 
             if(IsDead) return;
             healthComp.TakeDamage(data.ApplyDamageReduction(amount));
+        }
+
+        private void AcquireTarget(){
+            if(target!=null) return;
+            GameObject found = GameObject.FindGameObjectWithTag(targetTag);
+            if(found != null) target = found.transform;
+        }
+
+        public float DistanceToTarget(){
+            return target == null ? float.MaxValue : Vector3.Distance(transform.position, target.position);
+        }
+
+        public bool HasLineOfSight(){
+            if(target == null) return false;
+            Vector3 from = transform.position + Vector3.up * eyeHeight;
+            Vector3 to = target.position + Vector3.up * eyeHeight;
+            return !Physics.Linecast(from, to, obstacleMask);
+        }
+
+        public bool TrySpotTarget(){
+            AcquireTarget();
+            if(target == null) return false;
+            if(DistanceToTarget() > data.DetectionRange) return false;
+
+            Vector3 toTarget = target. position - transform.position;
+            toTarget.y = 0f;
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+
+            if(toTarget.sqrMagnitude > 0.0001f && forward.sqrMagnitude > 0.0001f){
+                if(Vector3.Angle(forward, toTarget) > data.ViewAngle*0.5f) return false;
+            }
+
+            return HasLineOfSight();
+        }
+
+        public void FaceTarget(float turnSpeed){
+            if(target == null) return;
+
+            Vector3 dir = target.position - transform.position;
+            dir.y = 0f;
+            if(dir.sqrMagnitude < 0.0001f) return;
+
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir), turnSpeed*Time.deltaTime);
+        }
+
+        public bool TryAttack(){
+            if(IsDead || Time.time < nextAttackTime) return false;
+            nextAttackTime = Time.time + data.AttackCooldown;
+            Attack();
+            return true;
         }
 
         public void MoveTowards(Vector3 destination, float speed){
@@ -105,6 +171,13 @@ namespace PhysicsThief.Enemies
             Vector3 center = Application.isPlaying ? HomePosition : transform.position;
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(center, data.RoamRadius);
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, data.DetectionRange);
+            Vector3 left = Quaternion.Euler(0f, -data.ViewAngle*0.5f, 0f)*transform.forward;
+            Vector3 right = Quaternion.Euler(0f, data.ViewAngle*0.5f, 0f)*transform.forward;
+            Gizmos.DrawRay(transform.position, left*data.DetectionRange);
+            Gizmos.DrawRay(transform.position, right*data.DetectionRange);
         }
     }
 }

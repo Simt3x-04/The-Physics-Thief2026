@@ -27,6 +27,8 @@ namespace PhysicsThief.Enemies
         [Header("Percezione")]
         [SerializeField] private float detectionRange;
         [SerializeField] private float loseTargetRange; // >= detectionRange
+        [SerializeField] private float viewAngle;
+        [SerializeField] private float loseSightTime;
  
         [Header("Fisica")]
         [SerializeField] private float mass;
@@ -56,6 +58,8 @@ namespace PhysicsThief.Enemies
  
         public float DetectionRange => detectionRange;
         public float LoseTargetRange => loseTargetRange;
+        public float ViewAngle => viewAngle;
+        public float LoseSightTime => loseSightTime;
  
         public float Mass => mass;
 

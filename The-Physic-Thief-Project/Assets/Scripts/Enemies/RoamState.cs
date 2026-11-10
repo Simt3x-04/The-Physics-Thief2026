@@ -20,6 +20,11 @@ namespace PhysicsThief.Enemies
         }
 
         public void Tick(EnemyBase owner){
+            if(owner.TrySpotTarget()){
+                owner.StateMachine.ChangeState(owner.CreateCombatState(), owner);
+                return;
+            }
+
             EnemyData d= owner.Data;
             switch(phase){
                 case Phase.Walking:

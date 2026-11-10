@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de15dbb30e5c1431bab6d1e1b16f013b, type: 3}
   m_Name: SpearBeetleData
   m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.Enemies.SpearBeetleData
-  displayName: 
+  displayName: Spear Beetle
   icon: {fileID: 0}
   prefab: {fileID: 0}
-  maxHP: 0
+  maxHP: 1
   moveSpeed: 0
   damageReduction: 0
   attackDamage: 0
@@ -23,7 +23,10 @@ MonoBehaviour:
   attackCooldown: 0
   detectionRange: 0
   loseTargetRange: 0
-  mass: 0
+  mass: 0.01
+  roamRadius: 0.5
+  roamPauseTime: 0
+  turnSpeed: 1
   hitSfx: {fileID: 0}
   deathSfx: {fileID: 0}
   deathVfx: {fileID: 0}
