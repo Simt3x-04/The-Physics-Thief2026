@@ -4,8 +4,8 @@ using UnityEngine;
 namespace PhysicsThief.Core
 {
     /// <summary>
-    /// Componente riutilizzabile per i punti vita (Player e Nemici). Evita di duplicare
-    /// la logica della salute in ogni classe.
+    /// Punti vita riutilizzabili (Gino e nemici). Gino parte da 100 HP; ogni mela ne ridona 25 (GDD 4.2).
+    /// Comunica solo tramite eventi: la UI e il LevelManager si iscrivono, nessuno viene chiamato direttamente.
     /// </summary>
     public class HealthComponent : MonoBehaviour
     {
@@ -20,16 +20,46 @@ namespace PhysicsThief.Core
         public event Action<float, float> OnHealthChanged;
         public event Action OnDied;
 
-        /// <summary>TODO: sottrai HP, notifica OnHealthChanged, chiama Die() se arriva a 0.</summary>
-        public void TakeDamage(float amount) { }
+        private void Awake()
+        {
+            currentHP = maxHP;
+        }
 
-        /// <summary>TODO: aggiungi HP (clamp a maxHP) e notifica OnHealthChanged.</summary>
-        public void Heal(float amount) { }
+        public void TakeDamage(float amount)
+        {
+            if (IsDead || amount <= 0f) return;
 
-        /// <summary>TODO: imposta IsDead e invoca OnDied.</summary>
-        public void Die() { }
+            currentHP = Mathf.Max(0f, currentHP - amount);
+            OnHealthChanged?.Invoke(currentHP, maxHP);
 
-        /// <summary>TODO: ripristina HP al massimo e IsDead = false (respawn).</summary>
-        public void ResetHealth() { }
+            if (currentHP <= 0f)
+            {
+                Die();
+            }
+        }
+
+        public void Heal(float amount)
+        {
+            if (IsDead || amount <= 0f) return;
+
+            currentHP = Mathf.Min(maxHP, currentHP + amount);
+            OnHealthChanged?.Invoke(currentHP, maxHP);
+        }
+
+        public void Die()
+        {
+            if (IsDead) return;
+            IsDead = true;
+            currentHP = 0f;
+            OnDied?.Invoke();
+        }
+
+        /// <summary>Respawn: salute piena e di nuovo vivo.</summary>
+        public void ResetHealth()
+        {
+            IsDead = false;
+            currentHP = maxHP;
+            OnHealthChanged?.Invoke(currentHP, maxHP);
+        }
     }
 }
