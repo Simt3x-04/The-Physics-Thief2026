@@ -482,108 +482,118 @@ public static class UIFlowTestSceneSetup
         }
 
         // ═════════════════════════════════════════════════════════════════════
-        // A. MAIN MENU CANVAS  (sort 0)
+        // A. MAIN MENU CANVAS  (sort 0) — Eternal Garden layout
         // ═════════════════════════════════════════════════════════════════════
         var mmCanvas = MakeCanvas("MainMenuCanvas", 0);
         var mmRoot   = mmCanvas.transform;
 
-        // ── Full-bleed backdrop ───────────────────────────────────────────────
-        // Right half: mid-navy (placeholder for team art — assign a Sprite here).
-        var backdropRT = Panel("Backdrop", mmRoot, MenuStyle.BackgroundMid, false);
-        backdropRT.gameObject.GetComponent<Image>().raycastTarget = false;
+        // ── BACKGROUND — full-canvas; assign real forest art to Backdrop's Image.sprite ──
+        var backdropGO = new GameObject("Backdrop");
+        backdropGO.transform.SetParent(mmRoot, false);
+        var backdropRT = backdropGO.AddComponent<RectTransform>();
+        backdropRT.anchorMin = Vector2.zero; backdropRT.anchorMax = Vector2.one;
+        backdropRT.offsetMin = backdropRT.offsetMax = Vector2.zero;
+        var backdropImg = backdropGO.AddComponent<Image>();
+        backdropImg.color = Color.white;
+        backdropImg.raycastTarget = false;
+        // ForestBackdrop paints layered solid-colour Images until real art is added.
+        backdropGO.AddComponent<ForestBackdrop>();
 
-        // Left column: deep navy panel (Dorfromantik left-strip).
-        var leftColGO = new GameObject("LeftColumn");
-        leftColGO.transform.SetParent(mmRoot, false);
-        var leftColRT = leftColGO.AddComponent<RectTransform>();
-        leftColRT.anchorMin        = new Vector2(0, 0);
-        leftColRT.anchorMax        = new Vector2(0, 1);
-        leftColRT.offsetMin        = Vector2.zero;
-        leftColRT.offsetMax        = new Vector2(LeftColW, 0);
-        var leftColImg = leftColGO.AddComponent<Image>();
-        leftColImg.color         = MenuStyle.BackgroundDeep;
-        leftColImg.raycastTarget = false;
-
-        // Art-hint label — right half placeholder (remove when real art is set on Backdrop).
-        {
-            var hint = new GameObject("ArtPlaceholderHint");
-            hint.transform.SetParent(mmRoot, false);
-            var hRT = hint.AddComponent<RectTransform>();
-            hRT.anchorMin        = new Vector2(MenuStyle.LeftColumnWidthFraction, 0.1f);
-            hRT.anchorMax        = new Vector2(1f, 0.9f);
-            hRT.offsetMin = hRT.offsetMax = Vector2.zero;
-            var hTxt = hint.AddComponent<TextMeshProUGUI>();
-            hTxt.text          = "[ ASSIGN ART HERE\nBackdrop Image component\non the Backdrop GameObject ]";
-            hTxt.fontSize      = 22;
-            hTxt.color         = MenuStyle.SubtitleGrey;
-            hTxt.alignment     = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
-            hTxt.raycastTarget = false;
-        }
-
-        // ── MainPanel — holds the title + buttons ─────────────────────────────
+        // ── MAIN PANEL — full-canvas transparent container for title + buttons ──
         var mainPanelGO = new GameObject("MainPanel");
         mainPanelGO.transform.SetParent(mmRoot, false);
         var mainPanelRT = mainPanelGO.AddComponent<RectTransform>();
-        mainPanelRT.anchorMin        = new Vector2(0, 0);
-        mainPanelRT.anchorMax        = new Vector2(0, 1);
-        mainPanelRT.offsetMin        = Vector2.zero;
-        mainPanelRT.offsetMax        = new Vector2(LeftColW, 0);
+        mainPanelRT.anchorMin = Vector2.zero; mainPanelRT.anchorMax = Vector2.one;
+        mainPanelRT.offsetMin = mainPanelRT.offsetMax = Vector2.zero;
 
-        // Title.  Anchored top-left with top margin of 180 px.
+        // ── TITLE: "THE PHYSICS" (smaller) + "THIEF" (larger, ~1.4×) ───────────
+        // Both centred, stacked to span 19–36% from top (anchors 0.64–0.81).
+        // Forest teal glow via LiberationSans SDF Outline material.
+        var outlineMat = AssetDatabase.FindAssets("LiberationSans SDF - Outline t:Material")
+            .Select(g2 => AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(g2)))
+            .FirstOrDefault(m => m != null);
+
         {
-            var titleGO = new GameObject("TitleLabel");
-            titleGO.transform.SetParent(mainPanelGO.transform, false);
-            var tRT = titleGO.AddComponent<RectTransform>();
-            tRT.anchorMin = new Vector2(0, 1); tRT.anchorMax = new Vector2(1, 1);
-            tRT.pivot     = new Vector2(0, 1);
-            tRT.sizeDelta = new Vector2(0, 180f);
-            tRT.anchoredPosition = new Vector2(MenuStyle.LeftMargin, -88f);
-            var tTxt = titleGO.AddComponent<TextMeshProUGUI>();
-            tTxt.text          = "THE PHYSICS\nTHIEF";
-            tTxt.fontSize      = MenuStyle.TitleSize;
-            tTxt.color         = MenuStyle.TextPrimary;
-            tTxt.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Top;
-            tTxt.lineSpacing   = -10f;
-            tTxt.raycastTarget = false;
+            var go = new GameObject("TitleTop");
+            go.transform.SetParent(mainPanelGO.transform, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.725f); rt.anchorMax = new Vector2(0.5f, 0.81f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(900f, 90f);
+            rt.anchoredPosition = Vector2.zero;
+            var t = go.AddComponent<TextMeshProUGUI>();
+            t.text = "THE PHYSICS"; t.fontSize = 54; t.fontStyle = FontStyles.Bold;
+            t.color = Color.white;
+            t.alignment = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
+            t.characterSpacing = 2f; t.raycastTarget = false;
+            if (outlineMat != null) {
+                var clone = new Material(outlineMat);
+                if (clone.HasProperty("_OutlineColor"))
+                    clone.SetColor("_OutlineColor", new Color(0.102f, 0.361f, 0.322f, 1f));
+                if (clone.HasProperty("_OutlineWidth")) clone.SetFloat("_OutlineWidth", 0.08f);
+                t.fontSharedMaterial = clone;
+            }
+        }
+        {
+            var go = new GameObject("TitleBottom");
+            go.transform.SetParent(mainPanelGO.transform, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.64f); rt.anchorMax = new Vector2(0.5f, 0.725f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(900f, 120f);
+            rt.anchoredPosition = Vector2.zero;
+            var t = go.AddComponent<TextMeshProUGUI>();
+            t.text = "THIEF"; t.fontSize = 90; t.fontStyle = FontStyles.Bold;
+            t.color = Color.white;
+            t.alignment = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
+            t.characterSpacing = 2f; t.raycastTarget = false;
+            if (outlineMat != null) {
+                var clone = new Material(outlineMat);
+                if (clone.HasProperty("_OutlineColor"))
+                    clone.SetColor("_OutlineColor", new Color(0.102f, 0.361f, 0.322f, 1f));
+                if (clone.HasProperty("_OutlineWidth")) clone.SetFloat("_OutlineWidth", 0.08f);
+                t.fontSharedMaterial = clone;
+            }
         }
 
-        // Subtitle / tagline.
+        // ── MENU BUTTONS: centred, START at 49%, OPTIONS 55%, QUIT 61% ────────
+        // EternalMenuButtonEffect: white rounded-rect outline on focus/hover.
+        Button EternalBtn(string nm, string lbl, float yAnchor)
         {
-            var subGO = new GameObject("Subtitle");
-            subGO.transform.SetParent(mainPanelGO.transform, false);
-            var sRT = subGO.AddComponent<RectTransform>();
-            sRT.anchorMin = new Vector2(0, 1); sRT.anchorMax = new Vector2(1, 1);
-            sRT.pivot     = new Vector2(0, 1);
-            sRT.sizeDelta = new Vector2(0, 36f);
-            sRT.anchoredPosition = new Vector2(MenuStyle.LeftMargin, -268f);
-            var sTxt = subGO.AddComponent<TextMeshProUGUI>();
-            sTxt.text          = "steal the laws of physics";
-            sTxt.fontSize      = MenuStyle.SubtitleSize;
-            sTxt.color         = MenuStyle.SubtitleGrey;
-            sTxt.fontStyle     = FontStyles.Italic;
-            sTxt.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
-            sTxt.raycastTarget = false;
+            var go = new GameObject(nm);
+            go.transform.SetParent(mainPanelGO.transform, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, yAnchor); rt.anchorMax = new Vector2(0.5f, yAnchor);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(400f, 60f);
+            rt.anchoredPosition = Vector2.zero;
+            var hitImg = go.AddComponent<Image>(); hitImg.color = new Color(0,0,0,0);
+            var btn = go.AddComponent<Button>(); btn.targetGraphic = hitImg;
+
+            var oGO = new GameObject("FocusOutline"); oGO.transform.SetParent(go.transform, false);
+            var oRT = oGO.AddComponent<RectTransform>();
+            oRT.anchorMin = Vector2.zero; oRT.anchorMax = Vector2.one;
+            oRT.offsetMin = new Vector2(-6,-6); oRT.offsetMax = new Vector2(6,6);
+            var oImg = oGO.AddComponent<Image>(); oImg.color = new Color(0,0,0,0);
+            oImg.raycastTarget = false; oImg.type = Image.Type.Sliced;
+
+            var lblGO = new GameObject("Label"); lblGO.transform.SetParent(go.transform, false);
+            var lblRT = lblGO.AddComponent<RectTransform>();
+            lblRT.anchorMin = Vector2.zero; lblRT.anchorMax = Vector2.one;
+            lblRT.offsetMin = lblRT.offsetMax = Vector2.zero;
+            var t = lblGO.AddComponent<TextMeshProUGUI>();
+            t.text = lbl; t.fontSize = 38; t.fontStyle = FontStyles.Bold;
+            t.color = Color.white;
+            t.alignment = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
+            t.characterSpacing = 4f; t.raycastTarget = false;
+
+            var fx = go.AddComponent<EternalMenuButtonEffect>(); fx.Init(oImg, t);
+            return btn;
         }
 
-        // Button stack — anchored to bottom of left column.
-        // Positions are measured from vertical center of the column.
-        //   Start   y = -48
-        //   Options y = -48 - (ButtonHeight + ButtonSpacing) = -128
-        //   Quit    y = -208
-        float buttonW = LeftColW - MenuStyle.LeftMargin - 32f;  // right margin 32
-        Vector2 btnSize = new Vector2(buttonW, MenuStyle.ButtonHeight);
-
-        // Pivot is (0, 0.5) so anchoredPosition.x = MenuStyle.LeftMargin.
-        // The parent is mainPanelGO; we use anchor (0, 0.5) + explicit y offsets from center.
-        float btnY0 = 20f;    // top button slightly above center for visual balance
-        float step  = MenuStyle.ButtonHeight + MenuStyle.ButtonSpacing;
-
-        var startBtn  = StyledButton("StartButton",   "START",   mainPanelGO.transform,
-                                     btnSize, new Vector2(MenuStyle.LeftMargin, btnY0));
-        var optBtn1   = StyledButton("OptionsButton", "OPTIONS", mainPanelGO.transform,
-                                     btnSize, new Vector2(MenuStyle.LeftMargin, btnY0 - step));
-        var quitBtn   = StyledButton("QuitButton",    "QUIT",    mainPanelGO.transform,
-                                     btnSize, new Vector2(MenuStyle.LeftMargin, btnY0 - step * 2));
+        var startBtn  = EternalBtn("StartButton",   "START",   0.51f);
+        var optBtn1   = EternalBtn("OptionsButton", "OPTIONS", 0.45f);
+        var quitBtn   = EternalBtn("QuitButton",    "QUIT",    0.39f);
 
         // Options panel (full-canvas, overlays everything).
         var optPanelMM = BuildOptionsPanel("OptionsPanel", mmRoot, 700f);
@@ -779,12 +789,14 @@ public static class UIFlowTestSceneSetup
         UpdateBuildSettingsGuid();
 
         Debug.Log(
-            "[UIFlowTestSetup] REDESIGNED scene saved to " + ScenePath + "\n\n" +
-            "MAIN MENU  — left column (deep navy), title top-left, START/OPTIONS/QUIT stacked.\n" +
-            "             Right side: mid-navy placeholder — assign your Sprite to Backdrop.\n" +
-            "PAUSE      — compact dark card (640×420) over semi-transparent scrim.\n" +
+            "[UIFlowTestSetup] Eternal Garden layout saved to " + ScenePath + "\n\n" +
+            "MAIN MENU  — full-screen forest, centred title + 3 stacked buttons.\n" +
+            "             Backdrop: assign real forest Sprite → Backdrop Image.sprite,\n" +
+            "             then remove ForestBackdrop component from Backdrop GO.\n" +
+            "PAUSE      — compact dark card over semi-transparent scrim.\n" +
             "OPTIONS    — full-canvas dark card, two rows, amber slider fill.\n\n" +
-            "Press Play → Start/Options/Quit, Esc for Pause, D/E for death and ending.");
+            "Press Play → Start/Options/Quit centred over forest.\n" +
+            "START has initial keyboard focus (white outline). Hover any item to see outline.");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
