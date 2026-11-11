@@ -15,18 +15,20 @@ MonoBehaviour:
   displayName: Angry Carrot
   icon: {fileID: 0}
   prefab: {fileID: 0}
-  maxHP: 1
-  moveSpeed: 0
+  maxHP: 50
+  moveSpeed: 3
   damageReduction: 0
-  attackDamage: 0
-  attackRange: 0
-  attackCooldown: 0
-  detectionRange: 0
-  loseTargetRange: 0
+  attackDamage: 10
+  attackRange: 1.5
+  attackCooldown: 3
+  detectionRange: 5
+  loseTargetRange: 6
+  viewAngle: 110
+  loseSightTime: 3
   mass: 0.01
-  roamRadius: 0.5
-  roamPauseTime: 0
-  turnSpeed: 1
+  roamRadius: 6
+  roamPauseTime: 1
+  turnSpeed: 180
   hitSfx: {fileID: 0}
   deathSfx: {fileID: 0}
   deathVfx: {fileID: 0}
