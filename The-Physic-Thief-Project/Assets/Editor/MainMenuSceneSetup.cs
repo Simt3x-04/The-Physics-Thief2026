@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 // ──────────────────────────────────────────────────────────────────────────────
 // MainMenuSceneSetup.cs  (Editor-only)
 //
@@ -141,7 +141,7 @@ public static class MainMenuSceneSetup
             hTxt.text          = "[ ASSIGN TEAM ART\nBackdrop → Image.sprite ]";
             hTxt.fontSize      = 20;
             hTxt.color         = MenuStyle.SubtitleGrey;
-            hTxt.alignment     = TextAlignmentOptions.Center | TextAlignmentOptions.Middle;
+            hTxt.alignment     = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
             hTxt.raycastTarget = false;
         }
 
@@ -186,7 +186,7 @@ public static class MainMenuSceneSetup
             sTxt.fontSize      = MenuStyle.SubtitleSize;
             sTxt.color         = MenuStyle.SubtitleGrey;
             sTxt.fontStyle     = FontStyles.Italic;
-            sTxt.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Middle;
+            sTxt.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
             sTxt.raycastTarget = false;
         }
 
@@ -299,7 +299,7 @@ public static class MainMenuSceneSetup
         lbl.text          = labelText;
         lbl.fontSize      = MenuStyle.ButtonSize;
         lbl.color         = MenuStyle.TextPrimary;
-        lbl.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Middle;
+        lbl.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
         lbl.raycastTarget = false;
 
         var effect = go.AddComponent<MenuButtonEffect>();
@@ -370,7 +370,7 @@ public static class MainMenuSceneSetup
         var lbl = lblGO.AddComponent<TextMeshProUGUI>();
         lbl.text = labelText; lbl.fontSize = MenuStyle.OptionLabelSize;
         lbl.color = MenuStyle.TextPrimary;
-        lbl.alignment = TextAlignmentOptions.Left | TextAlignmentOptions.Middle;
+        lbl.alignment = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
         lbl.raycastTarget = false;
 
         float sliderX = startX + labelW + 20f + sliderW * 0.5f;
@@ -385,7 +385,7 @@ public static class MainMenuSceneSetup
         valRT.sizeDelta = new Vector2(valueW, 44f); valRT.anchoredPosition = new Vector2(valX, yCenter);
         var valTxt = valGO.AddComponent<TextMeshProUGUI>();
         valTxt.fontSize = MenuStyle.ValueLabelSize; valTxt.color = MenuStyle.AccentAmber;
-        valTxt.alignment = TextAlignmentOptions.Right | TextAlignmentOptions.Middle;
+        valTxt.alignment = TextAlignmentOptions.Right | TextAlignmentOptions.Midline;
         valTxt.raycastTarget = false;
 
         valueLabel = valTxt;
@@ -448,7 +448,7 @@ public static class MainMenuSceneSetup
         var backLbl = backLblGO.AddComponent<TextMeshProUGUI>();
         backLbl.text = "BACK"; backLbl.fontSize = MenuStyle.ButtonSize;
         backLbl.color = MenuStyle.TextPrimary;
-        backLbl.alignment = TextAlignmentOptions.Left | TextAlignmentOptions.Middle;
+        backLbl.alignment = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
         backLbl.raycastTarget = false;
 
         var backEffect = backRoot.AddComponent<MenuButtonEffect>(); backEffect.Init(backMarkerImg, backLbl);

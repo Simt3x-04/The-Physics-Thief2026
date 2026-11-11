@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 // ──────────────────────────────────────────────────────────────────────────────
 // UIFlowTestSceneSetup.cs  (Editor-only, excluded from builds)
 //
@@ -249,7 +249,7 @@ public static class UIFlowTestSceneSetup
             lbl.text           = labelText;
             lbl.fontSize       = MenuStyle.ButtonSize;
             lbl.color          = MenuStyle.TextPrimary;
-            lbl.alignment      = TextAlignmentOptions.Left | TextAlignmentOptions.Middle;
+            lbl.alignment      = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
             lbl.raycastTarget  = false;
 
             // Wire up MenuButtonEffect.
@@ -301,7 +301,7 @@ public static class UIFlowTestSceneSetup
             lbl.text          = labelText;
             lbl.fontSize      = MenuStyle.OptionLabelSize;
             lbl.color         = MenuStyle.TextPrimary;
-            lbl.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Middle;
+            lbl.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
             lbl.raycastTarget = false;
 
             // Slider.
@@ -323,7 +323,7 @@ public static class UIFlowTestSceneSetup
             var valTxt = valGO.AddComponent<TextMeshProUGUI>();
             valTxt.fontSize      = MenuStyle.ValueLabelSize;
             valTxt.color         = MenuStyle.AccentAmber;
-            valTxt.alignment     = TextAlignmentOptions.Right | TextAlignmentOptions.Middle;
+            valTxt.alignment     = TextAlignmentOptions.Right | TextAlignmentOptions.Midline;
             valTxt.raycastTarget = false;
 
             valueLabel = valTxt;
@@ -462,7 +462,7 @@ public static class UIFlowTestSceneSetup
             backLbl.text          = "BACK";
             backLbl.fontSize      = MenuStyle.ButtonSize;
             backLbl.color         = MenuStyle.TextPrimary;
-            backLbl.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Middle;
+            backLbl.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
             backLbl.raycastTarget = false;
 
             var backEffect = backRoot.AddComponent<MenuButtonEffect>();
@@ -516,7 +516,7 @@ public static class UIFlowTestSceneSetup
             hTxt.text          = "[ ASSIGN ART HERE\nBackdrop Image component\non the Backdrop GameObject ]";
             hTxt.fontSize      = 22;
             hTxt.color         = MenuStyle.SubtitleGrey;
-            hTxt.alignment     = TextAlignmentOptions.Center | TextAlignmentOptions.Middle;
+            hTxt.alignment     = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
             hTxt.raycastTarget = false;
         }
 
@@ -561,7 +561,7 @@ public static class UIFlowTestSceneSetup
             sTxt.fontSize      = MenuStyle.SubtitleSize;
             sTxt.color         = MenuStyle.SubtitleGrey;
             sTxt.fontStyle     = FontStyles.Italic;
-            sTxt.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Middle;
+            sTxt.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
             sTxt.raycastTarget = false;
         }
 
