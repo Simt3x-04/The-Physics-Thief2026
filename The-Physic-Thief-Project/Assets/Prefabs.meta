@@ -1,6 +1,10 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:The-Physic-Thief-Project/Assets/Prefabs.meta
 guid: 2744d121ddfdbb14ba5fbe071085460b
 folderAsset: yes
+========
+guid: 3258ddd8785f0ff44bccba4eeaecf7ee
+>>>>>>>> main:The-Physic-Thief-Project/Assets/Scenes/UIFlowTest.unity.meta
 DefaultImporter:
   externalObjects: {}
   userData: 
