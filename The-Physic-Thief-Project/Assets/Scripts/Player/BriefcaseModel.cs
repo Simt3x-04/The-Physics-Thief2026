@@ -4,7 +4,7 @@ using PhysicsThief.Properties;
 
 namespace PhysicsThief.Player
 {
-    /// <summary>Esito di un tentativo di copia nella valigetta (la UI lo trasforma in un messaggio).</summary>
+    /// <summary>Result of an attempt to copy to the clipboard (the UI turns this into a message).</summary>
     public enum CopyResult
     {
         Success,
@@ -13,10 +13,10 @@ namespace PhysicsThief.Player
     }
 
     /// <summary>
-    /// Regole della valigetta (GDD 3.4-3.5) in C# puro: nessun MonoBehaviour, quindi testabile.
-    /// - Slot fissi: la copia va nel PRIMO slot libero; se non ce ne sono viene RIFIUTATA.
-    /// - Usare una proprieta' lascia lo slot vuoto (i buchi sono ammessi).
-    /// - Gli attributi si sbloccano durante il gioco (start: Mass, Velocity, Hardness).
+    /// Briefcase rules (GDD 3.4–3.5) implemented in pure C#: no `MonoBehaviour` dependencies, ensuring testability.
+    /// - Fixed slots: an item is placed into the FIRST available slot; if none are free, it is REJECTED.
+    /// - Removing an item leaves its slot empty (gaps are permitted).
+    /// - Attributes are unlocked during gameplay (starting with: Mass, Velocity, Hardness).
     /// </summary>
     public class BriefcaseModel
     {
@@ -32,7 +32,7 @@ namespace PhysicsThief.Player
         public float PropertyDuration { get; private set; } = BaseDuration;
         public int ActiveSlotIndex { get; private set; }
 
-        /// <summary>Scatta a ogni modifica (slot, selezione, sblocchi, durata).</summary>
+        /// <summary>Triggered by any change (slot, selection, unlocks, duration).</summary>
         public event Action Changed;
 
         public BriefcaseModel(int startingSlots = 2)
@@ -43,19 +43,19 @@ namespace PhysicsThief.Player
             unlockedAttributes.Add(AttributeType.Hardness);
         }
 
-        // ---------- sblocchi ----------
-
         public bool IsAttributeUnlocked(AttributeType type)
         {
             return unlockedAttributes.Contains(type);
         }
+
+        //Unlock attributes
 
         public void UnlockAttribute(AttributeType type)
         {
             if (unlockedAttributes.Add(type)) Changed?.Invoke();
         }
 
-        /// <summary>Imposta il NUMERO TOTALE di slot (es. 3 a fine tutorial, 5 uscendo dal laboratorio). Non diminuisce mai.</summary>
+        /// <summary>Set the TOTAL NUMBER of slots (e.g., 3 at the end of the tutorial, 5 upon leaving the laboratory). This never decreases.</summary>
         public void UnlockSlots(int totalSlots)
         {
             int target = Math.Min(totalSlots, MaxSlotCount);
@@ -71,7 +71,7 @@ namespace PhysicsThief.Player
             Changed?.Invoke();
         }
 
-        // ---------- lettura slot ----------
+        //Slot reading
 
         public bool IsSlotUnlocked(int index)
         {
@@ -88,9 +88,9 @@ namespace PhysicsThief.Player
             return IsSlotUnlocked(index) && selected[index];
         }
 
-        // ---------- copia / uso ----------
+        // copy/paste
 
-        /// <summary>Mette la proprieta' nel primo slot libero. Rifiuta se l'attributo e' bloccato o non ci sono slot liberi.</summary>
+        /// <summary>Places the property in the first available slot. Rejects if the attribute is locked or there are no available slots.</summary>
         public CopyResult TryAdd(PropertyValue property)
         {
             if (!IsAttributeUnlocked(property.type)) return CopyResult.AttributeLocked;
@@ -107,7 +107,7 @@ namespace PhysicsThief.Player
             return CopyResult.NoFreeSlot;
         }
 
-        /// <summary>Svuota lo slot e ritorna il suo contenuto (null se vuoto o bloccato).</summary>
+        /// <summary>Empties the slot and returns its contents (null if empty or locked).</summary>
         public PropertyValue? Consume(int index)
         {
             if (!IsSlotUnlocked(index) || !slots[index].HasValue) return null;
@@ -119,7 +119,7 @@ namespace PhysicsThief.Player
             return taken;
         }
 
-        /// <summary>Consuma gli slot selezionati; se non ce n'e' nessuno consuma quello attivo. Azzera la selezione.</summary>
+        /// <summary>Consumes the selected slots; if none are selected, it consumes the active one. Clears the selection.</summary>
         public List<PropertyValue> ConsumeSelected()
         {
             var result = new List<PropertyValue>();
@@ -147,13 +147,13 @@ namespace PhysicsThief.Player
             return result;
         }
 
-        /// <summary>Tasto X: scarta la proprieta' dello slot attivo. True se c'era qualcosa da scartare.</summary>
+        /// <summary>X key: discards the item in the active slot. Returns true if there was something to discard.</summary>
         public bool TrashActive()
         {
             return Consume(ActiveSlotIndex).HasValue;
         }
 
-        // ---------- selezione ----------
+        //Selection
 
         public void SetActiveSlot(int index)
         {
@@ -162,7 +162,7 @@ namespace PhysicsThief.Player
             Changed?.Invoke();
         }
 
-        /// <summary>Rotella del mouse: +1 / -1 tra gli slot sbloccati, con giro completo.</summary>
+        /// <summary>Mouse wheel: +1 / -1 between unlocked slots, with full rotation.</summary>
         public void CycleActiveSlot(int direction)
         {
             int count = UnlockedSlots;
@@ -186,6 +186,20 @@ namespace PhysicsThief.Player
                 selected[i] = false;
             }
             if (any) Changed?.Invoke();
+        }
+    }
+
+    public static class CopyResultExtensions
+    {
+        /// <summary>Message for the player (null if the copy was successful).</summary>
+        public static string ToMessage(this CopyResult result)
+        {
+            switch (result)
+            {
+                case CopyResult.AttributeLocked: return "Attribute still locked";
+                case CopyResult.NoFreeSlot: return "No free slot - press X to trash one";
+                default: return null;
+            }
         }
     }
 }

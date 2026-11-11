@@ -6,7 +6,7 @@ using PhysicsThief.Properties;
 
 namespace PhysicsThief.Audio
 {
-    /// <summary>Singleton persistente: SFX, voci TTS di Gino, musica con cross-fade e suoni spaziali.</summary>
+    /// <summary>Persistent singleton: SFX, Gino’s TTS voices, music with cross-fade, and spatial sounds.</summary>
     public class AudioManager : Singleton<AudioManager>
     {
         [SerializeField] private AudioLibrarySO audioLibrary;
@@ -26,7 +26,7 @@ namespace PhysicsThief.Audio
         public void PlayPropertySFX(AttributeType type, PropertyAudioEvent audioEvent) { }
         public void SetMusicTrack(MusicTrackId track) { }
 
-        /// <summary>TODO: sfuma da una sorgente musicale all'altra in crossFadeDuration secondi.</summary>
+        ///<summary>TODO: crossfade from one music source to another over a duration of crossFadeDuration seconds.</summary>
         private IEnumerator CrossFadeRoutine(MusicTrackEntry next) { yield break; }
     }
 }

@@ -5,7 +5,7 @@ namespace PhysicsThief.Properties
 {
     /// <summary>
     /// ScriptableObject con i dati "di base" di un tipo di oggetto (valori iniziali + materiale).
-    /// I designer creano un asset per tipo di oggetto invece di duplicare i valori nelle scene.
+    /// Un asset per tipo di oggetto (es. "Boulder", "Paper") invece di duplicare i valori nelle scene.
     /// </summary>
     [CreateAssetMenu(fileName = "PhysicalObjectDefinition", menuName = "Physics Thief/Physical Object Definition")]
     public class PhysicalObjectDefinitionSO : ScriptableObject
@@ -14,7 +14,14 @@ namespace PhysicsThief.Properties
         public MaterialTag material;
         public List<PropertyValue> baselineProperties = new List<PropertyValue>();
 
-        /// <summary>TODO: cerca in baselineProperties il valore del tipo richiesto (0 se assente).</summary>
-        public float GetBaseValue(AttributeType type) { return default; }
+        /// <summary>Valore base dell'attributo; se non e' elencato si usa il default (PropertyRules).</summary>
+        public float GetBaseValue(AttributeType type)
+        {
+            for (int i = 0; i < baselineProperties.Count; i++)
+            {
+                if (baselineProperties[i].type == type) return baselineProperties[i].value;
+            }
+            return PropertyRules.DefaultValue(type);
+        }
     }
 }

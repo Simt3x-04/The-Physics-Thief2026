@@ -5,23 +5,23 @@ using PhysicsThief.Items;
 namespace PhysicsThief.Player
 {
     /// <summary>
-    /// Gino: movimento in prima persona, salto, attacco corpo a corpo, mangiare mele, respawn.
-    /// Non gestisce scansione (PlayerScanner) ne' inventario (BriefcaseInventory).
+    /// Gino: first-person movement, jumping, melee attack, eating apples, respawning.
+    /// Does not handle scanning (PlayerScanner) or inventory (BriefcaseInventory).
     /// </summary>
     [RequireComponent(typeof(CharacterController), typeof(HealthComponent))]
     public class PlayerController : MonoBehaviour, IDamageable
     {
-        [Header("Movimento")]
+        [Header("Movement")]
         [SerializeField] private float moveSpeed = 5f;
         [SerializeField] private float jumpForce = 6f;
         [SerializeField] private float lookSensitivity = 0.1f;
 
-        [Header("Combattimento")]
+        [Header("Fight")]
         [SerializeField] private float meleeDamage = 10f;
         [SerializeField] private float meleeRange = 2f;
         [SerializeField] private LayerMask meleeLayers;
 
-        [Header("Riferimenti")]
+        [Header("Sources")]
         [SerializeField] private HealthComponent healthComp;
         [SerializeField] private PlayerScanner scanner;
         [SerializeField] private BriefcaseInventory briefcase;
@@ -32,30 +32,26 @@ namespace PhysicsThief.Player
         public BriefcaseInventory Briefcase => briefcase;
         public PlayerScanner Scanner => scanner;
 
-        /// <summary>TODO: iscriviti agli eventi di input e a healthComp.OnDied.</summary>
+        /// <summary>TODO: Sign up for input events and healthComp.OnDied.</summary>
         private void OnEnable() { }
 
-        /// <summary>TODO: disiscriviti dagli stessi eventi.</summary>
+        /// <summary>TODO: unsubscribe from the same events.</summary>
         private void OnDisable() { }
 
-        /// <summary>TODO: chiama HandleMovement e HandleLook solo se GameManager e' in Playing/Sandbox.</summary>
         private void Update() { }
-
-        private void HandleMovement() { }
-        private void HandleLook() { }
 
         public void Jump() { }
 
-        /// <summary>TODO: raycast/overlap davanti al player e applica meleeDamage agli IDamageable.</summary>
+        /// <summary>TODO: Perform a raycast/overlap in front of the player and apply `meleeDamage` to any `IDamageable` objects.</summary>
         public void MeleeAttack() { }
 
-        /// <summary>TODO: applica gli effetti della mela (cura, +slot, +durata) e avvia la voce TTS.</summary>
+        /// <summary>TODO: Apply the apple's effects (healing, +slot, +duration) and trigger the TTS voice line.</summary>
         public void EatApple(AppleItem apple) { }
 
-        /// <summary>TODO: teletrasporta al checkpoint e ripristina la salute.</summary>
+        /// <summary>TODO: Teleport to the checkpoint and restore health.</summary>
         public void Respawn(Vector3 checkpointPosition) { }
 
-        /// <summary>TODO: disabilita input, voce TTS di morte, avvisa il GameManager.</summary>
+        /// <summary>TODO: Disable input, play the death TTS voice line, and notify the `GameManager`.</summary>
         private void OnDeath() { }
 
         public void TakeDamage(float amount) { }
