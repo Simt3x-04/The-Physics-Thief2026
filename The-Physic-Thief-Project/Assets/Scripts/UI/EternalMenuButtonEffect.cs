@@ -123,7 +123,7 @@ namespace PhysicsThief.UI
 
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
-            tex.wrapMode   = WrapMode.Clamp;
+            tex.wrapMode   = TextureWrapMode.Clamp;
 
             var pixels = new Color32[W * H];
 
