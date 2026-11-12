@@ -496,8 +496,22 @@ public static class UIFlowTestSceneSetup
         var backdropImg = backdropGO.AddComponent<Image>();
         backdropImg.color = Color.white;
         backdropImg.raycastTarget = false;
-        // ForestBackdrop paints layered solid-colour Images until real art is added.
-        backdropGO.AddComponent<ForestBackdrop>();
+        backdropImg.type = Image.Type.Simple;
+        backdropImg.preserveAspect = false;
+        // Load background sprite if already imported; otherwise ForestBackdrop paints a placeholder.
+        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.jpg");
+        if (bgSprite != null)
+        {
+            backdropImg.sprite = bgSprite;
+            Debug.Log("[UIFlowTestSetup] Loaded MainMenuBackground.jpg sprite.");
+        }
+        else
+        {
+            // ForestBackdrop paints layered solid-colour Images until real art is imported.
+            backdropGO.AddComponent<ForestBackdrop>();
+            Debug.Log("[UIFlowTestSetup] MainMenuBackground.jpg not found — ForestBackdrop active. " +
+                      "Import the cleaned JPG to Assets/Textures/UI/ and regenerate.");
+        }
 
         // ── MAIN PANEL — full-canvas transparent container for title + buttons ──
         var mainPanelGO = new GameObject("MainPanel");

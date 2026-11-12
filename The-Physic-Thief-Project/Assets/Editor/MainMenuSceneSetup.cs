@@ -128,7 +128,20 @@ public static class MainMenuSceneSetup
         backdropImg.color         = Color.white;    // white so a sprite shows at full colour
         backdropImg.raycastTarget = false;
         // ForestBackdrop paints a procedural forest as child Images until real art is added.
-        backdropGO.AddComponent<ForestBackdrop>();
+                // Load background sprite if already imported; otherwise ForestBackdrop is the placeholder.
+        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.jpg");
+        if (bgSprite != null)
+        {
+            backdropImg.sprite  = bgSprite;
+            backdropImg.type    = Image.Type.Simple;
+            backdropImg.preserveAspect = false;
+        }
+        else
+        {
+            backdropGO.AddComponent<ForestBackdrop>();
+            Debug.LogWarning("[MainMenuSetup] MainMenuBackground.jpg not found at Assets/Textures/UI/. " +
+                             "Import a cleaned copy of the original JPG there, then run this tool again.");
+        }
 
         // ── MAIN PANEL (title + buttons) ─────────────────────────────────────
         var mainPanelGO = new GameObject("MainPanel");
