@@ -498,19 +498,23 @@ public static class UIFlowTestSceneSetup
         backdropImg.raycastTarget = false;
         backdropImg.type = Image.Type.Simple;
         backdropImg.preserveAspect = false;
-        // Load background sprite if already imported; otherwise ForestBackdrop paints a placeholder.
-        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.jpg");
+        // Load background sprite. File must be imported as Sprite (textureType=8).
+        // Looks for the PNG first, then the JPG, so either filename works.
+        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.png")
+                    ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.jpg");
         if (bgSprite != null)
         {
             backdropImg.sprite = bgSprite;
-            Debug.Log("[UIFlowTestSetup] Loaded MainMenuBackground.jpg sprite.");
+            Debug.Log("[UIFlowTestSetup] Loaded background sprite: " + bgSprite.name);
         }
         else
         {
             // ForestBackdrop paints layered solid-colour Images until real art is imported.
-            backdropGO.AddComponent<ForestBackdrop>();
-            Debug.Log("[UIFlowTestSetup] MainMenuBackground.jpg not found — ForestBackdrop active. " +
-                      "Import the cleaned JPG to Assets/Textures/UI/ and regenerate.");
+            var fb = backdropGO.AddComponent<ForestBackdrop>();
+            // Disable immediately — enabled only when sprite is absent at runtime too.
+            fb.enabled = false;
+            Debug.LogWarning("[UIFlowTestSetup] MainMenuBackground not found in Assets/Textures/UI/. " +
+                             "Import the PNG there (textureType=Sprite) and regenerate.");
         }
 
         // ── MAIN PANEL — full-canvas transparent container for title + buttons ──

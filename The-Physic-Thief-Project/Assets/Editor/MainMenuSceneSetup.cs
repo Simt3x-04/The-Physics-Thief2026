@@ -125,22 +125,24 @@ public static class MainMenuSceneSetup
         backdropRT.anchorMin = Vector2.zero; backdropRT.anchorMax = Vector2.one;
         backdropRT.offsetMin = backdropRT.offsetMax = Vector2.zero;
         var backdropImg = backdropGO.AddComponent<Image>();
-        backdropImg.color         = Color.white;    // white so a sprite shows at full colour
+        backdropImg.color         = Color.white;
         backdropImg.raycastTarget = false;
-        // ForestBackdrop paints a procedural forest as child Images until real art is added.
-                // Load background sprite if already imported; otherwise ForestBackdrop is the placeholder.
-        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.jpg");
+        // Load background sprite. File must be imported as Sprite (textureType=8).
+        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.png")
+                    ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.jpg");
         if (bgSprite != null)
         {
             backdropImg.sprite  = bgSprite;
             backdropImg.type    = Image.Type.Simple;
             backdropImg.preserveAspect = false;
+            Debug.Log("[MainMenuSetup] Loaded background sprite: " + bgSprite.name);
         }
         else
         {
-            backdropGO.AddComponent<ForestBackdrop>();
-            Debug.LogWarning("[MainMenuSetup] MainMenuBackground.jpg not found at Assets/Textures/UI/. " +
-                             "Import a cleaned copy of the original JPG there, then run this tool again.");
+            var fb = backdropGO.AddComponent<ForestBackdrop>();
+            fb.enabled = false;   // disabled; only used when sprite absent
+            Debug.LogWarning("[MainMenuSetup] MainMenuBackground not found in Assets/Textures/UI/. " +
+                             "Import PNG as Sprite type, then run this tool again.");
         }
 
         // ── MAIN PANEL (title + buttons) ─────────────────────────────────────

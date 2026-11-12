@@ -46,6 +46,16 @@ namespace PhysicsThief.UI
         private void Build()
         {
             if (_built) return;
+
+            // If a sibling Image already has a sprite assigned, there is real art in place.
+            // Skip all procedural layer construction so the sprite shows unobstructed.
+            var img = GetComponent<UnityEngine.UI.Image>();
+            if (img != null && img.sprite != null)
+            {
+                _built = true;   // mark done so we never run again
+                return;
+            }
+
             _built = true;
 
             var rt = GetComponent<RectTransform>();
