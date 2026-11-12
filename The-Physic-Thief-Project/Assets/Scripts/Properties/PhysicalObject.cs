@@ -24,7 +24,12 @@ namespace PhysicsThief.Properties
         private readonly Dictionary<AttributeType, TemporaryOverride> activeOverrides = new Dictionary<AttributeType, TemporaryOverride>();
         private readonly List<AttributeType> expiredBuffer = new List<AttributeType>();
 
+        private Vector3 launchDirection;
+
         public PhysicalObjectDefinitionSO Definition => definition;
+
+        /// <summary>Direction chosen when the current Velocity was pasted (zero if none). Read by RigidbodyReactor.</summary>
+        public Vector3 LaunchDirection => launchDirection;
 
         /// <summary>Nome mostrato dallo scanner.</summary>
         public string DisplayName
@@ -111,8 +116,10 @@ namespace PhysicsThief.Properties
         /// Incolla un valore per 'duration' secondi. Lo stesso attributo SOSTITUISCE il valore e riavvia il timer
         /// (i valori non si sommano mai). Il valore e' limitato dai tetti del GDD.
         /// </summary>
-        public void ApplyProperty(AttributeType type, float newValue, float duration)
+        public void ApplyProperty(AttributeType type, float newValue, float duration, Vector3 direction = default)
         {
+            if (type == AttributeType.Velocity) launchDirection = direction;
+
             float clamped = PropertyRules.Clamp(type, newValue);
             activeOverrides[type] = new TemporaryOverride(new PropertyValue(type, clamped), duration);
             OnPropertyValueChanged?.Invoke(type, clamped);

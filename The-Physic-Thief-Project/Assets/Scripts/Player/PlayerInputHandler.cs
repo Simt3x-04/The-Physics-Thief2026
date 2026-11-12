@@ -9,6 +9,7 @@ namespace PhysicsThief.Player
     /// Developers writing the player controller can access `MoveInput`, `LookInput`, and `JumpPressed` from here.
     /// For now, it reads directly from the devices; transitioning to an `InputActionAsset` would not affect how it is consumed.
     /// </summary>
+    [DefaultExecutionOrder(-100)]   // read the devices before any script that uses them
     public class PlayerInputHandler : MonoBehaviour
     {
         private static readonly Key[] NumberKeys = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5 };
@@ -16,6 +17,7 @@ namespace PhysicsThief.Player
         public Vector2 MoveInput { get; private set; }
         public Vector2 LookInput { get; private set; }
         public bool ScanHeld { get; private set; }
+        public bool PasteHeld { get; private set; }
         public bool ResetHeld { get; private set; }
 
         public event Action JumpPressed;
@@ -28,7 +30,7 @@ namespace PhysicsThief.Player
         /// <summary>Buttons 1-5: index 0-4.</summary>
         public event Action<int> NumberPressed;
 
-        /// <summary>Weel: -1 (up, previous slot) o +1 (down, next slot ).</summary>
+        /// <summary>Wheel: -1 (up, previous slot) o +1 (down, next slot).</summary>
         public event Action<int> ScrollStepped;
 
         private void Update()
@@ -59,6 +61,7 @@ namespace PhysicsThief.Player
             {
                 LookInput = mouse.delta.ReadValue();
                 ScanHeld = mouse.rightButton.isPressed;
+                PasteHeld = mouse.leftButton.isPressed;
 
                 if (mouse.leftButton.wasPressedThisFrame) PastePressed?.Invoke();
 

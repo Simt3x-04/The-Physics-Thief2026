@@ -1131,12 +1131,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.Player.PlayerScanner
   rayOrigin: {fileID: 0}
+  inventory: {fileID: 426502942}
+  input: {fileID: 1444891419}
   rayDistance: 150
   scanLayer:
     serializedVersion: 2
     m_Bits: 4294967295
-  inventory: {fileID: 426502942}
-  input: {fileID: 1444891419}
+  aimMaxDistance: 100
+  aimLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  floorNormalThreshold: 0.7
 --- !u!114 &961739755
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1144,11 +1149,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 961739749}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb39e7422d450da41b59c2e0d27e8d9f, type: 3}
+  m_Script: {fileID: 11500000, guid: 8bd01c64e7793ad47a06df64bb49cac6, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.DebugTools.DebugCameraLook
+  m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.UI.AimIndicator
+  scanner: {fileID: 961739754}
+  lineWidth: 0.05
 --- !u!1 &1005992218
 GameObject:
   m_ObjectHideFlags: 0
@@ -1222,6 +1229,8 @@ MonoBehaviour:
     value: 600
   - type: 4
     value: 8
+  - type: 1
+    value: 30
 --- !u!65 &1122816569
 BoxCollider:
   m_ObjectHideFlags: 0

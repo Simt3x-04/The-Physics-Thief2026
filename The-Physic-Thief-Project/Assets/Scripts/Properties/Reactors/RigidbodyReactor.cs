@@ -61,14 +61,21 @@ namespace PhysicsThief.Properties.Reactors
             }
         }
 
-        /// <summary>Moves the object in the direction the player is looking (GDD 3.2). Uses continuous collision (GDD 3.9).</summary>
+        /// <summary>
+        /// Moves the object along the direction chosen when the velocity was pasted (hold-and-release aiming).
+        /// Without a stored direction it falls back to the camera view direction. Uses continuous collision (GDD 3.9).
+        /// </summary>
         private void LaunchAsProjectile(float velocity)
         {
-            Camera cam = Camera.main;
-            Vector3 direction = cam != null ? cam.transform.forward : transform.forward;
+            Vector3 direction = physObj.LaunchDirection;
+            if (direction.sqrMagnitude < 0.0001f)
+            {
+                Camera cam = Camera.main;
+                direction = cam != null ? cam.transform.forward : transform.forward;
+            }
 
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            rb.linearVelocity = direction * velocity;
+            rb.linearVelocity = direction.normalized * velocity;
         }
 
         private void FixedUpdate()
