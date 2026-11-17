@@ -65,13 +65,18 @@ namespace PhysicsThief.Enemies
 
         public override void Attack()
         {
-            //TODO: if in range then attack
+            if (target == null || isStalled) return;
+            float distance = Vector3.Distance(transform.position, target.position);
+            if (distance <= hornetData.AttackRange)
+            {
+                FireVenomDart();
+            }
         }
-        public void HoverOutRanged(){
 
-        }
         public void FireVenomDart(){
-            //TODO instance hornetData.VenomDartPrefab da firePoint verso target
+            PoisonDart dart = Instantiate(hornetData.VenomDartPrefab, firePoint.position, firePoint.rotation);
+            Vector3 direction = ((target.position + Vector3.up * eyeHeight) - firePoint.position).normalized;
+            dart.Launch(direction, hornetData.AttackDamage, hornetData.PoisonDps, hornetData.PoisonDuration, gameObject);
         }
 
         

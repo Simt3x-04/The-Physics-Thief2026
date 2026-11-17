@@ -5,27 +5,33 @@ namespace PhysicsThief.Enemies
     [CreateAssetMenu(menuName = "Physics Thief/SpearBeetleData", fileName = "SpearBeetleData")]
     public class SpearBeetleData : EnemyData
     {
-        [Header("Patrol")]
-        [SerializeField] private float patrolSpeed = 2f;
-        [SerializeField] private float waitTimeAtPoint = 1f;
-        [SerializeField] private float pointReachDistance = 0.3f;
+
+        [Header("Ranged Attack")]
+        [SerializeField] private Projectile projectilePrefab;
+        [SerializeField] private float projectileDamage = 5f;
+        [SerializeField] private float shootRange = 10f;
 
         [Header("Armor")]
-        [Range(0f,1f)]
-        [SerializeField] private float shatteredDamageReduction = 0f; 
+        [Range(0f,1f)][SerializeField] private float shatteredDamageReduction = 0f;
+        [Range(0f,1f)][SerializeField] private float armorBreakHealthPercentage = 0.5f;
+        [Range(0f,1f)][SerializeField] private float armorDamageReduction = 0.5f;
 
-        public float PatrolSpeed => patrolSpeed;
-        public float WaitTimeAtPoint => waitTimeAtPoint;
-        public float PointReachDistance => pointReachDistance;
+        public Projectile ProjectilePrefab => projectilePrefab;
+        public float ProjectileDamage => projectileDamage;
+        public float ShootRange => shootRange;
         public float ShatteredDamageReduction => shatteredDamageReduction;
+        public float ArmorBreakHealthPercentage => armorBreakHealthPercentage;
+        public float ArmorDamageReduction => armorDamageReduction;
 
         protected override void OnValidate()
         {
             base.OnValidate();
-            patrolSpeed = Mathf.Max(0f, patrolSpeed);
-            waitTimeAtPoint = Mathf.Max(0f, waitTimeAtPoint);
-            pointReachDistance = Mathf.Max(0f, pointReachDistance);
-            shatteredDamageReduction = Mathf.Max(0f, shatteredDamageReduction);
+            projectileDamage = Mathf.Max(0f, projectileDamage);
+            shootRange = Mathf.Max(0f, shootRange);
+            shatteredDamageReduction = Mathf.Clamp01(shatteredDamageReduction);
+            armorBreakHealthPercentage = Mathf.Clamp01(armorBreakHealthPercentage);
+            armorDamageReduction = Mathf.Clamp01(armorDamageReduction);
+            
         }
     }
 }

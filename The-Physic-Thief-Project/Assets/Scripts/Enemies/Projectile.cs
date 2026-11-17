@@ -1,4 +1,5 @@
 using UnityEngine;
+using PhysicsThief.Core;
 
 namespace PhysicsThief.Enemies
 {
@@ -6,20 +7,52 @@ namespace PhysicsThief.Enemies
     [RequireComponent(typeof(Rigidbody))]
     public class Projectile : MonoBehaviour
     {
-        [SerializeField] private float damage = 10f;
-        [SerializeField] private float speed = 12f;
-        [SerializeField] private float lifetime = 6f;
+        [SerializeField] private float Speed = 12f;
+        [SerializeField] private float Lifetime = 6f;
 
-        public GameObject Owner { get; private set; }
-        public bool IsReflected { get; private set; }
+        private Rigidbody rb;
+        private float damage;
         public float Damage => damage;
+        public GameObject Owner {get; private set;}
+        public bool IsReflected {get; private set;}
+        private Vector3 newDirection;
 
-        public void Launch(Vector3 direction, GameObject owner) { }
+        private void Awake(){
+            rb = GetComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        }
+        public void Launch(Vector3 direction, GameObject owner, float damage){
+            Owner = owner;
+            this.damage = damage;
 
-        /// <summary>TODO: inverte la direzione e imposta IsReflected = true.</summary>
-        public void Reflect(Vector3 newDirection) { }
+            direction.Normalize();
+            rb.linearVelocity = direction * Speed;
+            transform.rotation = Quaternion.LookRotation(direction);
+            Destroy(gameObject, Lifetime);
+        }
 
-        /// <summary>TODO: applica danno agli IDamageable, gestisce la riflessione e distruggi il proiettile.</summary>
-        private void OnCollisionEnter(Collision collision) { }
+        public void Reflect(Vector3 direction){
+            IsReflected = true;
+            newDirection.Normalize();
+            rb.linearVelocity = newDirection * Speed;
+            transform.rotation = Quaternion.LookRotation(newDirection);
+        }
+
+        private void OnCollisionEnter(Collision collision){
+            GameObject other = collision.gameObject;
+
+            if(!IsReflected && Owner != null && other.transform.root == Owner.transform.root) return;
+            IDamageable target = collision.collider.GetComponentInParent<IDamageable>();
+            if(target != null)
+                target.TakeDamage(damage);
+            
+            Destroy(gameObject);
+        }
+
+
+        protected virtual void OnHitTarget(IDamageable target){
+            target.TakeDamage(damage);
+        }
     }
 }
