@@ -4,8 +4,8 @@ using UnityEngine;
 namespace PhysicsThief.Core
 {
     /// <summary>
-    /// Punti vita riutilizzabili (Gino e nemici). Gino parte da 100 HP; ogni mela ne ridona 25 (GDD 4.2).
-    /// Comunica solo tramite eventi: la UI e il LevelManager si iscrivono, nessuno viene chiamato direttamente.
+    /// Reusable health points (Gino and enemies). Gino starts with 100 HP; each apple restores 25 HP (GDD 4.2).
+    /// Communication occurs solely via events: the UI and LevelManager subscribe to these events; no direct calls are made.
     /// </summary>
     public class HealthComponent : MonoBehaviour
     {
@@ -16,7 +16,7 @@ namespace PhysicsThief.Core
         public float CurrentHP => currentHP;
         public bool IsDead { get; private set; }
 
-        /// <summary>Argomenti: HP correnti, HP massimi.</summary>
+        /// <summary>Arguments: current HP, max HP.</summary>
         public event Action<float, float> OnHealthChanged;
         public event Action OnDied;
 
@@ -54,7 +54,7 @@ namespace PhysicsThief.Core
             OnDied?.Invoke();
         }
 
-        /// <summary>Respawn: salute piena e di nuovo vivo.</summary>
+        /// <summary>Respawn: full health and alive.</summary>
         public void ResetHealth()
         {
             IsDead = false;

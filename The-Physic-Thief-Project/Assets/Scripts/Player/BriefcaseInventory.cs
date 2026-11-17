@@ -4,8 +4,8 @@ using UnityEngine;
 namespace PhysicsThief.Player
 {
     /// <summary>
-    /// Guscio MonoBehaviour della valigetta: tiene un BriefcaseModel (le regole) e ne inoltra l'evento Changed.
-    /// Chi scansiona/incolla usa Model (es. inventory.Model.TryAdd(...), inventory.Model.ConsumeSelected()).
+    /// MonoBehaviour shell for the briefcase: it holds a BriefcaseModel (the rules) and forwards its 'Changed' event.
+    /// Components that perform scanning or pasting interact with the Model (e.g., inventory.Model.TryAdd(...), inventory.Model.ConsumeSelected()).
     /// </summary>
     public class BriefcaseInventory : MonoBehaviour
     {
@@ -13,7 +13,7 @@ namespace PhysicsThief.Player
 
         private BriefcaseModel model;
 
-        /// <summary>Creato al primo accesso: sicuro anche se l'HUD si iscrive prima dell'Awake di questo oggetto.</summary>
+        /// <summary>Created upon first access: safe even if the HUD registers before this object's Awake [method].</summary>
         public BriefcaseModel Model => model ??= new BriefcaseModel(startingSlots);
 
         public event Action Changed

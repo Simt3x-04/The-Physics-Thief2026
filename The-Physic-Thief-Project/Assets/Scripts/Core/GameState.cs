@@ -1,6 +1,6 @@
 namespace PhysicsThief.Core
 {
-    /// <summary>Stati globali del gioco gestiti da GameManager (cambiano solo tramite SetState).</summary>
+    /// <summary>Global game states managed by GameManager (changed only via SetState).</summary>
     public enum GameState
     {
         MainMenu,

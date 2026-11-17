@@ -1,12 +1,12 @@
 namespace PhysicsThief.Core
 {
-    /// <summary>Qualunque entita' che puo' subire danno (player, nemici).</summary>
+    /// <summary>Any entity that can take damage (players, enemies).</summary>
     public interface IDamageable
     {
         void TakeDamage(float amount);
     }
 
-    /// <summary>Oggetti che LevelManager/PuzzleRoom possono riportare allo stato iniziale.</summary>
+    /// <summary>Objects that LevelManager/PuzzleRoom can reset to their initial state.</summary>
     public interface IResettable
     {
         void ResetState();

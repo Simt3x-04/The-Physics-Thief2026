@@ -4,7 +4,7 @@ using PhysicsThief.Player;
 
 namespace PhysicsThief.Level
 {
-    /// <summary>Gestisce UNA scena di livello: checkpoint, stanze-puzzle e cancelli. (Il flusso globale e' del GameManager.)</summary>
+    /// <summary>It manages a single level scene: checkpoints, puzzle rooms, and gates. (The overall flow is handled by the GameManager.)</summary>
     public class LevelManager : MonoBehaviour
     {
         [SerializeField] private PlayerController player;
