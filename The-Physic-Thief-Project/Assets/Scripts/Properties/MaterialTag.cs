@@ -13,6 +13,7 @@ namespace PhysicsThief.Properties
         Metal,
         Glass,
         Soil,
-        Organic
+        Organic,
+        Paper
     }
 }

@@ -28,6 +28,7 @@ namespace PhysicsThief.Player
         [Tooltip("Aiming at a surface at least this flat (0 = wall, 1 = perfect floor) launches the object horizontally instead of into the ground.")]
         [SerializeField, Range(0f, 1f)] private float floorNormalThreshold = 0.7f;
 
+        private readonly RaycastHit[] scanHits = new RaycastHit[16];
         private PhysicalObject aimTarget;
 
         public PhysicalObject CurrentTarget { get; private set; }
@@ -81,14 +82,29 @@ namespace PhysicsThief.Player
 
         // ---------- scan / copy ----------
 
-        /// <summary>Raycast from the aim point: the PhysicalObject hit (null if none, or if a wall is in the way).</summary>
+        /// <summary>
+        /// The nearest thing under the crosshair: its PhysicalObject, or null if there is none or a wall is in the way.
+        /// Trigger colliders count, so liquids (water is a trigger so that things can pass through it) can be scanned,
+        /// while zones and checkpoints, which have no PhysicalObject, never block the scan.
+        /// </summary>
         public PhysicalObject ScanTarget()
         {
-            if (Physics.Raycast(rayOrigin.position, rayOrigin.forward, out RaycastHit hit, rayDistance, scanLayer, QueryTriggerInteraction.Ignore))
+            int count = Physics.RaycastNonAlloc(rayOrigin.position, rayOrigin.forward, scanHits, rayDistance, scanLayer, QueryTriggerInteraction.Collide);
+
+            PhysicalObject nearest = null;
+            float nearestDistance = float.MaxValue;
+            for (int i = 0; i < count; i++)
             {
-                return hit.collider.GetComponentInParent<PhysicalObject>();
+                RaycastHit hit = scanHits[i];
+                if (hit.distance >= nearestDistance) continue;
+
+                PhysicalObject candidate = hit.collider.GetComponentInParent<PhysicalObject>();
+                if (hit.collider.isTrigger && candidate == null) continue;   // zones never block the scan
+
+                nearestDistance = hit.distance;
+                nearest = candidate;   // null means a solid surface without a PhysicalObject: it blocks the scan
             }
-            return null;
+            return nearest;
         }
 
         /// <summary>Copies the attribute of the scanned object into the first free slot. True if it worked.</summary>

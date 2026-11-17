@@ -24,6 +24,11 @@ namespace PhysicsThief.Properties.Reactors
         [SerializeField] private float hoverReturnSpeed = 2f;
         [SerializeField] private float hoverMaxSpeed = 3f;
 
+        // Nominal velocity (GDD 7: train 30 m/s, flowing water 1.5-5 m/s): an object whose BASE velocity is above 0
+        // keeps moving at that speed along its forward direction. Objects with base velocity 0 are moved only by physics.
+        private float baseVelocity;
+        private Vector3 cruiseDirection;
+
         private Vector3 hoverPosition;
         private bool groundedByMass;
 
@@ -33,6 +38,8 @@ namespace PhysicsThief.Properties.Reactors
             if (rb == null) rb = GetComponent<Rigidbody>();
 
             hoverPosition = rb.position;
+            baseVelocity = physObj.GetBaseValue(AttributeType.Velocity);
+            cruiseDirection = transform.forward;
             rb.maxLinearVelocity = maxVelocity;
             UpdateMass(physObj.GetValue(AttributeType.Mass));   // start from the object's base mass
         }
@@ -80,12 +87,20 @@ namespace PhysicsThief.Properties.Reactors
 
         private void FixedUpdate()
         {
-            if (!isLightFlyer || groundedByMass) return;
-            if (physObj.HasOverride(AttributeType.Velocity)) return;   // do not fight a launch
+            if (physObj.HasOverride(AttributeType.Velocity)) return;   // a pasted velocity (a launch) is never fought
 
-            // A light flyer floats and drifts back to the position where it started hovering.
-            Vector3 toHover = hoverPosition - rb.position;
-            rb.linearVelocity = Vector3.ClampMagnitude(toHover * hoverReturnSpeed, hoverMaxSpeed);
+            if (isLightFlyer && !groundedByMass)
+            {
+                // A light flyer floats and drifts back to the position where it started hovering.
+                Vector3 toHover = hoverPosition - rb.position;
+                rb.linearVelocity = Vector3.ClampMagnitude(toHover * hoverReturnSpeed, hoverMaxSpeed);
+            }
+            else if (baseVelocity > 0f)
+            {
+                // Cruise at the nominal speed; the vertical speed stays physical (gravity).
+                Vector3 cruise = cruiseDirection * baseVelocity;
+                rb.linearVelocity = new Vector3(cruise.x, rb.linearVelocity.y, cruise.z);
+            }
         }
     }
 }
