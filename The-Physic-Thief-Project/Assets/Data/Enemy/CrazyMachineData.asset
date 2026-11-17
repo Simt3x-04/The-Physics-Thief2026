@@ -16,13 +16,15 @@ MonoBehaviour:
   icon: {fileID: 0}
   prefab: {fileID: 0}
   maxHP: 1
-  moveSpeed: 0
+  moveSpeed: 3
   damageReduction: 0
   attackDamage: 0
   attackRange: 0
   attackCooldown: 0
   detectionRange: 0
   loseTargetRange: 0
+  viewAngle: 0
+  loseSightTime: 0
   mass: 0.01
   roamRadius: 0.5
   roamPauseTime: 0
