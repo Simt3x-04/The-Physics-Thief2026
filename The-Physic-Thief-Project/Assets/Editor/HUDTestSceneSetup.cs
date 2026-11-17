@@ -52,6 +52,24 @@ public static class HUDTestSceneSetup
                 "Wire", "Cancel"))
             return;
 
+        WireHUDtestInternal();
+    }
+
+    /// <summary>
+    /// Called from batch-mode scripts (no dialog, no interactive confirmation needed).
+    /// </summary>
+    public static void WireHUDtestBatch()
+    {
+        if (!System.IO.File.Exists(ScenePath))
+        {
+            Debug.LogError($"[HUDTestSetup] {ScenePath} not found.");
+            return;
+        }
+        WireHUDtestInternal();
+    }
+
+    private static void WireHUDtestInternal()
+    {
         var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
         // ── 1. Upgrade EventSystem to InputSystemUIInputModule ────────────────

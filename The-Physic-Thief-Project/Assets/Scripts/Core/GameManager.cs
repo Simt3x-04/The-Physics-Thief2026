@@ -145,3 +145,5 @@ namespace PhysicsThief.Core
             Cursor.lockState = inGameplay ? CursorLockMode.Locked : CursorLockMode.None;
             Cursor.visible   = !inGameplay;
         }
+    }
+}
