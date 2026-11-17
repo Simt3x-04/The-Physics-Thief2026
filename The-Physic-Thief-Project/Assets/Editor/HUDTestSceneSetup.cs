@@ -30,6 +30,7 @@ using UnityEngine.UI;
 using TMPro;
 using PhysicsThief.Audio;
 using PhysicsThief.Core;
+using PhysicsThief.Player;
 using PhysicsThief.UI;
 
 public static class HUDTestSceneSetup
@@ -164,36 +165,34 @@ public static class HUDTestSceneSetup
             var uiGO = new GameObject("UIIntegration");
             var hti  = uiGO.AddComponent<HUDTestIntegration>();
 
-            // Wire known references
             var so = new SerializedObject(hti);
 
-            // HealthComponent is on HUDTest GO
-            var hudTestGO = GameObject.Find("HUDTest");
-            if (hudTestGO != null)
+            // HealthComponent is on the Player GO (not HUDTest) in the new HUDtest
+            var playerGO = GameObject.Find("Player");
+            if (playerGO != null)
             {
-                var hc = hudTestGO.GetComponent<HealthComponent>();
-                if (hc != null)
-                    so.FindProperty("playerHealth").objectReferenceValue = hc;
-                so.FindProperty("playerTransform").objectReferenceValue = hudTestGO.transform;
+                var hc = playerGO.GetComponent<HealthComponent>();
+                if (hc != null) so.FindProperty("playerHealth").objectReferenceValue = hc;
+
+                var pm = playerGO.GetComponent<PlayerMotor>();
+                if (pm != null) so.FindProperty("playerMotor").objectReferenceValue = pm;
+            }
+            else
+            {
+                Debug.LogWarning("[HUDTestSetup] No 'Player' GO found. " +
+                                 "Assign playerHealth and playerMotor manually.");
             }
 
             // DeathScreenController
             var dsc = Object.FindFirstObjectByType<DeathScreenController>(FindObjectsInactive.Include);
-            if (dsc != null)
-                so.FindProperty("deathScreen").objectReferenceValue = dsc;
+            if (dsc != null) so.FindProperty("deathScreen").objectReferenceValue = dsc;
 
-            // HUDManager
-            var hm = Object.FindFirstObjectByType<HUDManager>();
-            if (hm != null)
-                so.FindProperty("hudManager").objectReferenceValue = hm;
-
-            // SpawnPoint
-            var sp = GameObject.Find("SpawnPoint");
-            if (sp != null)
-                so.FindProperty("initialSpawnPoint").objectReferenceValue = sp.transform;
+            // HUDManager (optional — may not exist in new HUDtest)
+            var hm = Object.FindFirstObjectByType<HUDManager>(FindObjectsInactive.Include);
+            if (hm != null) so.FindProperty("hudManager").objectReferenceValue = hm;
 
             so.ApplyModifiedPropertiesWithoutUndo();
-            Debug.Log("[HUDTestSetup] UIIntegration wired (HealthComponent, DeathScreen, HUDManager, SpawnPoint).");
+            Debug.Log("[HUDTestSetup] UIIntegration wired to Player HealthComponent + PlayerMotor.");
         }
         else
         {
@@ -219,17 +218,15 @@ public static class HUDTestSceneSetup
             "PLAY MODE STEPS:\n" +
             "  1. Open HUDtest.unity\n" +
             "  2. Set Game view to 16:9\n" +
-            "  3. Press Play\n" +
-            "  4. Walk into the hot-metal object (or press H to deal 10 HP damage via HudDebugInput)\n" +
+            "  3. Press Play (WASD + mouse to move)\n" +
+            "  4. Scan a hot object (CampFire 300C, Stove 250C), copy Temperature (key 3), paste onto Metal\n" +
+            "     Metal turns orange (Hot state) — walk into it — damage per second\n" +
+            "     Quick test: press H (HudDebugInput) for -10 HP | J for +25 HP\n" +
             "  5. At 0 HP → Death screen fades in\n" +
-            "  6. Click 'Snooze and retry' → player teleports to SpawnPoint, HP restored\n" +
-            "  7. Press Esc → Pause screen\n" +
-            "  8. Options → Back → Resume\n\n" +
-            "HOT METAL DAMAGE:\n" +
-            "  • Add a Collider (Is Trigger = true) to any object\n" +
-            "  • Add HotMetalDamageTrigger component (damagePerSecond = 20)\n" +
-            "  • Tag the HUDTest GO as 'Player'\n\n" +
-            "OR use HudDebugInput keyboard shortcut:  H = -10 HP  |  J = +25 HP");
+            "  6. Click 'Snooze and retry' → HP restored, movement re-enabled\n" +
+            "  7. Press Esc → Pause card\n" +
+            "  8. Options → adjust sliders → Back → Resume\n\n" +
+            "FROM MAIN MENU: Open MainMenu.unity → Press Play → Click Start → HUDtest loads");
     }
 
     // ══════════════════════════════════════════════════════════════════════════

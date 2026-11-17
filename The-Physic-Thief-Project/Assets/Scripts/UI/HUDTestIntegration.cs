@@ -1,66 +1,78 @@
 using UnityEngine;
 using PhysicsThief.Core;
+using PhysicsThief.Player;
 using PhysicsThief.UI;
 
 namespace PhysicsThief.UI
 {
     /// <summary>
-    /// Scene-local wiring component for HUDtest.unity.
+    /// Wires Start, Pause, Options, and Death into HUDtest.unity.
     ///
-    /// Place this on a root GameObject called "UIIntegration" in the scene.
-    /// It connects:
-    ///   • The player's HealthComponent.OnDied → GameManager.ReportPlayerDeath()
-    ///   • GameManager.OnRetryRequested        → respawn at checkpoint / restore HP
-    ///   • DeathScreenController.Bind()        → the same HealthComponent
-    ///   • HUDManager.Bind()                   → HealthComponent + BriefcaseInventory
-    ///   • PauseMenuController (via GameManager state events, nothing extra needed)
+    /// Place on a root GameObject called "UIIntegration" in HUDtest.
+    /// Run via  Tools → UI Flow → Wire HUDtest Scene  which creates this GO
+    /// and fills every Inspector field automatically.
     ///
-    /// The scene must have:
-    ///   • A GameManager root GameObject (persistent singleton)
-    ///   • A DeathScreenCanvas with DeathScreenController
-    ///   • A PauseMenuCanvas with PauseMenuController
-    ///   • The existing HUDTest GO with HealthComponent + BriefcaseInventory
-    ///   • The existing HUD GO with HUDManager
+    /// WHAT IT DOES
+    /// ─────────────
+    ///   • Player.HealthComponent.OnDied → GameManager.ReportPlayerDeath()
+    ///     (GameManager sets GameOver state, freezes time, shows cursor,
+    ///      fires OnGameStateChanged which DeathScreenController listens to)
     ///
-    /// CHECKPOINT LOGIC
-    /// ────────────────
-    /// Because LevelManager and Checkpoint are still stubs, this component tracks
-    /// the checkpoint position internally.  Call SetCheckpoint(transform) from a
-    /// Checkpoint trigger (or use the serialised initialSpawnPoint as the default).
-    /// On retry: health is fully restored, player is teleported to the last checkpoint.
+    ///   • GameManager.OnRetryRequested → restore HP + re-enable player input
+    ///     (Retry button on death screen calls GameManager.RetryFromCheckpoint()
+    ///      which sets Playing and fires OnRetryRequested)
     ///
-    /// INTEGRATION CONTRACT FOR DAVIDE (PlayerController owner):
-    ///   When PlayerController.Respawn(Vector3) is implemented, it will be called
-    ///   automatically — no code changes needed here.  The player GO is located by
-    ///   tag "Player" or via the serialised playerTransform field.
+    ///   • GameManager.OnGameStateChanged → PlayerMotor.SetInputEnabled()
+    ///     (blocks movement while paused / dead / in a menu)
+    ///
+    ///   • DeathScreenController.Bind(playerHealth) so the screen listens
+    ///     to the real player health component.
+    ///
+    ///   • HUDManager.Bind(health, inventory, scanner) if HUDManager exists.
+    ///
+    /// HOT-METAL DAMAGE (Davide's TemperatureReactor)
+    /// ───────────────────────────────────────────────
+    ///   The Metal GO in HUDtest already has TemperatureReactor.
+    ///   To trigger contact damage, paste a temperature >= 70 °C onto Metal
+    ///   using the in-game scanner (right-click scan → 1–5 to copy → left-click paste).
+    ///   Temperature >= 70 °C → ThermalState.Hot → FixedUpdate overlap check → TakeDamage().
+    ///
+    ///   For fast testing without the scanner:
+    ///     • Select Metal in Play Mode → Inspector → PhysicalObject → paste any value,
+    ///       or use HudDebugInput keyboard shortcuts (see HudDebugInput.cs).
+    ///
+    /// INTEGRATION CONTRACT FOR DAVIDE
+    /// ─────────────────────────────────
+    ///   PlayerMotor.SetInputEnabled(bool) is already implemented — it disables
+    ///   movement and look when false.  This component calls it on every state change.
+    ///   No changes needed to PlayerMotor.
+    ///
+    ///   Checkpoint / respawn teleport: HUDTestIntegration currently only resets HP.
+    ///   When LevelManager.RespawnPlayer() is implemented, subscribe it to
+    ///   GameManager.Instance.OnRetryRequested alongside this component.
     /// </summary>
     [DisallowMultipleComponent]
     public class HUDTestIntegration : MonoBehaviour
     {
-        [Header("Player references (auto-found if null)")]
-        [Tooltip("The HealthComponent on the player / HUDTest GO.")]
+        [Header("Player — assign the Player GO's components")]
+        [Tooltip("HealthComponent on the Player GameObject (not HUDTest).")]
         [SerializeField] private HealthComponent playerHealth;
 
-        [Tooltip("The player's Transform for respawn teleport.")]
-        [SerializeField] private Transform playerTransform;
+        [Tooltip("PlayerMotor on the Player GameObject (for input enable/disable).")]
+        [SerializeField] private PlayerMotor playerMotor;
 
-        [Header("UI Screens (auto-found by type if null)")]
+        [Header("UI Screens (auto-found if null)")]
         [SerializeField] private DeathScreenController deathScreen;
         [SerializeField] private HUDManager hudManager;
 
-        [Header("Checkpoint")]
-        [Tooltip("Transform the player spawns at before any checkpoint is activated.")]
-        [SerializeField] private Transform initialSpawnPoint;
+        // ── State ─────────────────────────────────────────────────────────────
+        private bool _eventsWired;
 
-        // ── Runtime state ────────────────────────────────────────────────────
-        private Transform _currentCheckpoint;   // null = use initialSpawnPoint
-
-        // ── Unity lifecycle ──────────────────────────────────────────────────
+        // ── Unity lifecycle ───────────────────────────────────────────────────
         private void Start()
         {
             ResolveReferences();
             WireEvents();
-            ApplyInitialState();
         }
 
         private void OnDestroy()
@@ -68,142 +80,119 @@ namespace PhysicsThief.UI
             UnwireEvents();
         }
 
-        // ── Reference resolution ─────────────────────────────────────────────
+        // ── Reference resolution ──────────────────────────────────────────────
         private void ResolveReferences()
         {
-            // HealthComponent
+            // HealthComponent — prefer the Player GO, not HUDTest
             if (playerHealth == null)
             {
-                // Try the HUDTest GO first, then search the scene.
-                var hudTestGO = GameObject.Find("HUDTest");
-                if (hudTestGO != null)
-                    playerHealth = hudTestGO.GetComponent<HealthComponent>();
-                if (playerHealth == null)
-                    playerHealth = FindFirstObjectByType<HealthComponent>();
+                var playerGO = GameObject.Find("Player");
+                if (playerGO != null) playerHealth = playerGO.GetComponent<HealthComponent>();
             }
+            if (playerHealth == null)
+                playerHealth = FindFirstObjectByType<HealthComponent>();
 
-            // Player Transform (for respawn)
-            if (playerTransform == null && playerHealth != null)
-                playerTransform = playerHealth.transform;
+            // PlayerMotor
+            if (playerMotor == null && playerHealth != null)
+                playerMotor = playerHealth.GetComponent<PlayerMotor>();
+            if (playerMotor == null)
+                playerMotor = FindFirstObjectByType<PlayerMotor>(FindObjectsInactive.Include);
 
             // DeathScreenController
             if (deathScreen == null)
                 deathScreen = FindFirstObjectByType<DeathScreenController>(FindObjectsInactive.Include);
 
-            // HUDManager
+            // HUDManager (optional — scene may not have one yet)
             if (hudManager == null)
                 hudManager = FindFirstObjectByType<HUDManager>(FindObjectsInactive.Include);
 
-            // Initial spawn point default: player's current position
-            if (initialSpawnPoint == null && playerTransform != null)
-            {
-                var spawnGO = new GameObject("InitialSpawnPoint");
-                spawnGO.transform.position = playerTransform.position;
-                spawnGO.transform.SetParent(transform, true);
-                initialSpawnPoint = spawnGO.transform;
-            }
-
-            // Warn about missing critical references
+            // Validation
             if (playerHealth == null)
                 Debug.LogError("[HUDTestIntegration] playerHealth not found. " +
-                               "Assign it in the Inspector or add a HealthComponent to the HUDTest GO.");
-            if (deathScreen == null)
-                Debug.LogError("[HUDTestIntegration] DeathScreenController not found. " +
-                               "Add a DeathScreenCanvas to HUDtest.unity.");
+                               "Assign the Player GO's HealthComponent in the Inspector.");
             if (GameManager.Instance == null)
                 Debug.LogError("[HUDTestIntegration] GameManager.Instance is null. " +
-                               "Add a GameManager root GO to HUDtest.unity.");
+                               "Add a GameManager root GO (Tools → UI Flow → Wire HUDtest Scene).");
+            if (deathScreen == null)
+                Debug.LogError("[HUDTestIntegration] DeathScreenController not found. " +
+                               "Run Tools → UI Flow → Wire HUDtest Scene to add it.");
         }
 
         private void WireEvents()
         {
-            // Player death → GameManager state
+            if (_eventsWired) return;
+
+            // Player death → game state
             if (playerHealth != null)
             {
-                playerHealth.OnDied -= OnPlayerDied;   // guard against double-subscribe
+                playerHealth.OnDied -= OnPlayerDied;
                 playerHealth.OnDied += OnPlayerDied;
             }
 
-            // GameManager retry → respawn
+            // GameManager retry → restore HP + re-enable input
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.OnRetryRequested -= HandleRetry;
-                GameManager.Instance.OnRetryRequested += HandleRetry;
+                GameManager.Instance.OnRetryRequested    -= HandleRetry;
+                GameManager.Instance.OnRetryRequested    += HandleRetry;
+                GameManager.Instance.OnGameStateChanged  -= HandleStateChanged;
+                GameManager.Instance.OnGameStateChanged  += HandleStateChanged;
             }
 
-            // Bind Death screen to this player's health
+            // Bind Death screen to player health
             if (deathScreen != null && playerHealth != null)
                 deathScreen.Bind(playerHealth);
 
-            // Bind HUD
+            // Bind HUD (optional)
             if (hudManager != null && playerHealth != null)
             {
-                var inv = playerHealth.GetComponent<
-                    PhysicsThief.Player.BriefcaseInventory>();
-                hudManager.Bind(playerHealth, inv, null);
+                var inv     = playerHealth.GetComponent<
+                                  PhysicsThief.Player.BriefcaseInventory>();
+                var scanner = playerHealth.GetComponent<
+                                  PhysicsThief.Player.PlayerScanner>();
+                hudManager.Bind(playerHealth, inv, scanner);
             }
+
+            // Start in Playing state so player can move immediately
+            if (GameManager.Instance != null &&
+                GameManager.Instance.State != GameState.Playing)
+                GameManager.Instance.SetState(GameState.Playing);
+
+            _eventsWired = true;
+            Debug.Log("[HUDTestIntegration] Wired: health → death screen, retry, state → input.");
         }
 
         private void UnwireEvents()
         {
             if (playerHealth != null) playerHealth.OnDied -= OnPlayerDied;
-            if (GameManager.Instance != null) GameManager.Instance.OnRetryRequested -= HandleRetry;
-        }
-
-        private void ApplyInitialState()
-        {
-            // HUDtest starts in Playing state so the HUD is immediately visible.
-            if (GameManager.Instance != null &&
-                GameManager.Instance.State != GameState.Playing)
+            if (GameManager.Instance != null)
             {
-                GameManager.Instance.SetState(GameState.Playing);
+                GameManager.Instance.OnRetryRequested   -= HandleRetry;
+                GameManager.Instance.OnGameStateChanged -= HandleStateChanged;
             }
         }
 
-        // ── Event handlers ───────────────────────────────────────────────────
+        // ── Event handlers ────────────────────────────────────────────────────
         private void OnPlayerDied()
         {
-            // Route through GameManager — this sets GameOver state (freezes time, 
-            // shows cursor) and fires OnGameStateChanged so DeathScreenController
-            // receives the state change and fades in.
+            // GameManager.SetState(GameOver) freezes time, shows cursor, fires OnGameStateChanged.
+            // DeathScreenController listens to OnGameStateChanged and fades in automatically.
             GameManager.Instance?.ReportPlayerDeath();
-
-            Debug.Log("[HUDTestIntegration] Player died → GameManager.ReportPlayerDeath()");
+            Debug.Log("[HUDTestIntegration] Player reached 0 HP → ReportPlayerDeath()");
         }
 
         private void HandleRetry()
         {
-            // Restore health
+            // Retry button: GameManager already set Playing + fired OnRetryRequested.
+            // We only need to restore HP; PlayerMotor input is re-enabled by HandleStateChanged.
             playerHealth?.ResetHealth();
-
-            // Teleport to last checkpoint (or initial spawn)
-            var target = _currentCheckpoint != null ? _currentCheckpoint : initialSpawnPoint;
-            if (target != null && playerTransform != null)
-            {
-                playerTransform.position = target.position;
-                playerTransform.rotation = target.rotation;
-                Debug.Log($"[HUDTestIntegration] Respawned at '{target.name}' ({target.position})");
-            }
-            else
-            {
-                Debug.LogWarning("[HUDTestIntegration] No spawn point found — player position unchanged.");
-            }
-
-            // Update HUD immediately
-            if (hudManager != null && playerHealth != null)
-                hudManager.UpdateHealthBar(playerHealth.CurrentHP, playerHealth.MaxHP);
-
-            Debug.Log("[HUDTestIntegration] Retry complete — health restored, player teleported.");
+            Debug.Log("[HUDTestIntegration] Retry: health restored to full.");
         }
 
-        // ── Public API ───────────────────────────────────────────────────────
-        /// <summary>
-        /// Call from a Checkpoint trigger (or any game logic) to register a new respawn point.
-        /// </summary>
-        public void SetCheckpoint(Transform checkpoint)
+        private void HandleStateChanged(GameState state)
         {
-            _currentCheckpoint = checkpoint;
-            Debug.Log($"[HUDTestIntegration] Checkpoint set: {checkpoint.name}");
+            // Keep player movement locked while any screen has focus.
+            bool canMove = state == GameState.Playing;
+            playerMotor?.SetInputEnabled(canMove);
         }
     }
 }

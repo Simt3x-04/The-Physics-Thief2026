@@ -5445,7 +5445,7 @@ MonoBehaviour:
   persistAcrossScenes: 1
   mainMenuScene: MainMenu
   levelScenes:
-  - SampleScene
+  - HUDtest
   currentLevel: 0
   gameState: 0
 --- !u!4 &2094343330
