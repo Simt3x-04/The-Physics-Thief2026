@@ -30,6 +30,14 @@ namespace PhysicsThief.UI
     ///
     ///   • HUDManager.Bind(health, inventory, scanner) if HUDManager exists.
     ///
+    /// CHECKPOINT RESPAWN (LevelManager)
+    /// ──────────────────────────────────
+    ///   LevelManager subscribes to OnRetryRequested and handles:
+    ///     • Teleporting the player to the active checkpoint (or default SpawnPoint)
+    ///     • Resetting health (redundant with this class, but idempotent)
+    ///   This class resets health for backward compatibility with scenes that
+    ///   don't have a LevelManager.
+    ///
     /// HOT-METAL DAMAGE (Davide's TemperatureReactor)
     /// ───────────────────────────────────────────────
     ///   The Metal GO in HUDtest already has TemperatureReactor.
@@ -46,10 +54,6 @@ namespace PhysicsThief.UI
     ///   PlayerMotor.SetInputEnabled(bool) is already implemented — it disables
     ///   movement and look when false.  This component calls it on every state change.
     ///   No changes needed to PlayerMotor.
-    ///
-    ///   Checkpoint / respawn teleport: HUDTestIntegration currently only resets HP.
-    ///   When LevelManager.RespawnPlayer() is implemented, subscribe it to
-    ///   GameManager.Instance.OnRetryRequested alongside this component.
     /// </summary>
     [DisallowMultipleComponent]
     public class HUDTestIntegration : MonoBehaviour
@@ -183,7 +187,8 @@ namespace PhysicsThief.UI
         private void HandleRetry()
         {
             // Retry button: GameManager already set Playing + fired OnRetryRequested.
-            // We only need to restore HP; PlayerMotor input is re-enabled by HandleStateChanged.
+            // LevelManager.RespawnPlayer() handles teleport + health reset.
+            // We reset health here too for scenes that don't have a LevelManager (backward compat).
             playerHealth?.ResetHealth();
             Debug.Log("[HUDTestIntegration] Retry: health restored to full.");
         }

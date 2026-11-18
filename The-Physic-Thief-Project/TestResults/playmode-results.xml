@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="4" result="Passed" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0,0338373">
+  <test-suite type="TestSuite" id="1012" name="The-Physic-Thief-Project" fullname="The-Physic-Thief-Project" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0.033837" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1006" name="Assembly-CSharp.dll" fullname="C:/Users/aigerim.turazhanova/videoGame/The-Physics-Thief2026/The-Physic-Thief-Project/Library/ScriptAssemblies/Assembly-CSharp.dll" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0.027247" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="112724" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1007" name="PhysicsThief" fullname="PhysicsThief" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0.026738" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1008" name="Tests" fullname="PhysicsThief.Tests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0.026426" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1001" name="PropertyRulesTests" fullname="PhysicsThief.Tests.PropertyRulesTests" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0.025407" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1005" name="CopyResultMessagesAreOnlyForFailures" fullname="PhysicsThief.Tests.PropertyRulesTests.CopyResultMessagesAreOnlyForFailures" methodname="CopyResultMessagesAreOnlyForFailures" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" seed="1283168664" result="Passed" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0.008198" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1004" name="DefaultsMatchAmbientConditions" fullname="PhysicsThief.Tests.PropertyRulesTests.DefaultsMatchAmbientConditions" methodname="DefaultsMatchAmbientConditions" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" seed="1388966149" result="Passed" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0.002962" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1002" name="PastedValuesAreCappedLikeTheGdd" fullname="PhysicsThief.Tests.PropertyRulesTests.PastedValuesAreCappedLikeTheGdd" methodname="PastedValuesAreCappedLikeTheGdd" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" seed="851737658" result="Passed" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0.000292" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1003" name="ValuesInsideTheRangeAreUnchanged" fullname="PhysicsThief.Tests.PropertyRulesTests.ValuesInsideTheRangeAreUnchanged" methodname="ValuesInsideTheRangeAreUnchanged" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" seed="1375645384" result="Passed" start-time="2026-11-18 10:41:49Z" end-time="2026-11-18 10:41:49Z" duration="0.000121" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[Saving results to: C:/Users/aigerim.turazhanova/AppData/LocalLow/DefaultCompany/The-Physic-Thief-Project\TestResults.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
