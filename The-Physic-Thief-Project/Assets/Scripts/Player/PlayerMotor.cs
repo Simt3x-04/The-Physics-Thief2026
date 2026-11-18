@@ -1,8 +1,30 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// PlayerMotor.cs
+//
+// Full implementation requires the Kinematic Character Controller (KCC) package.
+// When KCC is installed, define KINEMATIC_CHARACTER_CONTROLLER in
+//   Edit → Project Settings → Player → Other Settings → Scripting Define Symbols.
+//
+// Without the define, a lightweight stub is compiled so that:
+//   • HUDTestIntegration.SetInputEnabled() compiles and runs.
+//   • The scene references to PlayerMotor are preserved.
+//   • Movement is handled by whatever other component is on the Player GO.
+//
+// DAVIDE: once the KCC package is in Packages/manifest.json, add
+//         KINEMATIC_CHARACTER_CONTROLLER to the scripting define symbols
+//         to unlock the full implementation below.
+// ──────────────────────────────────────────────────────────────────────────────
 using UnityEngine;
+
+#if KINEMATIC_CHARACTER_CONTROLLER
 using KinematicCharacterController;
+#endif
 
 namespace PhysicsThief.Player
 {
+
+#if KINEMATIC_CHARACTER_CONTROLLER
+
     /// <summary>
     /// First-person movement built on Kinematic Character Controller (KCC).
     /// The KCC motor "asks" this class which velocity and rotation the character should have
@@ -57,8 +79,6 @@ namespace PhysicsThief.Player
         {
             if (motor == null) motor = GetComponent<KinematicCharacterMotor>();
             if (input == null) input = GetComponent<PlayerInputHandler>();
-
-            // Tell the motor to call our ICharacterController methods.
             motor.CharacterController = this;
         }
 
@@ -71,35 +91,19 @@ namespace PhysicsThief.Player
             }
         }
 
-        private void OnEnable()
-        {
-            input.JumpPressed += HandleJumpPressed;
-        }
+        private void OnEnable()  { input.JumpPressed += HandleJumpPressed; }
+        private void OnDisable() { input.JumpPressed -= HandleJumpPressed; }
 
-        private void OnDisable()
-        {
-            input.JumpPressed -= HandleJumpPressed;
-        }
-
-        /// <summary>Reads input every frame. The actual movement happens later, in the KCC callbacks.</summary>
         private void Update()
         {
-            if (!inputEnabled)
-            {
-                moveInput = Vector2.zero;
-                return;
-            }
-
+            if (!inputEnabled) { moveInput = Vector2.zero; return; }
             moveInput = input.MoveInput;
-
-            // Only look around while the cursor is locked (not in menus or pause).
             if (Cursor.lockState == CursorLockMode.Locked)
             {
                 Vector2 look = input.LookInput;
                 yaw += look.x * lookSensitivity;
                 pitch = Mathf.Clamp(pitch - look.y * lookSensitivity, -maxPitch, maxPitch);
             }
-
             cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
         }
 
@@ -110,9 +114,7 @@ namespace PhysicsThief.Player
             timeSinceJumpRequested = 0f;
         }
 
-        // ---------- public API ----------
-
-        /// <summary>Moves the player instantly (respawn at a checkpoint) and clears its velocity.</summary>
+        // ── Public API ──────────────────────────────────────────────────────
         public void Teleport(Vector3 position, Quaternion rotation)
         {
             motor.SetPositionAndRotation(position, rotation);
@@ -121,22 +123,18 @@ namespace PhysicsThief.Player
             pitch = 0f;
         }
 
-        /// <summary>Disables movement and look (pause, death screen, cutscenes).</summary>
         public void SetInputEnabled(bool enabled)
         {
             inputEnabled = enabled;
             if (!enabled) jumpRequested = false;
         }
 
-        // ---------- ICharacterController (called by the KCC motor) ----------
-
-        /// <summary>"Which rotation should I have?" Face the look direction (yaw only).</summary>
+        // ── ICharacterController ────────────────────────────────────────────
         public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
         {
             currentRotation = Quaternion.Euler(0f, yaw, 0f);
         }
 
-        /// <summary>"Which velocity should I have?" Ground/air movement, gravity and jumping.</summary>
         public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
         {
             Vector3 up = motor.CharacterUp;
@@ -145,47 +143,34 @@ namespace PhysicsThief.Player
 
             if (motor.GroundingStatus.IsStableOnGround)
             {
-                // Keep the velocity parallel to the slope, then blend towards the target velocity.
                 Vector3 groundNormal = motor.GroundingStatus.GroundNormal;
                 currentVelocity = motor.GetDirectionTangentToSurface(currentVelocity, groundNormal) * currentVelocity.magnitude;
-
                 Vector3 inputRight = Vector3.Cross(wishDirection, up);
                 Vector3 reorientedInput = Vector3.Cross(groundNormal, inputRight).normalized * wishDirection.magnitude;
-                Vector3 targetVelocity = reorientedInput * moveSpeed;
-
-                currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, 1f - Mathf.Exp(-groundSharpness * deltaTime));
+                currentVelocity = Vector3.Lerp(currentVelocity, reorientedInput * moveSpeed, 1f - Mathf.Exp(-groundSharpness * deltaTime));
             }
             else
             {
-                // Airborne: limited steering on the horizontal plane, plus gravity.
                 Vector3 vertical = Vector3.Project(currentVelocity, up);
                 Vector3 horizontal = currentVelocity - vertical;
-
-                float speedCap = Mathf.Max(moveSpeed, horizontal.magnitude);   // never speed the player up beyond what it already had
+                float speedCap = Mathf.Max(moveSpeed, horizontal.magnitude);
                 horizontal += wishDirection * airAcceleration * deltaTime;
                 horizontal = Vector3.ClampMagnitude(horizontal, speedCap);
-
                 vertical += gravity * deltaTime;
-
-                currentVelocity = horizontal + vertical;
-                currentVelocity *= 1f / (1f + airDrag * deltaTime);
+                currentVelocity = (horizontal + vertical) / (1f + airDrag * deltaTime);
             }
 
-            // Jump: buffered input + coyote time. Replaces the vertical velocity.
             if (jumpRequested && timeSinceJumpRequested <= jumpBufferTime && timeSinceLastGrounded <= coyoteTime)
             {
                 float jumpSpeed = Mathf.Sqrt(2f * gravity.magnitude * jumpHeight);
                 motor.ForceUnground();
                 currentVelocity += up * jumpSpeed - Vector3.Project(currentVelocity, up);
                 jumpRequested = false;
-                timeSinceLastGrounded = Mathf.Infinity;   // no double jump through coyote time
+                timeSinceLastGrounded = Mathf.Infinity;
             }
         }
 
-        public void BeforeCharacterUpdate(float deltaTime)
-        {
-            timeSinceJumpRequested += deltaTime;
-        }
+        public void BeforeCharacterUpdate(float deltaTime)   { timeSinceJumpRequested += deltaTime; }
 
         public void PostGroundingUpdate(float deltaTime)
         {
@@ -195,22 +180,80 @@ namespace PhysicsThief.Player
 
         public void AfterCharacterUpdate(float deltaTime)
         {
-            // Forget a buffered jump that was never used.
             if (jumpRequested && timeSinceJumpRequested > jumpBufferTime) jumpRequested = false;
         }
 
-        public bool IsColliderValidForCollisions(Collider coll)
+        public bool IsColliderValidForCollisions(Collider coll) => true;
+
+        public void OnGroundHit(Collider h, Vector3 n, Vector3 p, ref HitStabilityReport r) { }
+        public void OnMovementHit(Collider h, Vector3 n, Vector3 p, ref HitStabilityReport r) { }
+        public void ProcessHitStabilityReport(Collider h, Vector3 n, Vector3 p,
+            Vector3 cp, Quaternion cr, ref HitStabilityReport r) { }
+        public void OnDiscreteCollisionDetected(Collider h) { }
+    }
+
+#else
+
+    /// <summary>
+    /// Stub compiled when the Kinematic Character Controller package is not installed.
+    /// Preserves the public API so HUDTestIntegration and scene references compile.
+    ///
+    /// DAVIDE: install KCC via Package Manager, then add
+    ///   KINEMATIC_CHARACTER_CONTROLLER
+    /// to Edit → Project Settings → Player → Scripting Define Symbols.
+    /// </summary>
+    public class PlayerMotor : MonoBehaviour
+    {
+        [Header("Look (stub — no KCC movement)")]
+        [SerializeField] private float lookSensitivity = 0.1f;
+        [SerializeField] private bool  lockCursorOnStart = true;
+        [SerializeField] private Transform cameraPivot;
+
+        private bool  _inputEnabled = true;
+        private float _yaw;
+        private float _pitch;
+        private const float MaxPitch = 85f;
+
+        public bool IsGrounded => false;   // stub
+
+        private void Start()
         {
-            return true;   // collide with everything; later: ignore the player's own colliders or triggers if needed
+            if (lockCursorOnStart)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible   = false;
+            }
         }
 
-        public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport) { }
+        private void Update()
+        {
+            // Minimal mouse-look so the camera responds in Play Mode even without KCC.
+            if (!_inputEnabled) return;
+            if (Cursor.lockState != CursorLockMode.Locked) return;
 
-        public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport) { }
+            _yaw   += Input.GetAxisRaw("Mouse X") * lookSensitivity;
+            _pitch  = Mathf.Clamp(_pitch - Input.GetAxisRaw("Mouse Y") * lookSensitivity, -MaxPitch, MaxPitch);
 
-        public void ProcessHitStabilityReport(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint,
-            Vector3 atCharacterPosition, Quaternion atCharacterRotation, ref HitStabilityReport hitStabilityReport) { }
+            transform.rotation = Quaternion.Euler(0f, _yaw, 0f);
+            if (cameraPivot != null)
+                cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
 
-        public void OnDiscreteCollisionDetected(Collider hitCollider) { }
+        /// <summary>Disables movement and look input (pause, death screen, cutscenes).</summary>
+        public void SetInputEnabled(bool enabled)
+        {
+            _inputEnabled = enabled;
+        }
+
+        /// <summary>Teleports the player (stub — just sets position/rotation).</summary>
+        public void Teleport(Vector3 position, Quaternion rotation)
+        {
+            transform.SetPositionAndRotation(position, rotation);
+            _yaw   = rotation.eulerAngles.y;
+            _pitch = 0f;
+        }
     }
+
+#endif
+
 }
