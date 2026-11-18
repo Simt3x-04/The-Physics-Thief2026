@@ -16,7 +16,7 @@ namespace PhysicsThief.UI
     ///   PRESSED  — slight text scale pulse handled by the Button's normal transition.
     ///
     /// Setup (done by scene generators):
-    ///   focusImage  — a child Image stretched to match the button's RectTransform.
+    ///   focusImage  — a child Image that will be sized to match the label's content.
     ///                 Its sprite is set at runtime.
     ///   label       — the TMP_Text inside the button.
     ///
@@ -35,6 +35,10 @@ namespace PhysicsThief.UI
         [SerializeField] private Image    focusImage;
         [SerializeField] private TMP_Text label;
 
+        [Header("Outline Padding")]
+        [SerializeField] private float horizontalPadding = 24f;  // padding on each side of text
+        [SerializeField] private float verticalPadding = 12f;    // padding above/below text
+
         // ── Rounded-rect outline sprite ───────────────────────────────────────
         // Generated once per border thickness + corner radius combination.
         private static Sprite _outlineSprite;
@@ -43,6 +47,9 @@ namespace PhysicsThief.UI
         private bool _hovered;
         private bool _focused;   // keyboard / EventSystem selection
         private bool _pressed;
+        private RectTransform _outlineRect;
+        private bool _outlineSized;
+        private Vector2 _lastLabelSize;  // Track label size changes for resize handling
 
         // ── Colours ───────────────────────────────────────────────────────────
         private static readonly Color White       = new Color(1f, 1f, 1f, 1.00f);
@@ -65,9 +72,111 @@ namespace PhysicsThief.UI
 
             EnsureOutlineSprite();
             if (focusImage != null)
+            {
                 focusImage.sprite = _outlineSprite;
+                _outlineRect = focusImage.GetComponent<RectTransform>();
+            }
 
             ApplyVisuals();
+        }
+
+        private void Start()
+        {
+            // Ensure outline is sibling of label (both under button), not child of label.
+            EnsureOutlineIsSiblingOfLabel();
+            // Position and size the outline on the rendered text after layout.
+            PositionOutlineOnText();
+        }
+
+        private void LateUpdate()
+        {
+            if (label == null || _outlineRect == null) return;
+            
+            RectTransform labelRect = label.GetComponent<RectTransform>();
+            Vector2 currentSize = labelRect.rect.size;
+            
+            // Reposition outline if not yet sized, or if label size changed (resize/layout change).
+            if (!_outlineSized || currentSize != _lastLabelSize)
+            {
+                _lastLabelSize = currentSize;
+                PositionOutlineOnText();
+            }
+        }
+
+        /// <summary>
+        /// Ensures the outline is a sibling of the label (both children of the button),
+        /// not a child of the label. This simplifies coordinate calculations.
+        /// </summary>
+        private void EnsureOutlineIsSiblingOfLabel()
+        {
+            if (_outlineRect == null || label == null) return;
+
+            RectTransform labelRect = label.GetComponent<RectTransform>();
+            if (labelRect == null) return;
+
+            // The button is the label's parent.
+            Transform buttonTransform = labelRect.parent;
+            if (buttonTransform == null) return;
+
+            // If outline is currently a child of the label, reparent it to the button.
+            if (_outlineRect.parent == labelRect)
+            {
+                _outlineRect.SetParent(buttonTransform, false); // Don't keep world position - reset local
+                _outlineRect.SetAsFirstSibling(); // Put outline behind label
+                // Reset position after reparenting
+                _outlineRect.anchoredPosition = Vector2.zero;
+            }
+        }
+
+        /// <summary>
+        /// Positions and sizes the outline to wrap the visible TextMeshPro text bounds.
+        /// Both outline and label should be children of the button after EnsureOutlineIsSiblingOfLabel.
+        /// Uses TMP's textBounds to get the actual rendered text position and size.
+        /// </summary>
+        private void PositionOutlineOnText()
+        {
+            if (label == null || _outlineRect == null) return;
+
+            // Force TMP to compute its text bounds.
+            label.ForceMeshUpdate();
+            
+            // Get the actual text bounds in label's local space.
+            // textBounds gives us both position (center) and size of the rendered text.
+            Bounds textBounds = label.textBounds;
+            if (textBounds.size.x <= 0) return;  // Not yet computed.
+
+            // Calculate outline size: text size + padding on each side.
+            float outlineWidth = textBounds.size.x + (horizontalPadding * 2f);
+            float outlineHeight = textBounds.size.y + (verticalPadding * 2f);
+
+            // Get the center of the text bounds in label's local space.
+            Vector3 textCenterLocal = textBounds.center;
+            
+            // Convert text center from label's local space to world space.
+            RectTransform labelRect = label.GetComponent<RectTransform>();
+            Vector3 textCenterWorld = labelRect.TransformPoint(textCenterLocal);
+            
+            // Convert from world space to the outline's parent's local space.
+            // The outline and label are siblings (both children of the button).
+            Vector3 textCenterInParent = _outlineRect.parent.InverseTransformPoint(textCenterWorld);
+            
+            // Set up the outline's anchors and pivot for center positioning.
+            _outlineRect.anchorMin = new Vector2(0.5f, 0.5f);
+            _outlineRect.anchorMax = new Vector2(0.5f, 0.5f);
+            _outlineRect.pivot = new Vector2(0.5f, 0.5f);
+            
+            // Position the outline at the text's actual center.
+            // anchoredPosition is relative to the anchor point (parent's center).
+            _outlineRect.anchoredPosition = new Vector2(textCenterInParent.x, textCenterInParent.y);
+            _outlineRect.sizeDelta = new Vector2(outlineWidth, outlineHeight);
+
+            _outlineSized = true;
+            
+            #if UNITY_EDITOR
+            Debug.Log($"[EternalMenuButtonEffect] {name}: textBounds.center={textBounds.center}, " +
+                      $"textBounds.size={textBounds.size}, outlinePos={_outlineRect.anchoredPosition}, " +
+                      $"outlineSize={outlineWidth}x{outlineHeight}");
+            #endif
         }
 
         // ── IPointer / ISelect ─────────────────────────────────────────────────
@@ -102,7 +211,11 @@ namespace PhysicsThief.UI
             label      = lbl;
             EnsureOutlineSprite();
             if (focusImage != null)
+            {
                 focusImage.sprite = _outlineSprite;
+                _outlineRect = focusImage.GetComponent<RectTransform>();
+            }
+            _outlineSized = false;  // Will be sized in Start/LateUpdate.
             ApplyVisuals();
         }
 

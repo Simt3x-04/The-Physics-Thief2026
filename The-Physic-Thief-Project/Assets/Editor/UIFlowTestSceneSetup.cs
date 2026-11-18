@@ -589,9 +589,14 @@ public static class UIFlowTestSceneSetup
             var btn = go.AddComponent<Button>(); btn.targetGraphic = hitImg;
 
             var oGO = new GameObject("FocusOutline"); oGO.transform.SetParent(go.transform, false);
+            oGO.transform.SetAsFirstSibling();  // Put outline behind label
             var oRT = oGO.AddComponent<RectTransform>();
-            oRT.anchorMin = Vector2.zero; oRT.anchorMax = Vector2.one;
-            oRT.offsetMin = new Vector2(-6,-6); oRT.offsetMax = new Vector2(6,6);
+            // Use center anchors - EternalMenuButtonEffect will size this to match the label.
+            oRT.anchorMin = new Vector2(0.5f, 0.5f);
+            oRT.anchorMax = new Vector2(0.5f, 0.5f);
+            oRT.pivot = new Vector2(0.5f, 0.5f);
+            oRT.anchoredPosition = Vector2.zero;
+            oRT.sizeDelta = new Vector2(200f, 60f);  // Initial size, will be adjusted at runtime.
             var oImg = oGO.AddComponent<Image>(); oImg.color = new Color(0,0,0,0);
             oImg.raycastTarget = false; oImg.type = Image.Type.Sliced;
 
@@ -604,6 +609,9 @@ public static class UIFlowTestSceneSetup
             t.color = Color.white;
             t.alignment = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
             t.characterSpacing = 4f; t.raycastTarget = false;
+
+            // Outline stays as sibling of label (both children of button).
+            // EternalMenuButtonEffect will position it at runtime.
 
             var fx = go.AddComponent<EternalMenuButtonEffect>(); fx.Init(oImg, t);
             return btn;

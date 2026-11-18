@@ -251,19 +251,7 @@ public static class MainMenuSceneSetup
         var btn = go.AddComponent<Button>();
         btn.targetGraphic = hitImg;
 
-        // Focus outline Image (sized to match button, procedural sprite applied by effect).
-        var outlineGO = new GameObject("FocusOutline");
-        outlineGO.transform.SetParent(go.transform, false);
-        var oRT = outlineGO.AddComponent<RectTransform>();
-        oRT.anchorMin = Vector2.zero; oRT.anchorMax = Vector2.one;
-        oRT.offsetMin = new Vector2(-6, -6); oRT.offsetMax = new Vector2(6, 6); // slightly larger than label
-        var oImg = outlineGO.AddComponent<Image>();
-        oImg.color         = Clear;        // hidden by default; EternalMenuButtonEffect shows it on focus
-        oImg.raycastTarget = false;
-        oImg.type          = Image.Type.Sliced;
-        oImg.pixelsPerUnitMultiplier = 1f;
-
-        // Label.
+        // Label first (so outline can be its child).
         var lblGO = new GameObject("Label");
         lblGO.transform.SetParent(go.transform, false);
         var lRT = lblGO.AddComponent<RectTransform>();
@@ -277,6 +265,23 @@ public static class MainMenuSceneSetup
         lbl.alignment        = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
         lbl.characterSpacing = LetterSpacing;
         lbl.raycastTarget    = false;
+
+        // Focus outline Image as sibling of label (both children of button).
+        // The EternalMenuButtonEffect will position it at the text center.
+        var outlineGO = new GameObject("FocusOutline");
+        outlineGO.transform.SetParent(go.transform, false);  // Child of button, sibling of label
+        outlineGO.transform.SetAsFirstSibling();  // Behind the label
+        var oRT = outlineGO.AddComponent<RectTransform>();
+        oRT.anchorMin = new Vector2(0.5f, 0.5f);
+        oRT.anchorMax = new Vector2(0.5f, 0.5f);
+        oRT.pivot = new Vector2(0.5f, 0.5f);
+        oRT.anchoredPosition = Vector2.zero;
+        oRT.sizeDelta = new Vector2(200f, 60f);  // Initial size, will be adjusted at runtime.
+        var oImg = outlineGO.AddComponent<Image>();
+        oImg.color         = Clear;        // hidden by default; EternalMenuButtonEffect shows it on focus
+        oImg.raycastTarget = false;
+        oImg.type          = Image.Type.Sliced;
+        oImg.pixelsPerUnitMultiplier = 1f;
 
         // Wire EternalMenuButtonEffect.
         var effect = go.AddComponent<EternalMenuButtonEffect>();
@@ -474,12 +479,7 @@ public static class MainMenuSceneSetup
         var backHit  = backRoot.AddComponent<Image>(); backHit.color = Clear;
         var backBtn  = backRoot.AddComponent<Button>(); backBtn.targetGraphic = backHit;
 
-        var backOutGO = new GameObject("FocusOutline"); backOutGO.transform.SetParent(backRoot.transform, false);
-        var boRT = backOutGO.AddComponent<RectTransform>();
-        boRT.anchorMin = Vector2.zero; boRT.anchorMax = Vector2.one;
-        boRT.offsetMin = new Vector2(-6,-6); boRT.offsetMax = new Vector2(6,6);
-        var boImg = backOutGO.AddComponent<Image>(); boImg.color = Clear; boImg.raycastTarget = false; boImg.type = Image.Type.Sliced;
-
+        // Label first (so outline can be its child).
         var backLblGO = new GameObject("Label"); backLblGO.transform.SetParent(backRoot.transform, false);
         var backLblRT = backLblGO.AddComponent<RectTransform>();
         backLblRT.anchorMin = Vector2.zero; backLblRT.anchorMax = Vector2.one;
@@ -489,6 +489,18 @@ public static class MainMenuSceneSetup
         backLbl.color = MenuStyle.TextPrimary;
         backLbl.alignment = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
         backLbl.characterSpacing = LetterSpacing; backLbl.raycastTarget = false;
+
+        // Focus outline as sibling of label (both children of button).
+        var backOutGO = new GameObject("FocusOutline"); backOutGO.transform.SetParent(backRoot.transform, false);
+        backOutGO.transform.SetAsFirstSibling();
+        var boRT = backOutGO.AddComponent<RectTransform>();
+        boRT.anchorMin = new Vector2(0.5f, 0.5f);
+        boRT.anchorMax = new Vector2(0.5f, 0.5f);
+        boRT.pivot = new Vector2(0.5f, 0.5f);
+        boRT.anchoredPosition = Vector2.zero;
+        boRT.sizeDelta = new Vector2(120f, 50f);  // Initial size, will be adjusted at runtime.
+        var boImg = backOutGO.AddComponent<Image>(); boImg.color = Clear; boImg.raycastTarget = false; boImg.type = Image.Type.Sliced;
+        
         var backEffect = backRoot.AddComponent<EternalMenuButtonEffect>(); backEffect.Init(boImg, backLbl);
 
         var so = new SerializedObject(op);
