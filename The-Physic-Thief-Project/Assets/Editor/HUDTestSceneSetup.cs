@@ -12,7 +12,9 @@
 //   • DeathScreenCanvas with DeathScreenController is wired to the player health
 //   • PauseMenuCanvas with PauseMenuController is wired to the input asset
 //   • A UIIntegration GO with HUDTestIntegration wires the full death → retry loop
+//   • A LevelManager GO handles checkpoint-based respawn
 //   • A SpawnPoint GO marks the initial respawn position
+//   • A Checkpoint1 GO (green cube) demonstrates checkpoint activation
 //   • HUDtest is added to Build Settings
 //
 // WHAT IS PRESERVED
@@ -148,6 +150,81 @@ public static class HUDTestSceneSetup
             Debug.Log($"[HUDTestSetup] SpawnPoint created at {spawnPoint.transform.position}.");
         }
 
+        // ── 4b. LevelManager ──────────────────────────────────────────────────
+        var existingLM = Object.FindFirstObjectByType<PhysicsThief.Level.LevelManager>();
+        if (existingLM == null)
+        {
+            var lmGO = new GameObject("LevelManager");
+            var lm   = lmGO.AddComponent<PhysicsThief.Level.LevelManager>();
+            var lmSO = new SerializedObject(lm);
+
+            // Wire Player references
+            var playerGO = GameObject.Find("Player");
+            if (playerGO != null)
+            {
+                var pm = playerGO.GetComponent<PlayerMotor>();
+                if (pm != null) lmSO.FindProperty("playerMotor").objectReferenceValue = pm;
+
+                var hc = playerGO.GetComponent<HealthComponent>();
+                if (hc != null) lmSO.FindProperty("playerHealth").objectReferenceValue = hc;
+            }
+
+            // Wire SpawnPoint as default spawn
+            lmSO.FindProperty("defaultSpawnPoint").objectReferenceValue = spawnPoint.transform;
+            lmSO.ApplyModifiedPropertiesWithoutUndo();
+            Debug.Log("[HUDTestSetup] LevelManager added with Player and SpawnPoint references.");
+        }
+        else
+        {
+            Debug.Log("[HUDTestSetup] LevelManager already present — skipping.");
+        }
+
+        // ── 4c. Checkpoint ────────────────────────────────────────────────────
+        var existingCheckpoint = GameObject.Find("Checkpoint1");
+        if (existingCheckpoint == null)
+        {
+            // Create checkpoint at a clearly different position from SpawnPoint
+            // Positioned behind the Metal object, easy to reach from spawn
+            var checkpointGO = new GameObject("Checkpoint1");
+            checkpointGO.transform.position = new Vector3(-8f, 0.5f, 5f);
+            checkpointGO.transform.rotation = Quaternion.identity;
+
+            // Add visible mesh (green semi-transparent cube)
+            var meshFilter = checkpointGO.AddComponent<MeshFilter>();
+            meshFilter.sharedMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+
+            var meshRenderer = checkpointGO.AddComponent<MeshRenderer>();
+            var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            mat.color = new Color(0.2f, 0.8f, 0.4f, 0.5f);
+            // Make it transparent
+            mat.SetFloat("_Surface", 1); // Transparent
+            mat.SetFloat("_Blend", 0);
+            mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_ZWrite", 0);
+            mat.renderQueue = 3000;
+            meshRenderer.sharedMaterial = mat;
+
+            // Add trigger collider
+            var boxCol = checkpointGO.AddComponent<BoxCollider>();
+            boxCol.isTrigger = true;
+            boxCol.size = new Vector3(3f, 3f, 3f); // Large enough to walk through
+
+            // Add Checkpoint component
+            var checkpoint = checkpointGO.AddComponent<PhysicsThief.Level.Checkpoint>();
+            var cpSO = new SerializedObject(checkpoint);
+            cpSO.FindProperty("checkpointRenderer").objectReferenceValue = meshRenderer;
+            cpSO.FindProperty("activatedColor").colorValue = new Color(0.2f, 1f, 0.4f, 0.7f);
+            cpSO.ApplyModifiedPropertiesWithoutUndo();
+
+            Debug.Log($"[HUDTestSetup] Checkpoint1 created at {checkpointGO.transform.position}. " +
+                      "Walk into the green cube to activate it.");
+        }
+        else
+        {
+            Debug.Log("[HUDTestSetup] Checkpoint1 already present — skipping.");
+        }
+
         // ── 5. Death Screen Canvas ────────────────────────────────────────────
         var existingDSC = Object.FindFirstObjectByType<DeathScreenController>(FindObjectsInactive.Include);
         if (existingDSC == null)
@@ -241,9 +318,15 @@ public static class HUDTestSceneSetup
             "     Metal turns orange (Hot state) — walk into it — damage per second\n" +
             "     Quick test: press H (HudDebugInput) for -10 HP | J for +25 HP\n" +
             "  5. At 0 HP → Death screen fades in\n" +
-            "  6. Click 'Snooze and retry' → HP restored, movement re-enabled\n" +
+            "  6. Click 'Snooze and retry' → Respawn at SpawnPoint, HP restored\n" +
             "  7. Press Esc → Pause card\n" +
             "  8. Options → adjust sliders → Back → Resume\n\n" +
+            "CHECKPOINT TESTING:\n" +
+            "  1. Walk into 'Checkpoint1' (green semi-transparent cube at -8, 0.5, 5)\n" +
+            "     Console shows: [Checkpoint] 'Checkpoint1' activated\n" +
+            "  2. Move away from the checkpoint, then die (H key repeatedly)\n" +
+            "  3. Click 'Snooze and retry' → Respawn at Checkpoint1 (not SpawnPoint)\n" +
+            "  4. Die again and Retry → Still respawn at Checkpoint1\n\n" +
             "FROM MAIN MENU: Open MainMenu.unity → Press Play → Click Start → HUDtest loads");
     }
 

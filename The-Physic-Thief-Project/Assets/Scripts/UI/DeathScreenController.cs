@@ -108,15 +108,16 @@ namespace PhysicsThief.UI
         // ───────────────────────────────────────────────────────────────────────
         private void OnPlayerDied()
         {
-            // Idempotent: if already in GameOver don't re-trigger.
-            if (GameManager.Instance != null &&
-                GameManager.Instance.State == GameState.GameOver) return;
+            // Idempotent: if fade is already running or panel is already shown, skip.
+            // NOTE: We do NOT check GameState here because HUDTestIntegration's handler
+            // may have already set GameOver before this handler fires (event order).
+            if (_fadeRoutine != null || (deathPanel != null && deathPanel.activeSelf))
+                return;
 
-            // Let GameManager freeze time and set state.
+            // Let GameManager freeze time and set state (safe to call if already GameOver).
             GameManager.Instance?.ReportPlayerDeath();
 
             // Start fade-in; show panel after fade completes.
-            if (_fadeRoutine != null) StopCoroutine(_fadeRoutine);
             _fadeRoutine = StartCoroutine(FadeInAndShow());
         }
 

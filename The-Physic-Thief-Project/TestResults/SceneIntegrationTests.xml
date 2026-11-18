@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="17" result="Failed(Child)" total="17" passed="14" failed="3" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:29Z" duration="1,5657218">
+  <test-suite type="TestSuite" id="1031" name="The-Physic-Thief-Project" fullname="The-Physic-Thief-Project" runstate="Runnable" testcasecount="17" result="Failed" site="Child" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:29Z" duration="1.565722" total="17" passed="14" failed="3" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1016" name="Assembly-CSharp.dll" fullname="C:/Users/aigerim.turazhanova/videoGame/The-Physics-Thief2026/The-Physic-Thief-Project/Library/ScriptAssemblies/Assembly-CSharp.dll" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.034764" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="23580" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1017" name="PhysicsThief" fullname="PhysicsThief" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.034314" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1018" name="Tests" fullname="PhysicsThief.Tests" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.034045" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1001" name="CheckpointRespawnTests" fullname="PhysicsThief.Tests.CheckpointRespawnTests" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.030945" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1008" name="CheckpointActivation_ToggleBehavior" fullname="PhysicsThief.Tests.CheckpointRespawnTests.CheckpointActivation_ToggleBehavior" methodname="CheckpointActivation_ToggleBehavior" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" seed="343858593" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.008444" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1007" name="HealthReset_RestoresToMax" fullname="PhysicsThief.Tests.CheckpointRespawnTests.HealthReset_RestoresToMax" methodname="HealthReset_RestoresToMax" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" seed="1619286901" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.005390" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1009" name="RespawnGuard_PreventsDoubleExecution" fullname="PhysicsThief.Tests.CheckpointRespawnTests.RespawnGuard_PreventsDoubleExecution" methodname="RespawnGuard_PreventsDoubleExecution" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" seed="1106698396" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000453" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1005" name="RespawnLogic_ClearCheckpoint_RevertsToDefault" fullname="PhysicsThief.Tests.CheckpointRespawnTests.RespawnLogic_ClearCheckpoint_RevertsToDefault" methodname="RespawnLogic_ClearCheckpoint_RevertsToDefault" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" seed="200385292" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.002576" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1004" name="RespawnLogic_LatestCheckpointWins" fullname="PhysicsThief.Tests.CheckpointRespawnTests.RespawnLogic_LatestCheckpointWins" methodname="RespawnLogic_LatestCheckpointWins" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" seed="1143333897" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000254" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1003" name="RespawnLogic_ReturnsCheckpoint_WhenActive" fullname="PhysicsThief.Tests.CheckpointRespawnTests.RespawnLogic_ReturnsCheckpoint_WhenActive" methodname="RespawnLogic_ReturnsCheckpoint_WhenActive" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" seed="349375881" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000180" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1002" name="RespawnLogic_ReturnsDefaultSpawn_WhenNoCheckpoint" fullname="PhysicsThief.Tests.CheckpointRespawnTests.RespawnLogic_ReturnsDefaultSpawn_WhenNoCheckpoint" methodname="RespawnLogic_ReturnsDefaultSpawn_WhenNoCheckpoint" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" seed="1727377361" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000139" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1006" name="TeleportLogic_MovesToTargetPosition" fullname="PhysicsThief.Tests.CheckpointRespawnTests.TeleportLogic_MovesToTargetPosition" methodname="TeleportLogic_MovesToTargetPosition" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" seed="131923669" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000905" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1010" name="TeleportLogic_SetsRotation" fullname="PhysicsThief.Tests.CheckpointRespawnTests.TeleportLogic_SetsRotation" methodname="TeleportLogic_SetsRotation" classname="PhysicsThief.Tests.CheckpointRespawnTests" runstate="Runnable" seed="1993996552" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000592" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1011" name="PropertyRulesTests" fullname="PhysicsThief.Tests.PropertyRulesTests" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.002080" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1015" name="CopyResultMessagesAreOnlyForFailures" fullname="PhysicsThief.Tests.PropertyRulesTests.CopyResultMessagesAreOnlyForFailures" methodname="CopyResultMessagesAreOnlyForFailures" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" seed="365457907" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000200" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1014" name="DefaultsMatchAmbientConditions" fullname="PhysicsThief.Tests.PropertyRulesTests.DefaultsMatchAmbientConditions" methodname="DefaultsMatchAmbientConditions" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" seed="1738679191" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000678" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1012" name="PastedValuesAreCappedLikeTheGdd" fullname="PhysicsThief.Tests.PropertyRulesTests.PastedValuesAreCappedLikeTheGdd" methodname="PastedValuesAreCappedLikeTheGdd" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" seed="331120132" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000203" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1013" name="ValuesInsideTheRangeAreUnchanged" fullname="PhysicsThief.Tests.PropertyRulesTests.ValuesInsideTheRangeAreUnchanged" methodname="ValuesInsideTheRangeAreUnchanged" classname="PhysicsThief.Tests.PropertyRulesTests" runstate="Runnable" seed="725966625" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.000086" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1024" name="PlayModeTests.dll" fullname="C:/Users/aigerim.turazhanova/videoGame/The-Physics-Thief2026/The-Physic-Thief-Project/Library/ScriptAssemblies/PlayModeTests.dll" runstate="Runnable" testcasecount="4" result="Failed" site="Child" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:29Z" duration="1.524697" total="4" passed="1" failed="3" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="23580" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1025" name="PhysicsThief" fullname="PhysicsThief" runstate="Runnable" testcasecount="4" result="Failed" site="Child" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:29Z" duration="1.524375" total="4" passed="1" failed="3" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1026" name="Tests" fullname="PhysicsThief.Tests" runstate="Runnable" testcasecount="4" result="Failed" site="Child" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:29Z" duration="1.524189" total="4" passed="1" failed="3" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1027" name="PlayMode" fullname="PhysicsThief.Tests.PlayMode" runstate="Runnable" testcasecount="4" result="Failed" site="Child" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:29Z" duration="1.524008" total="4" passed="1" failed="3" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1019" name="HUDTestSceneIntegrationTests" fullname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests" classname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests" runstate="Runnable" testcasecount="4" result="Failed" site="Child" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:29Z" duration="1.523791" total="4" passed="1" failed="3" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1023" name="ReportPlayerControllerType" fullname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests.ReportPlayerControllerType" methodname="ReportPlayerControllerType" classname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests" runstate="Runnable" seed="1154756638" result="Passed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:28Z" duration="0.582362" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <reason>
+                  <message><![CDATA[Player controller: Stub/Transform only]]></message>
+                </reason>
+                <output><![CDATA[[HUDTestIntegration] Wired: health → death screen, retry, state → input.
+[LevelManager] Checkpoint cleared.
+[ControllerCheck] Checking player controller type...
+[ControllerCheck] KinematicCharacterMotor: False
+[ControllerCheck] CharacterController: False
+[ControllerCheck] Rigidbody: False
+[ControllerCheck] PlayerMotor: PlayerMotor present (IsGrounded: False, likely STUB)
+[ControllerCheck] KINEMATIC_CHARACTER_CONTROLLER not defined - using STUB PlayerMotor
+[ControllerCheck] Real movement with Davide's controller: UNVERIFIED
+]]></output>
+              </test-case>
+              <test-case id="1020" name="Scenario1_NoCheckpoint_DieAndRetry_RespawnsAtSpawnPoint" fullname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests.Scenario1_NoCheckpoint_DieAndRetry_RespawnsAtSpawnPoint" methodname="Scenario1_NoCheckpoint_DieAndRetry_RespawnsAtSpawnPoint" classname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests" runstate="Runnable" seed="2103984323" result="Failed" start-time="2026-11-18 11:05:28Z" end-time="2026-11-18 11:05:29Z" duration="0.311554" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  GameManager required
+  Expected: not null
+  But was:  null
+]]></message>
+                  <stack-trace><![CDATA[at PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests+<Scenario1_NoCheckpoint_DieAndRetry_RespawnsAtSpawnPoint>d__28.MoveNext () [0x0008f] in C:\Users\aigerim.turazhanova\videoGame\The-Physics-Thief2026\The-Physic-Thief-Project\Assets\Tests\PlayMode\HUDTestSceneIntegrationTests.cs:219
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@bd7f943e9647\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[[HUDTestIntegration] Wired: health → death screen, retry, state → input.
+[LevelManager] Checkpoint cleared.
+[Scenario1] Starting: No checkpoint → die → retry → respawn at SpawnPoint
+]]></output>
+              </test-case>
+              <test-case id="1021" name="Scenario2_CheckpointActivated_DieAndRetry_RespawnsAtCheckpoint" fullname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests.Scenario2_CheckpointActivated_DieAndRetry_RespawnsAtCheckpoint" methodname="Scenario2_CheckpointActivated_DieAndRetry_RespawnsAtCheckpoint" classname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests" runstate="Runnable" seed="503190317" result="Failed" start-time="2026-11-18 11:05:29Z" end-time="2026-11-18 11:05:29Z" duration="0.306810" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  GameManager required
+  Expected: not null
+  But was:  null
+]]></message>
+                  <stack-trace><![CDATA[at PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests+<Scenario2_CheckpointActivated_DieAndRetry_RespawnsAtCheckpoint>d__29.MoveNext () [0x000b4] in C:\Users\aigerim.turazhanova\videoGame\The-Physics-Thief2026\The-Physic-Thief-Project\Assets\Tests\PlayMode\HUDTestSceneIntegrationTests.cs:299
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@bd7f943e9647\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[[HUDTestIntegration] Wired: health → death screen, retry, state → input.
+[LevelManager] Checkpoint cleared.
+[Scenario2] Starting: Checkpoint activated → die → retry → respawn at checkpoint
+]]></output>
+              </test-case>
+              <test-case id="1022" name="Scenario3_FreshRun_RetryUsesSpawnPointBeforeCheckpoint" fullname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests.Scenario3_FreshRun_RetryUsesSpawnPointBeforeCheckpoint" methodname="Scenario3_FreshRun_RetryUsesSpawnPointBeforeCheckpoint" classname="PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests" runstate="Runnable" seed="1886266431" result="Failed" start-time="2026-11-18 11:05:29Z" end-time="2026-11-18 11:05:29Z" duration="0.321386" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  GameManager required
+  Expected: not null
+  But was:  null
+]]></message>
+                  <stack-trace><![CDATA[at PhysicsThief.Tests.PlayMode.HUDTestSceneIntegrationTests+<Scenario3_FreshRun_RetryUsesSpawnPointBeforeCheckpoint>d__30.MoveNext () [0x000bd] in C:\Users\aigerim.turazhanova\videoGame\The-Physics-Thief2026\The-Physic-Thief-Project\Assets\Tests\PlayMode\HUDTestSceneIntegrationTests.cs:405
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@bd7f943e9647\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[[HUDTestIntegration] Wired: health → death screen, retry, state → input.
+[LevelManager] Checkpoint cleared.
+[Scenario3] Starting: Fresh run → retry uses SpawnPoint before any checkpoint
+Saving results to: C:/Users/aigerim.turazhanova/AppData/LocalLow/DefaultCompany/The-Physic-Thief-Project\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Failed(Child)" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-18 12:41:10Z" end-time="2026-11-18 12:41:13Z" duration="3,113125">
+  <test-suite type="TestSuite" id="1033" name="The-Physic-Thief-Project" fullname="The-Physic-Thief-Project" runstate="Runnable" testcasecount="18" result="Failed" site="Child" start-time="2026-11-18 12:41:10Z" end-time="2026-11-18 12:41:13Z" duration="3.113125" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1026" name="PlayModeTests.dll" fullname="C:/Users/aigerim.turazhanova/videoGame/The-Physics-Thief2026/The-Physic-Thief-Project/Library/ScriptAssemblies/PlayModeTests.dll" runstate="Runnable" testcasecount="5" result="Failed" site="Child" start-time="2026-11-18 12:41:10Z" end-time="2026-11-18 12:41:13Z" duration="3.106629" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="80232" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1027" name="PhysicsThief" fullname="PhysicsThief" runstate="Runnable" testcasecount="5" result="Failed" site="Child" start-time="2026-11-18 12:41:10Z" end-time="2026-11-18 12:41:13Z" duration="3.106081" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1028" name="Tests" fullname="PhysicsThief.Tests" runstate="Runnable" testcasecount="5" result="Failed" site="Child" start-time="2026-11-18 12:41:10Z" end-time="2026-11-18 12:41:13Z" duration="3.105793" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1029" name="PlayMode" fullname="PhysicsThief.Tests.PlayMode" runstate="Runnable" testcasecount="5" result="Failed" site="Child" start-time="2026-11-18 12:41:10Z" end-time="2026-11-18 12:41:13Z" duration="3.105513" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestFixture" id="1019" name="FullCheckpointFlowTest" fullname="PhysicsThief.Tests.PlayMode.FullCheckpointFlowTest" classname="PhysicsThief.Tests.PlayMode.FullCheckpointFlowTest" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-11-18 12:41:10Z" end-time="2026-11-18 12:41:13Z" duration="3.104552" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-case id="1020" name="FullCheckpointFlow_WithActualButtonClick" fullname="PhysicsThief.Tests.PlayMode.FullCheckpointFlowTest.FullCheckpointFlow_WithActualButtonClick" methodname="FullCheckpointFlow_WithActualButtonClick" classname="PhysicsThief.Tests.PlayMode.FullCheckpointFlowTest" runstate="Runnable" seed="1387302040" result="Failed" start-time="2026-11-18 12:41:10Z" end-time="2026-11-18 12:41:13Z" duration="3.093172" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <failure>
+                  <message><![CDATA[  Death panel should be VISIBLE after fade completes
+  Expected: True
+  But was:  False
+]]></message>
+                  <stack-trace><![CDATA[at PhysicsThief.Tests.PlayMode.FullCheckpointFlowTest+<FullCheckpointFlow_WithActualButtonClick>d__25.MoveNext () [0x0053d] in C:\Users\aigerim.turazhanova\videoGame\The-Physics-Thief2026\The-Physic-Thief-Project\Assets\Tests\PlayMode\FullCheckpointFlowTest.cs:315
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@bd7f943e9647\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44
+]]></stack-trace>
+                </failure>
+                <output><![CDATA[=== LOADING HUDtest SCENE ===
+[HUDTestIntegration] Wired: health → death screen, retry, state → input.
+[LevelManager] Checkpoint cleared.
+╔════════════════════════════════════════════════════════════════╗
+║  FULL CHECKPOINT FLOW TEST - Using Actual Scene Objects        ║
+╚════════════════════════════════════════════════════════════════╝
+
+[STEP 1] Checking player controller...
+⚠ KinematicCharacterMotor NOT FOUND - Using STUB PlayerMotor
+⚠ Physics trigger entry CANNOT be tested
+⚠ Checkpoint will be activated MANUALLY via Activate()
+
+[STEP 2] Verifying initial state...
+✓ No checkpoint active
+✓ Player HP: 100/100
+✓ GameState: Playing
+
+[STEP 3] Activating checkpoint...
+  Checkpoint1 position: (-8.00, 0.50, 5.00)
+  Player teleported to: (-8.00, 0.50, 5.00)
+  Physics trigger did not fire (expected without KCC)
+  Manually calling Checkpoint.Activate()...
+[LevelManager] Checkpoint activated: Checkpoint1 at (-8.00, 0.50, 5.00)
+[Checkpoint] 'Checkpoint1' activated.
+✓ Checkpoint1 ACTIVATED
+  Respawn position: (-8.00, 0.50, 5.00)
+
+[STEP 4] Moving player away and applying lethal damage...
+  Player moved to: (12.00, 0.50, 25.00)
+[HUDTestIntegration] Player reached 0 HP → ReportPlayerDeath()
+  Lethal damage applied!
+
+[STEP 5] Verifying death screen (waiting for fade)...
+✓ GameState: GameOver
+✓ Time frozen (timeScale = 0)
+  Waiting for fade animation (0.8s unscaled)...
+  Fade wait complete (waited 0,80s real time)
+  Death panel active: False
+Saving results to: C:/Users/aigerim.turazhanova/AppData/LocalLow/DefaultCompany/The-Physic-Thief-Project\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
