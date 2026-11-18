@@ -107,14 +107,43 @@ namespace PhysicsThief.Core
             if (gameState == newState) return;
             gameState = newState;
 
-            bool frozen = newState == GameState.Paused || newState == GameState.GameOver;
+            // Paused, GameOver, and Ending all freeze gameplay time.
+            // Loading resets to 1 so async scene loads proceed even after a frozen state.
+            bool frozen     = newState == GameState.Paused
+                           || newState == GameState.GameOver
+                           || newState == GameState.Ending;
             bool inGameplay = newState == GameState.Playing;
 
-            Time.timeScale = frozen ? 0f : 1f;
+            if (newState == GameState.Loading) Time.timeScale = 1f;
+            else                              Time.timeScale = frozen ? 0f : 1f;
+
             Cursor.lockState = inGameplay ? CursorLockMode.Locked : CursorLockMode.None;
-            Cursor.visible = !inGameplay;
+            Cursor.visible   = !inGameplay;
 
             OnGameStateChanged?.Invoke(newState);
+        }
+
+        // ── Initial state policy ─────────────────────────────────────────────
+        /// <summary>
+        /// Applies cursor + timeScale for the serialised gameState so the very first frame
+        /// is correct without an explicit SetState call.  Called by Awake in the surviving
+        /// singleton instance.
+        /// </summary>
+        protected override void Awake()
+        {
+            base.Awake();
+            if (Instance != this) return;   // duplicate — Singleton.Awake already destroys it
+
+            bool frozen     = gameState == GameState.Paused
+                           || gameState == GameState.GameOver
+                           || gameState == GameState.Ending;
+            bool inGameplay = gameState == GameState.Playing;
+
+            if (gameState == GameState.Loading) Time.timeScale = 1f;
+            else                               Time.timeScale = frozen ? 0f : 1f;
+
+            Cursor.lockState = inGameplay ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible   = !inGameplay;
         }
     }
 }

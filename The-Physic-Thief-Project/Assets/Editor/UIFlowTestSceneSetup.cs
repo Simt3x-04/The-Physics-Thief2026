@@ -1,26 +1,31 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 // ──────────────────────────────────────────────────────────────────────────────
 // UIFlowTestSceneSetup.cs  (Editor-only, excluded from builds)
 //
 // Run via:  Tools → UI Flow → Create UIFlowTest Scene
 //
-// Generates Assets/Scenes/UIFlowTest.unity with:
-//   Main Camera + SensitivityDemoCamera (TEST ONLY — shows slider has live effect)
-//   EventSystem  (InputSystemUIInputModule, wired to InputSystem_Actions asset)
-//   GameManager  (mainMenuScene=UIFlowTest, levelScenes=[UIFlowTest], gameState=MainMenu)
-//   AudioManager
+// REDESIGN (Nov 2026)
+// ───────────────────
+// Main Menu   — left-column layout (Dorfromantik/From Dust style)
+//               • Full-bleed two-tone backdrop: deep navy left, mid-navy right
+//               • Left column: "THE PHYSICS THIEF" title + subtitle, then
+//                 Start / Options / Quit stacked with an amber left-bar marker
+//               • Right side: backdrop image placeholder (swap for real art)
+//               • 5 px amber bar appears on hover/focus; text goes amber on select
 //
-//   MainMenuCanvas  (sort 0)  — MainMenuController + OptionsPanel + 3 buttons
-//   PauseMenuCanvas (sort 10) — PauseMenuController + OptionsPanel + Resume/Options
-//   DeathScreenCanvas(sort 20)— DeathScreenController + FadeOverlayD + DeathPanel
-//   EndingScreenCanvas(sort 30)—EndingScreenController + FadeOverlayE + EndingPanel
-//   TestHarness — UIFlowTestHarness + HealthComponent (dummy player)
+// Pause Menu  — compact dark card centered over dimmed-but-visible gameplay
+//               • 72 % opacity scrim, then a small card (640 × 400 at ref)
+//               • "PAUSED" heading, Resume + Options buttons, same amber style
+//               • No full-screen blackout — game is visible behind
 //
-// Design decisions preserved by regeneration:
-//   • FadeOverlay images start with alpha=0, raycastTarget=false (set at runtime by controllers)
-//   • GameManager starts in MainMenu state so cursor is visible and timeScale=1 on first frame
-//   • levelScenes=[UIFlowTest] so Start() reloads the demo scene (no real level required)
-//   • InputSystem_Actions asset looked up by name/type, not hard-coded path
+// Options     — shared panel used from both Main Menu and Pause
+//               • Two rows: Master Volume, Mouse Sensitivity
+//               • Label left / slider center / value right
+//               • Amber slider handle, separator line between rows
+//               • "OPTIONS" heading, Back button at bottom
+//
+// All logic (GameManager, Death, Ending screens, TestHarness) is unchanged.
+// Death / Ending canvases are rebuilt at the end with the same code as before.
 // ──────────────────────────────────────────────────────────────────────────────
 using System.Linq;
 using UnityEditor;
@@ -39,6 +44,13 @@ public static class UIFlowTestSceneSetup
 {
     private const string ScenePath = "Assets/Scenes/UIFlowTest.unity";
 
+    // ── Reference resolution ─────────────────────────────────────────────────
+    private const float RefW = 1920f;
+    private const float RefH = 1080f;
+
+    // ── Left column width in pixels at reference resolution ──────────────────
+    private static float LeftColW => RefW * MenuStyle.LeftColumnWidthFraction; // ≈ 729 px
+
     [MenuItem("Tools/UI Flow/Create UIFlowTest Scene")]
     public static void CreateScene()
     {
@@ -52,7 +64,6 @@ public static class UIFlowTestSceneSetup
         var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
         // ── Camera ───────────────────────────────────────────────────────────
-        // DefaultGameObjects already creates a camera; reuse it.
         Camera cam = Object.FindFirstObjectByType<Camera>();
         if (cam == null)
         {
@@ -61,12 +72,9 @@ public static class UIFlowTestSceneSetup
             camGO.tag = "MainCamera";
             camGO.AddComponent<AudioListener>();
         }
-        // Attach sensitivity demo camera so the slider has a visible effect in Play Mode.
-        // Remove this component when real PlayerController.HandleLook() is implemented.
         cam.gameObject.AddComponent<SensitivityDemoCamera>();
 
-        // ── EventSystem (new Input System) ────────────────────────────────────
-        // Remove any default EventSystem created by NewScene.
+        // ── EventSystem ──────────────────────────────────────────────────────
         foreach (var es in Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None))
             Object.DestroyImmediate(es.gameObject);
 
@@ -74,7 +82,6 @@ public static class UIFlowTestSceneSetup
         esGO.AddComponent<EventSystem>();
         var isUIModule = esGO.AddComponent<InputSystemUIInputModule>();
 
-        // Wire the actions asset — look up by type + name so the path doesn't matter.
         var inputAsset = AssetDatabase.FindAssets("t:InputActionAsset")
             .Select(g => AssetDatabase.LoadAssetAtPath<UnityEngine.InputSystem.InputActionAsset>(
                              AssetDatabase.GUIDToAssetPath(g)))
@@ -84,52 +91,45 @@ public static class UIFlowTestSceneSetup
         {
             var esSO = new SerializedObject(isUIModule);
             esSO.FindProperty("m_ActionsAsset").objectReferenceValue = inputAsset;
-            // Individual Point/Click/Navigate/Submit/Cancel action references are auto-resolved
-            // by InputSystemUIInputModule at runtime when m_ActionsAsset is assigned.
-            // We only need to set the asset reference here.
             esSO.ApplyModifiedPropertiesWithoutUndo();
         }
         else
         {
             Debug.LogWarning("[UIFlowTestSetup] InputSystem_Actions asset not found. " +
-                             "Assign it manually to InputSystemUIInputModule in the Inspector.");
+                             "Assign it manually to InputSystemUIInputModule.");
         }
 
         // ── GameManager ───────────────────────────────────────────────────────
         var gmGO = new GameObject("GameManager");
         var gm   = gmGO.AddComponent<GameManager>();
         var gmSO = new SerializedObject(gm);
-
-        // gameState = MainMenu (0): Start() applies correct cursor/timeScale policy.
-        var stateProp = gmSO.FindProperty("gameState");
-        if (stateProp != null) { stateProp.enumValueIndex = (int)GameState.MainMenu; }
-
-        // persistAcrossScenes = true: survives scene reloads.
-        var persistProp = gmSO.FindProperty("persistAcrossScenes");
-        if (persistProp != null) { persistProp.boolValue = true; }
-
-        // mainMenuScene + levelScenes: both point to UIFlowTest so the demo is self-contained.
-        var mainSceneProp = gmSO.FindProperty("mainMenuScene");
-        if (mainSceneProp != null) { mainSceneProp.stringValue = "UIFlowTest"; }
-
-        var levelsProp = gmSO.FindProperty("levelScenes");
-        if (levelsProp != null)
         {
-            levelsProp.arraySize = 1;
-            levelsProp.GetArrayElementAtIndex(0).stringValue = "UIFlowTest";
+            var p = gmSO.FindProperty("gameState");
+            if (p != null) p.enumValueIndex = (int)GameState.MainMenu;
         }
-
+        {
+            var p = gmSO.FindProperty("persistAcrossScenes");
+            if (p != null) p.boolValue = true;
+        }
+        {
+            var p = gmSO.FindProperty("mainMenuScene");
+            if (p != null) p.stringValue = "UIFlowTest";
+        }
+        {
+            var p = gmSO.FindProperty("levelScenes");
+            if (p != null) { p.arraySize = 1; p.GetArrayElementAtIndex(0).stringValue = "UIFlowTest"; }
+        }
         gmSO.ApplyModifiedPropertiesWithoutUndo();
 
-        // ── AudioManager ───────────────────────────────────────────────────────
+        // ── AudioManager ──────────────────────────────────────────────────────
         var amGO = new GameObject("AudioManager");
         amGO.AddComponent<AudioManager>();
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // Local helper functions
-        // ═══════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════
+        // ──── LOCAL HELPERS ────────────────────────────────────────────────
+        // ═════════════════════════════════════════════════════════════════════
 
-        // Creates a root Canvas with CanvasScaler (ScaleWithScreenSize 1920×1080) and GraphicRaycaster.
+        // Creates a root Canvas (ScreenSpaceOverlay, ScaleWithScreenSize 1920×1080).
         Canvas MakeCanvas(string name, int sortOrder)
         {
             var go = new GameObject(name);
@@ -138,135 +138,337 @@ public static class UIFlowTestSceneSetup
             c.sortingOrder = sortOrder;
             var cs = go.AddComponent<CanvasScaler>();
             cs.uiScaleMode         = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            cs.referenceResolution = new Vector2(1920, 1080);
+            cs.referenceResolution = new Vector2(RefW, RefH);
             cs.screenMatchMode     = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             cs.matchWidthOrHeight  = 0.5f;
             go.AddComponent<GraphicRaycaster>();
             return c;
         }
 
-        // Creates a child panel (full-stretch RectTransform). Adds an Image only when bg.a > 0.
-        RectTransform Panel(string name, Transform parent, Color bg)
+        // Full-stretch child panel.  Adds an Image only when bg.a > 0.
+        RectTransform Panel(string name, Transform parent, Color bg, bool raycast = true)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             var rt = go.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
             rt.offsetMin = rt.offsetMax = Vector2.zero;
-            if (bg.a > 0f) { var img = go.AddComponent<Image>(); img.color = bg; }
+            if (bg.a > 0f)
+            {
+                var img = go.AddComponent<Image>();
+                img.color         = bg;
+                img.raycastTarget = raycast;
+            }
             return rt;
         }
 
-        // Creates a TMP_Text label child at the default sizeDelta.
-        TMP_Text Label(string name, string text, Transform parent, int fontSize = 36)
+        // Child panel with explicit pixel size + anchored position.
+        RectTransform Box(string name, Transform parent, Vector2 size, Vector2 pos, Color bg)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             var rt = go.AddComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(600, 60);
+            rt.anchorMin        = new Vector2(0.5f, 0.5f);
+            rt.anchorMax        = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta        = size;
+            rt.anchoredPosition = pos;
+            if (bg.a > 0f)
+            {
+                var img = go.AddComponent<Image>();
+                img.color = bg;
+            }
+            return rt;
+        }
+
+        // TMP label — pivot / anchor centred, explicit size.
+        TMP_Text Txt(string name, string text, Transform parent, int fontSize,
+                     Color col, Vector2 size, Vector2 pos,
+                     TextAlignmentOptions align = TextAlignmentOptions.Left)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin        = new Vector2(0.5f, 0.5f);
+            rt.anchorMax        = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta        = size;
+            rt.anchoredPosition = pos;
             var t = go.AddComponent<TextMeshProUGUI>();
-            t.text      = text;
-            t.fontSize  = fontSize;
-            t.alignment = TextAlignmentOptions.Center;
-            t.color     = Color.white;
+            t.text           = text;
+            t.fontSize       = fontSize;
+            t.color          = col;
+            t.alignment      = align;
+            t.raycastTarget  = false;
             return t;
         }
 
-        // Creates a button (Image background + TMP_Text label).
-        Button MakeButton(string name, string label, Transform parent, Vector2 pos)
+        // ── Styled menu button (amber left-bar + text, MenuButtonEffect) ──────
+        //   parent : the container that owns the button row
+        //   label  : display text
+        //   pos    : anchoredPosition of the row's root RT (pivot bottom-left of left column)
+        //   width  : RT width (usually LeftColW - LeftMargin)
+        Button StyledButton(string name, string labelText, Transform parent,
+                            Vector2 size, Vector2 pos)
         {
-            var go = new GameObject(name);
+            // Root GO — transparent background, hit-area sized.
+            var go  = new GameObject(name);
             go.transform.SetParent(parent, false);
-            var rt = go.AddComponent<RectTransform>();
-            rt.sizeDelta        = new Vector2(300, 60);
+            var rt  = go.AddComponent<RectTransform>();
+            rt.anchorMin        = new Vector2(0, 0.5f);
+            rt.anchorMax        = new Vector2(0, 0.5f);
+            rt.pivot            = new Vector2(0, 0.5f);
+            rt.sizeDelta        = size;
             rt.anchoredPosition = pos;
-            var img = go.AddComponent<Image>();
-            img.color = new Color(0.15f, 0.5f, 0.8f, 0.9f);
-            var btn = go.AddComponent<Button>();
-            // Label inside the button.
-            var lbl = Label(label, label, go.transform, 28);
-            lbl.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-            lbl.GetComponent<RectTransform>().sizeDelta        = new Vector2(280, 55);
+
+            // Invisible background that catches raycasts.
+            var hitImg   = go.AddComponent<Image>();
+            hitImg.color = MenuStyle.Transparent;
+
+            var btn      = go.AddComponent<Button>();
+            btn.targetGraphic = hitImg;
+
+            // Amber marker bar — anchored to the left edge, full height.
+            var markerGO  = new GameObject("SelectionMarker");
+            markerGO.transform.SetParent(go.transform, false);
+            var markerRT  = markerGO.AddComponent<RectTransform>();
+            markerRT.anchorMin = new Vector2(0, 0);
+            markerRT.anchorMax = new Vector2(0, 1);
+            markerRT.offsetMin = Vector2.zero;
+            markerRT.offsetMax = new Vector2(MenuStyle.MarkerWidth, 0);
+            var markerImg = markerGO.AddComponent<Image>();
+            markerImg.color = MenuStyle.Transparent;   // hidden until hover/focus
+
+            // Label — left-aligned, offset right of the marker.
+            var lblGO  = new GameObject("Label");
+            lblGO.transform.SetParent(go.transform, false);
+            var lblRT  = lblGO.AddComponent<RectTransform>();
+            lblRT.anchorMin        = Vector2.zero;
+            lblRT.anchorMax        = Vector2.one;
+            lblRT.offsetMin        = new Vector2(MenuStyle.MarkerWidth + MenuStyle.ButtonPadLeft, 0);
+            lblRT.offsetMax        = Vector2.zero;
+            var lbl    = lblGO.AddComponent<TextMeshProUGUI>();
+            lbl.text           = labelText;
+            lbl.fontSize       = MenuStyle.ButtonSize;
+            lbl.color          = MenuStyle.TextPrimary;
+            lbl.alignment      = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
+            lbl.raycastTarget  = false;
+
+            // Wire up MenuButtonEffect.
+            var effect = go.AddComponent<MenuButtonEffect>();
+            effect.Init(markerImg, lbl);
+
             return btn;
         }
 
-        // Builds a fully-wired Unity UI Slider with Background / Fill / Handle sub-objects.
-        Slider MakeSlider(string name, Transform parent, Vector2 pos, float min, float max, float val)
+        // ── Horizontal separator line ─────────────────────────────────────────
+        RectTransform Separator(string name, Transform parent, float yPos, float width)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             var rt = go.AddComponent<RectTransform>();
-            rt.sizeDelta        = new Vector2(400, 40);
-            rt.anchoredPosition = pos;
+            rt.anchorMin        = new Vector2(0.5f, 0.5f);
+            rt.anchorMax        = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta        = new Vector2(width, 1f);
+            rt.anchoredPosition = new Vector2(0, yPos);
+            var img = go.AddComponent<Image>();
+            img.color         = MenuStyle.SeparatorLine;
+            img.raycastTarget = false;
+            return rt;
+        }
 
-            var bgGO = new GameObject("Background"); bgGO.transform.SetParent(go.transform, false);
-            var bgRT = bgGO.AddComponent<RectTransform>();
-            bgRT.anchorMin = Vector2.zero; bgRT.anchorMax = Vector2.one; bgRT.sizeDelta = Vector2.zero;
-            var bgImg = bgGO.AddComponent<Image>(); bgImg.color = new Color(0.2f, 0.2f, 0.2f);
+        // ── Options slider row ────────────────────────────────────────────────
+        //   Returns the Slider component; also creates label + value label.
+        Slider OptionsRow(string rowName, Transform parent,
+                          float yCenter, float panelWidth,
+                          float sliderMin, float sliderMax, float sliderDefault,
+                          string labelText,
+                          out TMP_Text valueLabel)
+        {
+            float labelW  = 280f;
+            float sliderW = panelWidth * 0.38f;
+            float valueW  = 90f;
+            float totalContent = labelW + 20f + sliderW + 16f + valueW;
+            float startX  = -(totalContent * 0.5f);   // centre the whole row
 
-            var fillArea = new GameObject("Fill Area"); fillArea.transform.SetParent(go.transform, false);
-            var faRT = fillArea.AddComponent<RectTransform>();
-            faRT.anchorMin = new Vector2(0, 0.25f); faRT.anchorMax = new Vector2(1, 0.75f);
-            faRT.offsetMin = new Vector2(5, 0); faRT.offsetMax = new Vector2(-15, 0);
+            // Row label.
+            var lblGO = new GameObject(rowName + "_Label");
+            lblGO.transform.SetParent(parent, false);
+            var lblRT = lblGO.AddComponent<RectTransform>();
+            lblRT.anchorMin        = new Vector2(0.5f, 0.5f);
+            lblRT.anchorMax        = new Vector2(0.5f, 0.5f);
+            lblRT.sizeDelta        = new Vector2(labelW, 44f);
+            lblRT.anchoredPosition = new Vector2(startX + labelW * 0.5f, yCenter);
+            var lbl = lblGO.AddComponent<TextMeshProUGUI>();
+            lbl.text          = labelText;
+            lbl.fontSize      = MenuStyle.OptionLabelSize;
+            lbl.color         = MenuStyle.TextPrimary;
+            lbl.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
+            lbl.raycastTarget = false;
 
-            var fill = new GameObject("Fill"); fill.transform.SetParent(fillArea.transform, false);
-            var fillRT = fill.AddComponent<RectTransform>();
-            fillRT.anchorMin = Vector2.zero; fillRT.anchorMax = Vector2.one; fillRT.sizeDelta = new Vector2(10, 0);
-            var fillImg = fill.AddComponent<Image>(); fillImg.color = new Color(0.2f, 0.7f, 1f);
+            // Slider.
+            float sliderX = startX + labelW + 20f + sliderW * 0.5f;
+            var slider = BuildSlider(rowName + "_Slider", parent,
+                                     new Vector2(sliderW, 10f),
+                                     new Vector2(sliderX, yCenter),
+                                     sliderMin, sliderMax, sliderDefault);
 
-            var hsa = new GameObject("Handle Slide Area"); hsa.transform.SetParent(go.transform, false);
-            var hsaRT = hsa.AddComponent<RectTransform>();
-            hsaRT.anchorMin = Vector2.zero; hsaRT.anchorMax = Vector2.one;
-            hsaRT.offsetMin = new Vector2(10, 0); hsaRT.offsetMax = new Vector2(-10, 0);
+            // Value readout.
+            float valX = startX + labelW + 20f + sliderW + 16f + valueW * 0.5f;
+            var valGO  = new GameObject(rowName + "_Value");
+            valGO.transform.SetParent(parent, false);
+            var valRT  = valGO.AddComponent<RectTransform>();
+            valRT.anchorMin        = new Vector2(0.5f, 0.5f);
+            valRT.anchorMax        = new Vector2(0.5f, 0.5f);
+            valRT.sizeDelta        = new Vector2(valueW, 44f);
+            valRT.anchoredPosition = new Vector2(valX, yCenter);
+            var valTxt = valGO.AddComponent<TextMeshProUGUI>();
+            valTxt.fontSize      = MenuStyle.ValueLabelSize;
+            valTxt.color         = MenuStyle.AccentAmber;
+            valTxt.alignment     = TextAlignmentOptions.Right | TextAlignmentOptions.Midline;
+            valTxt.raycastTarget = false;
 
-            var handle = new GameObject("Handle"); handle.transform.SetParent(hsa.transform, false);
-            var handleRT = handle.AddComponent<RectTransform>();
-            handleRT.sizeDelta = new Vector2(20, 0);
-            handleRT.anchorMin = handleRT.anchorMax = new Vector2(0.5f, 0.5f);
-            var handleImg = handle.AddComponent<Image>(); handleImg.color = Color.white;
-
-            var slider = go.AddComponent<Slider>();
-            slider.fillRect   = fillRT;
-            slider.handleRect = handleRT;
-            slider.minValue   = min;
-            slider.maxValue   = max;
-            slider.value      = val;
-            slider.direction  = Slider.Direction.LeftToRight;
+            valueLabel = valTxt;
             return slider;
         }
 
-        // Builds a complete OptionsPanel hierarchy and wires all serialized fields.
-        OptionsPanel BuildOptionsPanel(string goName, Transform parent)
+        // ── Thin-track slider (amber fill + white handle) ─────────────────────
+        Slider BuildSlider(string sliderName, Transform parent,
+                           Vector2 trackSize, Vector2 pos,
+                           float min, float max, float val)
+        {
+            var go = new GameObject(sliderName);
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin        = new Vector2(0.5f, 0.5f);
+            rt.anchorMax        = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta        = new Vector2(trackSize.x, 32f);
+            rt.anchoredPosition = pos;
+
+            // Track background.
+            var bgGO  = new GameObject("Background"); bgGO.transform.SetParent(go.transform, false);
+            var bgRT  = bgGO.AddComponent<RectTransform>();
+            bgRT.anchorMin = new Vector2(0, 0.5f); bgRT.anchorMax = new Vector2(1, 0.5f);
+            bgRT.sizeDelta = new Vector2(0, trackSize.y);
+            var bgImg = bgGO.AddComponent<Image>();
+            bgImg.color = new Color(1, 1, 1, 0.15f);
+
+            // Fill area.
+            var fillAreaGO = new GameObject("Fill Area"); fillAreaGO.transform.SetParent(go.transform, false);
+            var fillAreaRT = fillAreaGO.AddComponent<RectTransform>();
+            fillAreaRT.anchorMin = new Vector2(0, 0.5f); fillAreaRT.anchorMax = new Vector2(1, 0.5f);
+            fillAreaRT.sizeDelta = new Vector2(-10f, trackSize.y);
+
+            var fillGO  = new GameObject("Fill"); fillGO.transform.SetParent(fillAreaGO.transform, false);
+            var fillRT  = fillGO.AddComponent<RectTransform>();
+            fillRT.anchorMin = Vector2.zero; fillRT.anchorMax = Vector2.one;
+            fillRT.sizeDelta = new Vector2(10f, 0);
+            var fillImg = fillGO.AddComponent<Image>();
+            fillImg.color = MenuStyle.AccentAmber;
+
+            // Handle slide area.
+            var hsaGO = new GameObject("Handle Slide Area"); hsaGO.transform.SetParent(go.transform, false);
+            var hsaRT = hsaGO.AddComponent<RectTransform>();
+            hsaRT.anchorMin = Vector2.zero; hsaRT.anchorMax = Vector2.one;
+            hsaRT.offsetMin = new Vector2(8, 0); hsaRT.offsetMax = new Vector2(-8, 0);
+
+            var handleGO  = new GameObject("Handle"); handleGO.transform.SetParent(hsaGO.transform, false);
+            var handleRT  = handleGO.AddComponent<RectTransform>();
+            handleRT.anchorMin = new Vector2(0, 0.5f); handleRT.anchorMax = new Vector2(0, 0.5f);
+            handleRT.sizeDelta = new Vector2(22f, 22f);
+            var handleImg = handleGO.AddComponent<Image>();
+            handleImg.color = Color.white;
+
+            var slider          = go.AddComponent<Slider>();
+            slider.fillRect     = fillRT;
+            slider.handleRect   = handleRT;
+            slider.minValue     = min;
+            slider.maxValue     = max;
+            slider.value        = val;
+            slider.direction    = Slider.Direction.LeftToRight;
+            return slider;
+        }
+
+        // ── Full OptionsPanel sub-hierarchy ───────────────────────────────────
+        OptionsPanel BuildOptionsPanel(string goName, Transform parent, float cardWidth)
         {
             var panelGO = new GameObject(goName);
             panelGO.transform.SetParent(parent, false);
             var rt = panelGO.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
             rt.offsetMin = rt.offsetMax = Vector2.zero;
-            var bg = panelGO.AddComponent<Image>(); bg.color = new Color(0.05f, 0.1f, 0.2f, 0.95f);
+
+            // Dark card behind the options rows.
+            var card = panelGO.AddComponent<Image>();
+            card.color = MenuStyle.PanelCard;
+
             var op = panelGO.AddComponent<OptionsPanel>();
 
-            Label("OptionsTitle", "Options", panelGO.transform, 42)
-                .GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 200);
+            // "OPTIONS" heading.
+            Txt("OptionsHeading", "OPTIONS", panelGO.transform,
+                MenuStyle.PauseTitleSize, MenuStyle.AccentAmber,
+                new Vector2(cardWidth - 80f, 60f), new Vector2(0, 148f),
+                TextAlignmentOptions.Center);
 
-            Label("VolumeLabel", "Master Volume", panelGO.transform, 28)
-                .GetComponent<RectTransform>().anchoredPosition = new Vector2(-200, 80);
-            var volSlider = MakeSlider("VolumeSlider", panelGO.transform,
-                                        new Vector2(80, 80), 0, 1, UISettings.DefaultVolume);
-            var volLabel = Label("VolumeValueLabel", "80%", panelGO.transform, 24);
-            volLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(310, 80);
+            // Separator under heading.
+            Separator("Sep0", panelGO.transform, 108f, cardWidth * 0.75f);
 
-            Label("SensLabel", "Mouse Sensitivity", panelGO.transform, 28)
-                .GetComponent<RectTransform>().anchoredPosition = new Vector2(-200, 10);
-            var sensSlider = MakeSlider("SensSlider", panelGO.transform,
-                                         new Vector2(80, 10),
-                                         UISettings.MinSensitivity, UISettings.MaxSensitivity,
-                                         UISettings.DefaultSensitivity);
-            var sensLabel = Label("SensValueLabel", "1.0", panelGO.transform, 24);
-            sensLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(310, 10);
+            // Volume row  (y = +30).
+            var volSlider = OptionsRow("Volume", panelGO.transform,
+                                       28f, cardWidth,
+                                       UISettings.MinVolume, UISettings.MaxVolume,
+                                       UISettings.DefaultVolume,
+                                       "MASTER VOLUME", out var volLabel);
 
-            var backBtn = MakeButton("BackButton", "Back", panelGO.transform, new Vector2(0, -120));
+            // Mid separator.
+            Separator("Sep1", panelGO.transform, -20f, cardWidth * 0.75f);
 
+            // Sensitivity row  (y = -68).
+            var sensSlider = OptionsRow("Sensitivity", panelGO.transform,
+                                        -68f, cardWidth,
+                                        UISettings.MinSensitivity, UISettings.MaxSensitivity,
+                                        UISettings.DefaultSensitivity,
+                                        "MOUSE SENSITIVITY", out var sensLabel);
+
+            // Bottom separator.
+            Separator("Sep2", panelGO.transform, -116f, cardWidth * 0.75f);
+
+            // Back button — centred, bottom of card.
+            var backRoot = new GameObject("BackButton");
+            backRoot.transform.SetParent(panelGO.transform, false);
+            var backRT   = backRoot.AddComponent<RectTransform>();
+            backRT.anchorMin        = new Vector2(0.5f, 0.5f);
+            backRT.anchorMax        = new Vector2(0.5f, 0.5f);
+            backRT.sizeDelta        = new Vector2(220f, MenuStyle.ButtonHeight);
+            backRT.anchoredPosition = new Vector2(0, -172f);
+            var backHit  = backRoot.AddComponent<Image>();
+            backHit.color = MenuStyle.Transparent;
+            var backBtn  = backRoot.AddComponent<Button>();
+            backBtn.targetGraphic = backHit;
+
+            // Marker.
+            var backMarkerGO  = new GameObject("SelectionMarker");
+            backMarkerGO.transform.SetParent(backRoot.transform, false);
+            var backMarkerRT  = backMarkerGO.AddComponent<RectTransform>();
+            backMarkerRT.anchorMin = new Vector2(0, 0); backMarkerRT.anchorMax = new Vector2(0, 1);
+            backMarkerRT.offsetMin = Vector2.zero; backMarkerRT.offsetMax = new Vector2(MenuStyle.MarkerWidth, 0);
+            var backMarkerImg = backMarkerGO.AddComponent<Image>(); backMarkerImg.color = MenuStyle.Transparent;
+
+            // Label.
+            var backLblGO = new GameObject("Label"); backLblGO.transform.SetParent(backRoot.transform, false);
+            var backLblRT = backLblGO.AddComponent<RectTransform>();
+            backLblRT.anchorMin = Vector2.zero; backLblRT.anchorMax = Vector2.one;
+            backLblRT.offsetMin = new Vector2(MenuStyle.MarkerWidth + MenuStyle.ButtonPadLeft, 0);
+            backLblRT.offsetMax = Vector2.zero;
+            var backLbl = backLblGO.AddComponent<TextMeshProUGUI>();
+            backLbl.text          = "BACK";
+            backLbl.fontSize      = MenuStyle.ButtonSize;
+            backLbl.color         = MenuStyle.TextPrimary;
+            backLbl.alignment     = TextAlignmentOptions.Left | TextAlignmentOptions.Midline;
+            backLbl.raycastTarget = false;
+
+            var backEffect = backRoot.AddComponent<MenuButtonEffect>();
+            backEffect.Init(backMarkerImg, backLbl);
+
+            // Wire OptionsPanel serialized fields.
             var so = new SerializedObject(op);
             so.FindProperty("volumeSlider"     ).objectReferenceValue = volSlider;
             so.FindProperty("volumeValueLabel" ).objectReferenceValue = volLabel;
@@ -275,86 +477,279 @@ public static class UIFlowTestSceneSetup
             so.FindProperty("backButton"       ).objectReferenceValue = backBtn;
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            panelGO.SetActive(false);   // panels start hidden; controllers activate them
+            panelGO.SetActive(false);
             return op;
         }
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // A. MAIN MENU CANVAS  (sort 0)
-        // ═══════════════════════════════════════════════════════════════════════
-        var mmCanvas  = MakeCanvas("MainMenuCanvas", 0);
-        var mmRoot    = mmCanvas.transform;
+        // ═════════════════════════════════════════════════════════════════════
+        // A. MAIN MENU CANVAS  (sort 0) — Eternal Garden layout
+        // ═════════════════════════════════════════════════════════════════════
+        var mmCanvas = MakeCanvas("MainMenuCanvas", 0);
+        var mmRoot   = mmCanvas.transform;
 
-        var mainPanelRT = Panel("MainPanel", mmRoot, new Color(0.05f, 0.05f, 0.15f, 0.97f));
-        Label("TitleLabel", "The Physics Thief", mainPanelRT, 56)
-            .GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 250);
-        var startBtn  = MakeButton("StartButton",   "Start",   mainPanelRT, new Vector2(0,  100));
-        var optBtn1   = MakeButton("OptionsButton", "Options", mainPanelRT, new Vector2(0,   20));
-        var quitBtn   = MakeButton("QuitButton",    "Quit",    mainPanelRT, new Vector2(0,  -60));
-        var optPanelMM = BuildOptionsPanel("OptionsPanel", mmRoot);
+        // ── BACKGROUND — full-canvas; assign real forest art to Backdrop's Image.sprite ──
+        var backdropGO = new GameObject("Backdrop");
+        backdropGO.transform.SetParent(mmRoot, false);
+        var backdropRT = backdropGO.AddComponent<RectTransform>();
+        backdropRT.anchorMin = Vector2.zero; backdropRT.anchorMax = Vector2.one;
+        backdropRT.offsetMin = backdropRT.offsetMax = Vector2.zero;
+        var backdropImg = backdropGO.AddComponent<Image>();
+        backdropImg.color = Color.white;
+        backdropImg.raycastTarget = false;
+        backdropImg.type = Image.Type.Simple;
+        backdropImg.preserveAspect = false;
+        // Load background sprite. File must be imported as Sprite (textureType=8).
+        // Looks for the PNG first, then the JPG, so either filename works.
+        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.png")
+                    ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.jpg");
+        if (bgSprite != null)
+        {
+            backdropImg.sprite = bgSprite;
+            Debug.Log("[UIFlowTestSetup] Loaded background sprite: " + bgSprite.name);
+        }
+        else
+        {
+            // ForestBackdrop paints layered solid-colour Images until real art is imported.
+            var fb = backdropGO.AddComponent<ForestBackdrop>();
+            // Disable immediately — enabled only when sprite is absent at runtime too.
+            fb.enabled = false;
+            Debug.LogWarning("[UIFlowTestSetup] MainMenuBackground not found in Assets/Textures/UI/. " +
+                             "Import the PNG there (textureType=Sprite) and regenerate.");
+        }
 
+        // ── MAIN PANEL — full-canvas transparent container for title + buttons ──
+        var mainPanelGO = new GameObject("MainPanel");
+        mainPanelGO.transform.SetParent(mmRoot, false);
+        var mainPanelRT = mainPanelGO.AddComponent<RectTransform>();
+        mainPanelRT.anchorMin = Vector2.zero; mainPanelRT.anchorMax = Vector2.one;
+        mainPanelRT.offsetMin = mainPanelRT.offsetMax = Vector2.zero;
+
+        // ── TITLE: "THE PHYSICS" (smaller) + "THIEF" (larger, ~1.4×) ───────────
+        // Both centred, stacked to span 19–36% from top (anchors 0.64–0.81).
+        // Forest teal glow via LiberationSans SDF Outline material.
+        var outlineMat = AssetDatabase.FindAssets("LiberationSans SDF - Outline t:Material")
+            .Select(g2 => AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(g2)))
+            .FirstOrDefault(m => m != null);
+
+        {
+            var go = new GameObject("TitleTop");
+            go.transform.SetParent(mainPanelGO.transform, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.725f); rt.anchorMax = new Vector2(0.5f, 0.81f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(900f, 90f);
+            rt.anchoredPosition = Vector2.zero;
+            var t = go.AddComponent<TextMeshProUGUI>();
+            t.text = "THE PHYSICS"; t.fontSize = 54; t.fontStyle = FontStyles.Bold;
+            t.color = Color.white;
+            t.alignment = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
+            t.characterSpacing = 2f; t.raycastTarget = false;
+            if (outlineMat != null) {
+                var clone = new Material(outlineMat);
+                if (clone.HasProperty("_OutlineColor"))
+                    clone.SetColor("_OutlineColor", new Color(0.102f, 0.361f, 0.322f, 1f));
+                if (clone.HasProperty("_OutlineWidth")) clone.SetFloat("_OutlineWidth", 0.08f);
+                t.fontSharedMaterial = clone;
+            }
+        }
+        {
+            var go = new GameObject("TitleBottom");
+            go.transform.SetParent(mainPanelGO.transform, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.64f); rt.anchorMax = new Vector2(0.5f, 0.725f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(900f, 120f);
+            rt.anchoredPosition = Vector2.zero;
+            var t = go.AddComponent<TextMeshProUGUI>();
+            t.text = "THIEF"; t.fontSize = 90; t.fontStyle = FontStyles.Bold;
+            t.color = Color.white;
+            t.alignment = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
+            t.characterSpacing = 2f; t.raycastTarget = false;
+            if (outlineMat != null) {
+                var clone = new Material(outlineMat);
+                if (clone.HasProperty("_OutlineColor"))
+                    clone.SetColor("_OutlineColor", new Color(0.102f, 0.361f, 0.322f, 1f));
+                if (clone.HasProperty("_OutlineWidth")) clone.SetFloat("_OutlineWidth", 0.08f);
+                t.fontSharedMaterial = clone;
+            }
+        }
+
+        // ── MENU BUTTONS: centred, START at 49%, OPTIONS 55%, QUIT 61% ────────
+        // EternalMenuButtonEffect: white rounded-rect outline on focus/hover.
+        Button EternalBtn(string nm, string lbl, float yAnchor)
+        {
+            var go = new GameObject(nm);
+            go.transform.SetParent(mainPanelGO.transform, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, yAnchor); rt.anchorMax = new Vector2(0.5f, yAnchor);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(400f, 60f);
+            rt.anchoredPosition = Vector2.zero;
+            var hitImg = go.AddComponent<Image>(); hitImg.color = new Color(0,0,0,0);
+            var btn = go.AddComponent<Button>(); btn.targetGraphic = hitImg;
+
+            var oGO = new GameObject("FocusOutline"); oGO.transform.SetParent(go.transform, false);
+            oGO.transform.SetAsFirstSibling();  // Put outline behind label
+            var oRT = oGO.AddComponent<RectTransform>();
+            // Use center anchors - EternalMenuButtonEffect will size this to match the label.
+            oRT.anchorMin = new Vector2(0.5f, 0.5f);
+            oRT.anchorMax = new Vector2(0.5f, 0.5f);
+            oRT.pivot = new Vector2(0.5f, 0.5f);
+            oRT.anchoredPosition = Vector2.zero;
+            oRT.sizeDelta = new Vector2(200f, 60f);  // Initial size, will be adjusted at runtime.
+            var oImg = oGO.AddComponent<Image>(); oImg.color = new Color(0,0,0,0);
+            oImg.raycastTarget = false; oImg.type = Image.Type.Sliced;
+
+            var lblGO = new GameObject("Label"); lblGO.transform.SetParent(go.transform, false);
+            var lblRT = lblGO.AddComponent<RectTransform>();
+            lblRT.anchorMin = Vector2.zero; lblRT.anchorMax = Vector2.one;
+            lblRT.offsetMin = lblRT.offsetMax = Vector2.zero;
+            var t = lblGO.AddComponent<TextMeshProUGUI>();
+            t.text = lbl; t.fontSize = 38; t.fontStyle = FontStyles.Bold;
+            t.color = Color.white;
+            t.alignment = TextAlignmentOptions.Center | TextAlignmentOptions.Midline;
+            t.characterSpacing = 4f; t.raycastTarget = false;
+
+            // Outline stays as sibling of label (both children of button).
+            // EternalMenuButtonEffect will position it at runtime.
+
+            var fx = go.AddComponent<EternalMenuButtonEffect>(); fx.Init(oImg, t);
+            return btn;
+        }
+
+        var startBtn  = EternalBtn("StartButton",   "START",   0.51f);
+        var optBtn1   = EternalBtn("OptionsButton", "OPTIONS", 0.45f);
+        var quitBtn   = EternalBtn("QuitButton",    "QUIT",    0.39f);
+
+        // Options panel (full-canvas, overlays everything).
+        var optPanelMM = BuildOptionsPanel("OptionsPanel", mmRoot, 700f);
+
+        // Wire MainMenuController.
         var mmc  = mmCanvas.gameObject.AddComponent<MainMenuController>();
         var mmSO = new SerializedObject(mmc);
-        mmSO.FindProperty("mainPanel"    ).objectReferenceValue = mainPanelRT.gameObject;
+        mmSO.FindProperty("mainPanel"    ).objectReferenceValue = mainPanelGO;
         mmSO.FindProperty("optionsPanel" ).objectReferenceValue = optPanelMM;
         mmSO.FindProperty("startButton"  ).objectReferenceValue = startBtn;
         mmSO.FindProperty("optionsButton").objectReferenceValue = optBtn1;
         mmSO.FindProperty("quitButton"   ).objectReferenceValue = quitBtn;
         mmSO.ApplyModifiedPropertiesWithoutUndo();
 
-        // ═══════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════
         // B. PAUSE CANVAS  (sort 10)
-        // ═══════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════
         var pauseCanvas = MakeCanvas("PauseMenuCanvas", 10);
         var pauseRoot   = pauseCanvas.transform;
 
-        var pausePanelRT = Panel("PausePanel", pauseRoot, new Color(0f, 0f, 0f, 0.75f));
-        Label("PauseTitle", "PAUSED", pausePanelRT, 48)
-            .GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 120);
-        var resumeBtn  = MakeButton("ResumeButton",  "Resume",  pausePanelRT, new Vector2(0,  30));
-        var optBtn2    = MakeButton("OptionsButton", "Options", pausePanelRT, new Vector2(0, -50));
-        pausePanelRT.gameObject.SetActive(false);
+        // Scrim — semi-transparent, keeps game visible (From Dust / a757ba8f reference).
+        var scrimGO  = new GameObject("Scrim");
+        scrimGO.transform.SetParent(pauseRoot, false);
+        var scrimRT  = scrimGO.AddComponent<RectTransform>();
+        scrimRT.anchorMin = Vector2.zero; scrimRT.anchorMax = Vector2.one;
+        scrimRT.offsetMin = scrimRT.offsetMax = Vector2.zero;
+        var scrimImg = scrimGO.AddComponent<Image>();
+        scrimImg.color         = MenuStyle.PauseScrim;
+        scrimImg.raycastTarget = true;   // block clicks through to game
 
-        var optPanelPause = BuildOptionsPanel("PauseOptionsPanel", pauseRoot);
+        // Dark card — compact, centred (640 × 420 at ref).
+        float cardW = 640f; float cardH = 420f;
+        var cardRT  = Box("PauseCard", pauseRoot, new Vector2(cardW, cardH), Vector2.zero,
+                          MenuStyle.PanelCard);
+        cardRT.gameObject.GetComponent<Image>().raycastTarget = false;
 
+        // "PAUSED" heading inside card.
+        Txt("PauseTitle", "PAUSED", cardRT,
+            MenuStyle.PauseTitleSize, MenuStyle.AccentAmber,
+            new Vector2(cardW - 60f, 60f), new Vector2(0, 140f),
+            TextAlignmentOptions.Center);
+
+        // Separator under heading.
+        Separator("Sep", cardRT, 100f, cardW * 0.70f);
+
+        // Pause buttons — centred inside card.
+        float pbW     = 320f;
+        float pbY0    = 20f;
+        float pbStep  = MenuStyle.ButtonHeight + 10f;
+
+        var resumeBtn = StyledButton("ResumeButton",  "RESUME",  cardRT,
+                                     new Vector2(pbW, MenuStyle.ButtonHeight),
+                                     new Vector2(-pbW * 0.5f, pbY0));
+        var pOptBtn   = StyledButton("OptionsButton", "OPTIONS", cardRT,
+                                     new Vector2(pbW, MenuStyle.ButtonHeight),
+                                     new Vector2(-pbW * 0.5f, pbY0 - pbStep));
+
+        // PausePanel contains card+scrim; we set it inactive when not paused.
+        var pausePanelGO = new GameObject("PausePanel");
+        pausePanelGO.transform.SetParent(pauseRoot, false);
+        var pausePanelRT = pausePanelGO.AddComponent<RectTransform>();
+        pausePanelRT.anchorMin = Vector2.zero; pausePanelRT.anchorMax = Vector2.one;
+        pausePanelRT.offsetMin = pausePanelRT.offsetMax = Vector2.zero;
+
+        // Re-parent scrim and card under PausePanel so the whole thing hides together.
+        scrimGO.transform.SetParent(pausePanelGO.transform, true);
+        cardRT.transform.SetParent(pausePanelGO.transform, true);
+
+        pausePanelGO.SetActive(false);
+
+        // Options panel for pause (also full-canvas).
+        var optPanelPause = BuildOptionsPanel("PauseOptionsPanel", pauseRoot, 700f);
+
+        // Wire PauseMenuController.
         var pmc   = pauseCanvas.gameObject.AddComponent<PauseMenuController>();
         var pmcSO = new SerializedObject(pmc);
-        pmcSO.FindProperty("pausePanel"   ).objectReferenceValue = pausePanelRT.gameObject;
+        pmcSO.FindProperty("pausePanel"   ).objectReferenceValue = pausePanelGO;
         pmcSO.FindProperty("optionsPanel" ).objectReferenceValue = optPanelPause;
         pmcSO.FindProperty("resumeButton" ).objectReferenceValue = resumeBtn;
-        pmcSO.FindProperty("optionsButton").objectReferenceValue = optBtn2;
+        pmcSO.FindProperty("optionsButton").objectReferenceValue = pOptBtn;
         if (inputAsset != null)
             pmcSO.FindProperty("inputActions").objectReferenceValue = inputAsset;
         pmcSO.ApplyModifiedPropertiesWithoutUndo();
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // C. DEATH CANVAS  (sort 20)
-        // ═══════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════
+        // C. DEATH CANVAS  (sort 20)  — unchanged from previous implementation
+        // ═════════════════════════════════════════════════════════════════════
         var deathCanvas = MakeCanvas("DeathScreenCanvas", 20);
         var deathRoot   = deathCanvas.transform;
 
-        // FadeOverlayD: transparent + non-blocking at start. DeathScreenController.Awake()
-        // also calls SetFadeRaycast(false), but setting it here keeps the saved YAML clean.
-        var fadeOvD = Panel("FadeOverlayD", deathRoot, Color.clear);
+        var fadeOvD  = Panel("FadeOverlayD", deathRoot, Color.clear);
         var fadeImgD = fadeOvD.gameObject.AddComponent<Image>();
         fadeImgD.color         = new Color(0, 0, 0, 0);
-        fadeImgD.raycastTarget = false;     // enabled at runtime by DeathScreenController
+        fadeImgD.raycastTarget = false;
 
         var deathPanelRT = Panel("DeathPanel", deathRoot, Color.clear);
         deathPanelRT.gameObject.SetActive(false);
 
-        var ginoGO = new GameObject("GinoImage");
+        var ginoGO  = new GameObject("GinoImage");
         ginoGO.transform.SetParent(deathPanelRT, false);
-        var ginoRT = ginoGO.AddComponent<RectTransform>();
-        ginoRT.sizeDelta        = new Vector2(300, 300);
-        ginoRT.anchoredPosition = new Vector2(0, 80);
-        var ginoImg = ginoGO.AddComponent<Image>();
-        ginoImg.color = new Color(0.4f, 0.4f, 0.4f);   // grey placeholder — replace with spiral-eyes art
+        var ginoRT  = ginoGO.AddComponent<RectTransform>();
+        ginoRT.sizeDelta = new Vector2(300, 300); ginoRT.anchoredPosition = new Vector2(0, 80);
+        var ginoImg = ginoGO.AddComponent<Image>(); ginoImg.color = new Color(0.4f, 0.4f, 0.4f);
 
-        Label("NightmareLostLabel", "Nightmare lost\u2026", deathPanelRT, 42)
-            .GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -100);
-        var retryBtn     = MakeButton("RetryButton",    "Snooze and retry", deathPanelRT, new Vector2(0, -170));
-        var deathMenuBtn = MakeButton("MainMenuButton", "Main menu",        deathPanelRT, new Vector2(0, -240));
+        var nightmareLbl = Txt("NightmareLostLabel", "Nightmare lost\u2026", deathPanelRT,
+            42, MenuStyle.TextPrimary, new Vector2(600, 60), new Vector2(0, -100),
+            TextAlignmentOptions.Center);
+
+        // Death buttons reuse legacy plain-button helper (not styled menu buttons —
+        // the death screen has its own aesthetic defined in the GDD).
+        Button PlainButton(string n, string lbl, Transform p, Vector2 pos)
+        {
+            var go  = new GameObject(n);
+            go.transform.SetParent(p, false);
+            var rt  = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f); rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(300, 56); rt.anchoredPosition = pos;
+            var img = go.AddComponent<Image>(); img.color = new Color(0.12f, 0.14f, 0.28f, 0.9f);
+            var btn = go.AddComponent<Button>(); btn.targetGraphic = img;
+            var lblGO = new GameObject("Label"); lblGO.transform.SetParent(go.transform, false);
+            var lblRT = lblGO.AddComponent<RectTransform>();
+            lblRT.anchorMin = Vector2.zero; lblRT.anchorMax = Vector2.one; lblRT.offsetMin = lblRT.offsetMax = Vector2.zero;
+            var t = lblGO.AddComponent<TextMeshProUGUI>();
+            t.text = lbl; t.fontSize = 26; t.color = MenuStyle.TextPrimary;
+            t.alignment = TextAlignmentOptions.Center; t.raycastTarget = false;
+            return btn;
+        }
+
+        var retryBtn     = PlainButton("RetryButton",    "SNOOZE AND RETRY", deathPanelRT, new Vector2(0, -170));
+        var deathMenuBtn = PlainButton("MainMenuButton", "MAIN MENU",         deathPanelRT, new Vector2(0, -240));
 
         var dsc   = deathCanvas.gameObject.AddComponent<DeathScreenController>();
         var dscSO = new SerializedObject(dsc);
@@ -365,35 +760,30 @@ public static class UIFlowTestSceneSetup
         dscSO.FindProperty("mainMenuButton").objectReferenceValue = deathMenuBtn;
         dscSO.ApplyModifiedPropertiesWithoutUndo();
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // D. ENDING CANVAS  (sort 30)
-        // ═══════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════
+        // D. ENDING CANVAS  (sort 30)  — unchanged
+        // ═════════════════════════════════════════════════════════════════════
         var endingCanvas = MakeCanvas("EndingScreenCanvas", 30);
         var endingRoot   = endingCanvas.transform;
 
-        // FadeOverlayE: transparent + non-blocking at start. EndingScreenController.Awake()
-        // also calls SetFadeRaycast(false); keeping it false here keeps saved YAML clean.
-        // IMPORTANT: do NOT start this opaque — a full-screen alpha=1 Image on sort=30 would
-        // intercept all mouse clicks before they reach the MainMenuCanvas (sort=0).
-        var fadeOvE = Panel("FadeOverlayE", endingRoot, Color.clear);
+        var fadeOvE  = Panel("FadeOverlayE", endingRoot, Color.clear);
         var fadeImgE = fadeOvE.gameObject.AddComponent<Image>();
-        fadeImgE.color         = new Color(0, 0, 0, 0);
-        fadeImgE.raycastTarget = false;     // enabled at runtime by EndingScreenController
+        fadeImgE.color = new Color(0, 0, 0, 0); fadeImgE.raycastTarget = false;
 
         var endingPanelRT = Panel("EndingPanel", endingRoot, Color.clear);
         endingPanelRT.gameObject.SetActive(false);
 
-        var bedroomGO = new GameObject("BedroomImage");
+        var bedroomGO  = new GameObject("BedroomImage");
         bedroomGO.transform.SetParent(endingPanelRT, false);
-        var bedroomRT = bedroomGO.AddComponent<RectTransform>();
-        bedroomRT.sizeDelta        = new Vector2(500, 350);
-        bedroomRT.anchoredPosition = new Vector2(0, 80);
-        var bedroomImg = bedroomGO.AddComponent<Image>();
-        bedroomImg.color = new Color(0.3f, 0.3f, 0.5f);   // blue placeholder — replace with bedroom art
+        var bedroomRT  = bedroomGO.AddComponent<RectTransform>();
+        bedroomRT.sizeDelta = new Vector2(500, 350); bedroomRT.anchoredPosition = new Vector2(0, 80);
+        var bedroomImg = bedroomGO.AddComponent<Image>(); bedroomImg.color = new Color(0.3f, 0.3f, 0.5f);
 
-        Label("ThanksLabel", "Thanks for playing", endingPanelRT, 48)
-            .GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -100);
-        var endMenuBtn = MakeButton("MainMenuButton", "Main menu", endingPanelRT, new Vector2(0, -200));
+        Txt("ThanksLabel", "Thanks for playing", endingPanelRT,
+            48, MenuStyle.TextPrimary, new Vector2(640, 60), new Vector2(0, -100),
+            TextAlignmentOptions.Center);
+
+        var endMenuBtn = PlainButton("MainMenuButton", "MAIN MENU", endingPanelRT, new Vector2(0, -200));
 
         var esc   = endingCanvas.gameObject.AddComponent<EndingScreenController>();
         var escSO = new SerializedObject(esc);
@@ -403,39 +793,36 @@ public static class UIFlowTestSceneSetup
         escSO.FindProperty("mainMenuButton").objectReferenceValue = endMenuBtn;
         escSO.ApplyModifiedPropertiesWithoutUndo();
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // E. TEST HARNESS  (keyboard triggers for all five screens)
-        // ═══════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════
+        // E. TEST HARNESS
+        // ═════════════════════════════════════════════════════════════════════
         var harnessGO  = new GameObject("TestHarness");
         var testHealth = harnessGO.AddComponent<HealthComponent>();
         var harness    = harnessGO.AddComponent<UIFlowTestHarness>();
-
-        var hSO = new SerializedObject(harness);
+        var hSO        = new SerializedObject(harness);
         hSO.FindProperty("testPlayerHealth").objectReferenceValue = testHealth;
         hSO.FindProperty("deathScreen"     ).objectReferenceValue = dsc;
         hSO.ApplyModifiedPropertiesWithoutUndo();
-
-        // Wire test health to death screen so pressing D triggers the real fade.
         var dscSOb = new SerializedObject(dsc);
         dscSOb.FindProperty("playerHealth").objectReferenceValue = testHealth;
         dscSOb.ApplyModifiedPropertiesWithoutUndo();
 
-        // ═══════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════
         // Save
-        // ═══════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
         UpdateBuildSettingsGuid();
 
         Debug.Log(
-            "[UIFlowTestSetup] UIFlowTest scene created.\n" +
-            "Open Assets/Scenes/UIFlowTest.unity and press Play.\n" +
-            "  Start → reloads demo scene as 'level' (all UI survives in DontDestroyOnLoad)\n" +
-            "  Esc   → Pause → Resume / Options / Esc-chain\n" +
-            "  D     → Death screen    R → Retry    M → Main Menu\n" +
-            "  E     → Ending screen\n" +
-            "  F1    → Smoke test (check Console)\n" +
-            "Assign real art to GinoImage (spiral-eyes) and BedroomImage when available.");
+            "[UIFlowTestSetup] Eternal Garden layout saved to " + ScenePath + "\n\n" +
+            "MAIN MENU  — full-screen forest, centred title + 3 stacked buttons.\n" +
+            "             Backdrop: assign real forest Sprite → Backdrop Image.sprite,\n" +
+            "             then remove ForestBackdrop component from Backdrop GO.\n" +
+            "PAUSE      — compact dark card over semi-transparent scrim.\n" +
+            "OPTIONS    — full-canvas dark card, two rows, amber slider fill.\n\n" +
+            "Press Play → Start/Options/Quit centred over forest.\n" +
+            "START has initial keyboard focus (white outline). Hover any item to see outline.");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -443,23 +830,18 @@ public static class UIFlowTestSceneSetup
     {
         string metaPath = ScenePath + ".meta";
         if (!System.IO.File.Exists(metaPath)) return;
-
         string guid = "";
         foreach (var line in System.IO.File.ReadAllLines(metaPath))
         {
             if (line.TrimStart().StartsWith("guid:"))
-            {
-                guid = line.Split(':')[1].Trim();
-                break;
-            }
+            { guid = line.Split(':')[1].Trim(); break; }
         }
         if (string.IsNullOrEmpty(guid)) return;
-
-        string settingsPath = "ProjectSettings/EditorBuildSettings.asset";
-        string content = System.IO.File.ReadAllText(settingsPath);
+        string sp      = "ProjectSettings/EditorBuildSettings.asset";
+        string content = System.IO.File.ReadAllText(sp);
         content = content.Replace("guid: 00000000000000000000000000000001", $"guid: {guid}");
-        System.IO.File.WriteAllText(settingsPath, content);
-        Debug.Log($"[UIFlowTestSetup] Build settings updated with UIFlowTest GUID: {guid}");
+        System.IO.File.WriteAllText(sp, content);
+        Debug.Log($"[UIFlowTestSetup] Build settings → UIFlowTest GUID: {guid}");
     }
 }
 #endif
