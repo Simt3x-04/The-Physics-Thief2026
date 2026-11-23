@@ -45,7 +45,7 @@ namespace PhysicsThief.Enemies
             Vector3 aimPoint = target.position + Vector3.up * eyeHeight;
             Vector3 direction = (aimPoint - firePoint.position).normalized;
             Projectile projectile = Instantiate(spearBeetleData.ProjectilePrefab, firePoint.position, Quaternion.LookRotation(direction));
-            //projectile.Launch(direction, spearBeetleData.ProjectileDamage, gameObject);
+            projectile.Launch(direction,gameObject ,spearBeetleData.ProjectileDamage);
         }
 
         public void ShatterArmor()

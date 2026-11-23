@@ -33,7 +33,7 @@ namespace PhysicsThief.Core
         public void TakeDamage(float amount) { }
 
         ///<summary>TODO: When the character is poisoned take damage every x seconds
-        public void PoisonDamage(float poisonDps, float poisonDuration) { }
+        public virtual void PoisonDamage(float poisonDps, float poisonDuration) { }
 
         /// <summary>TODO: aggiungi HP (clamp a maxHP) e notifica OnHealthChanged.</summary>
         public void Heal(float amount) { }

@@ -34,9 +34,9 @@ namespace PhysicsThief.Enemies
 
         public void Reflect(Vector3 direction){
             IsReflected = true;
-            newDirection.Normalize();
-            rb.linearVelocity = newDirection * Speed;
-            transform.rotation = Quaternion.LookRotation(newDirection);
+            direction.Normalize();
+            rb.linearVelocity = direction * Speed;
+            transform.rotation = Quaternion.LookRotation(direction);
         }
 
         private void OnCollisionEnter(Collision collision){
@@ -45,7 +45,7 @@ namespace PhysicsThief.Enemies
             if(!IsReflected && Owner != null && other.transform.root == Owner.transform.root) return;
             IDamageable target = collision.collider.GetComponentInParent<IDamageable>();
             if(target != null)
-                target.TakeDamage(damage);
+                OnHitTarget(target);
             
             Destroy(gameObject);
         }

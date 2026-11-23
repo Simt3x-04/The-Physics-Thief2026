@@ -15,14 +15,16 @@ MonoBehaviour:
   displayName: Spear Beetle
   icon: {fileID: 0}
   prefab: {fileID: 0}
-  maxHP: 1
-  moveSpeed: 0
+  maxHP: 50
+  moveSpeed: 3
   damageReduction: 0
-  attackDamage: 0
-  attackRange: 0
-  attackCooldown: 0
-  detectionRange: 0
-  loseTargetRange: 0
+  attackDamage: 5
+  attackRange: 10
+  attackCooldown: 2
+  detectionRange: 10
+  loseTargetRange: 10
+  viewAngle: 120
+  loseSightTime: 4
   mass: 0.01
   roamRadius: 0.5
   roamPauseTime: 0
@@ -30,7 +32,9 @@ MonoBehaviour:
   hitSfx: {fileID: 0}
   deathSfx: {fileID: 0}
   deathVfx: {fileID: 0}
-  patrolSpeed: 2
-  waitTimeAtPoint: 1
-  pointReachDistance: 0.3
+  projectilePrefab: {fileID: 4462929263966746478, guid: c7bd766e0d4380442a83b5dcc0c89fff, type: 3}
+  projectileDamage: 5
+  shootRange: 10
   shatteredDamageReduction: 0
+  armorBreakHealthPercentage: 0.5
+  armorDamageReduction: 0.5

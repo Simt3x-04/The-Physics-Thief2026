@@ -19,15 +19,16 @@ namespace PhysicsThief.Enemies
         {
             this.poisonDps = poisonDps;
             this.poisonDuration = poisonDuration;
-            //base.Launch(direction, damage, owner);
+            base.Launch(direction, owner, damage);
         }
 
         protected override void OnHitTarget(IDamageable target)
         {
             base.OnHitTarget(target);
-            if (target is HealthComponent healthComp)
+            if (target is Component c)
             {
-                healthComp.PoisonDamage(poisonDps, poisonDuration);
+                HealthComponent hc = c.GetComponentInParent<HealthComponent>();
+                if (hc != null) hc.PoisonDamage(poisonDps, poisonDuration);
             }
         }
     }
