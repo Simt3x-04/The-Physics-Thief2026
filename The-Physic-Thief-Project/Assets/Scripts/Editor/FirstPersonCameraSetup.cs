@@ -6,6 +6,7 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using PhysicsThief.Player;
 
 // 一键设置第一人称摄像机：
 // 1. 找到场景里的 PlayerController 和人物头部骨骼
