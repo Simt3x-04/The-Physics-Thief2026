@@ -53,6 +53,22 @@ public class PlayerController : MonoBehaviour
     private float verticalRotation;
     private float normalCameraHeight;
 
+    [Header("Action Lock (copy / paste)")]
+    [Tooltip("为 true 时角色不能移动（播放复制/粘贴动画时由 FirstPersonHandsAction 设置）。")]
+    public bool inputLocked;
+    [Tooltip("为 true 时不能转视角。")]
+    public bool lookLocked;
+
+    [HideInInspector] public float pitchOverrideWeight;   // 0 = 正常视角, 1 = 使用 pitchOverride
+    [HideInInspector] public float pitchOverride;
+    [HideInInspector] public float actionForwardShift = 0.03f;
+
+    private Vector2 lastMoveInput;
+
+    /// <summary>站在地上且没有移动输入、没有滑铲。</summary>
+    public bool IsIdleOnGround =>
+        controller != null && controller.isGrounded && !isSliding && lastMoveInput.sqrMagnitude < 0.01f;
+
     [Header("Crouch and Slide")]
     public float slideDuration = 0.75f;
     public float slideHeight = 1.0f;
@@ -111,14 +127,12 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         // 鼠标上下移动只旋转镜头。
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        float mouseX = lookLocked ? 0f : Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = lookLocked ? 0f : Input.GetAxis("Mouse Y") * mouseSensitivity;
 
         verticalRotation -= mouseY;
         verticalRotation = Mathf.Clamp(verticalRotation, -maxLookUp, maxLookDown);
-
-        cameraTransform.localRotation =
-            Quaternion.Euler(verticalRotation, 0f, 0f);
+        // 镜头的最终角度在 LateUpdate 里设置（动作时可能被临时覆盖）。
 
         // 鼠标左右移动旋转整个人物。
         transform.Rotate(Vector3.up * mouseX);
@@ -130,7 +144,8 @@ public class PlayerController : MonoBehaviour
             playerVelocity.y = 0f;
         }
 
-        if (currentSpeed.Equals(sprintSpeed)
+        if (!inputLocked
+            && currentSpeed.Equals(sprintSpeed)
             && Input.GetKeyDown(KeyCode.C)
             && groundedPlayer
             && !isSliding)
@@ -178,15 +193,17 @@ public class PlayerController : MonoBehaviour
                     : walkSpeed;
             }
 
-            float moveX = Input.GetAxis("Horizontal");
-            float moveZ = Input.GetAxis("Vertical");
+            float moveX = inputLocked ? 0f : Input.GetAxis("Horizontal");
+            float moveZ = inputLocked ? 0f : Input.GetAxis("Vertical");
+            lastMoveInput = new Vector2(moveX, moveZ);
 
             move = transform.right * moveX + transform.forward * moveZ;
         }
 
         controller.Move(move * (currentSpeed * Time.deltaTime));
 
-        if (Input.GetButtonDown("Jump")
+        if (!inputLocked
+            && Input.GetButtonDown("Jump")
             && groundedPlayer
             && !isSliding)
         {
@@ -200,6 +217,10 @@ public class PlayerController : MonoBehaviour
 
     void LateUpdate()
     {
+        // 最终镜头上下角度：平时用鼠标的 verticalRotation，动作时混合到 pitchOverride。
+        float effectivePitch = Mathf.Lerp(verticalRotation, pitchOverride, pitchOverrideWeight);
+        cameraTransform.localRotation = Quaternion.Euler(effectivePitch, 0f, 0f);
+
         if (eyeAnchor != null)
         {
             // 镜头跟随眼睛锚点（会跟着动画一起动，下蹲动画也会自动带低镜头）。
@@ -208,13 +229,14 @@ public class PlayerController : MonoBehaviour
 
             // 低头时像弯脖子一样，把眼睛往前、往下带。
             float lookDown01 = maxLookDown > 0f
-                ? Mathf.Clamp01(verticalRotation / maxLookDown)
+                ? Mathf.Clamp01(effectivePitch / maxLookDown)
                 : 0f;
             float bend = Mathf.Sin(lookDown01 * Mathf.PI * 0.5f);
+            float forwardShift = Mathf.Lerp(lookDownForwardShift, actionForwardShift, pitchOverrideWeight);
             Vector3 neckBend = new Vector3(
                 0f,
                 -lookDownDropShift * bend,
-                lookDownForwardShift * bend
+                forwardShift * bend
             );
 
             cameraTransform.localPosition = anchorLocal + eyeAnchorOffset + neckBend;

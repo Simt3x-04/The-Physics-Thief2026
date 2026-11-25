@@ -77,3 +77,7 @@ crashlytics-build.properties
 # macOS
 .DS_Store
 **/.DS_Store
+
+# 本地备份（不要上传，里面有超过 100MB 的场景备份）
+/IslandBackup/
+/_to_delete/
