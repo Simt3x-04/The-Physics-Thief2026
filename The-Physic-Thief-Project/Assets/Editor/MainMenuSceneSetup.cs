@@ -4,7 +4,7 @@
 //
 // Run via:  Tools → UI Flow → Rebuild MainMenu Scene
 //
-// Builds Assets/Scenes/MainMenu.unity as a full-screen forest composition
+// Builds Assets/_Project/Scenes/MainMenu.unity as a full-screen forest composition
 // matching the Eternal Garden reference image:
 //
 //   BACKGROUND
@@ -50,7 +50,7 @@ using PhysicsThief.UI;
 
 public static class MainMenuSceneSetup
 {
-    private const string ScenePath = "Assets/Scenes/MainMenu.unity";
+    private const string ScenePath = "Assets/_Project/Scenes/MainMenu.unity";
     private const float RefW = 1920f;
     private const float RefH = 1080f;
 
@@ -128,8 +128,8 @@ public static class MainMenuSceneSetup
         backdropImg.color         = Color.white;
         backdropImg.raycastTarget = false;
         // Load background sprite. File must be imported as Sprite (textureType=8).
-        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.png")
-                    ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.jpg");
+        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Textures/UI/MainMenuBackground.png")
+                    ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Textures/UI/MainMenuBackground.jpg");
         if (bgSprite != null)
         {
             backdropImg.sprite  = bgSprite;
@@ -141,7 +141,7 @@ public static class MainMenuSceneSetup
         {
             var fb = backdropGO.AddComponent<ForestBackdrop>();
             fb.enabled = false;   // disabled; only used when sprite absent
-            Debug.LogWarning("[MainMenuSetup] MainMenuBackground not found in Assets/Textures/UI/. " +
+            Debug.LogWarning("[MainMenuSetup] MainMenuBackground not found in Assets/_Project/Art/Textures/UI/. " +
                              "Import PNG as Sprite type, then run this tool again.");
         }
 

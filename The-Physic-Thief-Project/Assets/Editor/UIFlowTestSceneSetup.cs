@@ -42,7 +42,7 @@ using PhysicsThief.UI;
 
 public static class UIFlowTestSceneSetup
 {
-    private const string ScenePath = "Assets/Scenes/UIFlowTest.unity";
+    private const string ScenePath = "Assets/_Project/Scenes/UIFlowTest.unity";
 
     // ── Reference resolution ─────────────────────────────────────────────────
     private const float RefW = 1920f;
@@ -500,8 +500,8 @@ public static class UIFlowTestSceneSetup
         backdropImg.preserveAspect = false;
         // Load background sprite. File must be imported as Sprite (textureType=8).
         // Looks for the PNG first, then the JPG, so either filename works.
-        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.png")
-                    ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/UI/MainMenuBackground.jpg");
+        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Textures/UI/MainMenuBackground.png")
+                    ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Textures/UI/MainMenuBackground.jpg");
         if (bgSprite != null)
         {
             backdropImg.sprite = bgSprite;
@@ -513,7 +513,7 @@ public static class UIFlowTestSceneSetup
             var fb = backdropGO.AddComponent<ForestBackdrop>();
             // Disable immediately — enabled only when sprite is absent at runtime too.
             fb.enabled = false;
-            Debug.LogWarning("[UIFlowTestSetup] MainMenuBackground not found in Assets/Textures/UI/. " +
+            Debug.LogWarning("[UIFlowTestSetup] MainMenuBackground not found in Assets/_Project/Art/Textures/UI/. " +
                              "Import the PNG there (textureType=Sprite) and regenerate.");
         }
 
