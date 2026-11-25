@@ -17,7 +17,7 @@ namespace PhysicsThief.UI
     ///       Pressed  → PressedTint
     ///       Selected → AccentAmber  (keyboard focus)
     ///
-    /// Setup (done by UIFlowTestSceneSetup, not manually):
+    /// Setup (already done in the saved MainMenu scene):
     ///   markerImage — a child Image stretched to the full button height, anchored left,
     ///                 exactly MenuStyle.MarkerWidth wide.
     ///   label       — the TMP_Text inside the button.

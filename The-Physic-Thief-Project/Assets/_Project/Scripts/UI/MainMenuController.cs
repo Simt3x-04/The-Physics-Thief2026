@@ -14,7 +14,7 @@ namespace PhysicsThief.UI
     ///   quitButton
     ///   optionsPanel — OptionsPanel component (optional; if null, Options button is hidden)
     ///
-    /// The UIFlowTest scene has a full OptionsPanel. The legacy MainMenu scene may have optionsPanel=null,
+    /// A menu scene may have optionsPanel=null,
     /// in which case the Options button is automatically hidden to prevent an unrecoverable state.
     /// </summary>
     public class MainMenuController : MonoBehaviour
