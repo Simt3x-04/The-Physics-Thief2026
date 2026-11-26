@@ -329,8 +329,28 @@ namespace PhysicsThief.Player
         /// <summary>TODO: Perform a raycast/overlap in front of the player and apply `meleeDamage` to any `IDamageable` objects.</summary>
         public void MeleeAttack() { }
 
-        /// <summary>TODO: Apply the apple's effects (healing, +slot, +duration) and trigger the TTS voice line.</summary>
-        public void EatApple(AppleItem apple) { }
+        /// <summary>
+        /// Eats an apple (GDD 3.6 and 4.2): heals through the HealthComponent, which caps the value at MaxHP.
+        /// Refused while dead, at full health, or while gameplay input is off (pause, death screen, menus).
+        /// Only decides and heals: the apple removes itself when the result is Eaten (AppleItem.Collect).
+        /// </summary>
+        public AppleEatResult EatApple(AppleItem apple, out float healedAmount)
+        {
+            healedAmount = 0f;
+            if (healthComp == null) healthComp = GetComponent<HealthComponent>();
+            if (healthComp == null) return AppleEatResult.NoHealthComponent;
+            if (apple == null) return AppleEatResult.AppleUnavailable;
+
+            bool gameplayActive = inputEnabled && Time.timeScale > 0f;
+            AppleEatResult result = AppleEatRules.Evaluate(apple.IsAvailable, gameplayActive,
+                healthComp.IsDead, healthComp.CurrentHP, healthComp.MaxHP);
+            if (result != AppleEatResult.Eaten) return result;
+
+            float before = healthComp.CurrentHP;
+            healthComp.Heal(apple.HealAmount);   // fires OnHealthChanged: the HUD health bar updates from that event
+            healedAmount = healthComp.CurrentHP - before;
+            return result;
+        }
 
         /// <summary>Teleports Gino to a checkpoint and restores his health.</summary>
         public void Respawn(Vector3 checkpointPosition)

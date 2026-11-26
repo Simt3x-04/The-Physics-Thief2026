@@ -16,7 +16,7 @@ namespace PhysicsThief.UI
     ///   - GameManager.OnRetryRequested -> restores the player's health.
     ///   - GameManager.OnGameStateChanged -> PlayerController.SetInputEnabled()
     ///     (no look / movement while paused, dead or in a menu).
-    ///   - DeathScreenController.Bind(health) and HUDManager.Bind(health, inventory, scanner), so both screens
+    ///   - DeathScreenController.Bind(health) and HUDManager.Bind(health, inventory, scanner, interactor), so both screens
     ///     follow the real player even if the Inspector references are empty.
     ///   - Puts the GameManager in the Playing state, so the player can move as soon as the scene starts
     ///     (also when you press Play directly in the map without going through the main menu).
@@ -117,7 +117,8 @@ namespace PhysicsThief.UI
                 Transform root = player != null ? player.transform : playerHealth.transform;
                 BriefcaseInventory inventory = root.GetComponent<BriefcaseInventory>();
                 PlayerScanner scanner = root.GetComponentInChildren<PlayerScanner>(true);
-                hudManager.Bind(playerHealth, inventory, scanner);
+                PlayerInteractor interactor = root.GetComponentInChildren<PlayerInteractor>(true);   // E prompt (apples)
+                hudManager.Bind(playerHealth, inventory, scanner, interactor);
             }
 
             // Start in the Playing state so the player can move immediately.

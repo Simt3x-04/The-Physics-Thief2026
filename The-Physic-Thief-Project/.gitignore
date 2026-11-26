@@ -84,3 +84,6 @@ crashlytics-build.properties
 # Asset Store: Kinematic Character Controller
 KinematicCharacterController/
 KinematicCharacterController.meta
+
+# Unity test results, logs and captures from the apple verification
+/[Tt]est[Rr]esults/
