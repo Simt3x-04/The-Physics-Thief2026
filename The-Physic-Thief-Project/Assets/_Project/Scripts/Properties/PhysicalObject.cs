@@ -20,6 +20,9 @@ namespace PhysicsThief.Properties
         [SerializeField] private MaterialTag material;
         [Tooltip("Only the attributes that differ from the default: Mass 1, Velocity 0, Temperature 20, Magnetism 0, Hardness 1.")]
         [SerializeField] private List<PropertyValue> baselineProperties = new List<PropertyValue>();
+        [Tooltip("Off for objects that can only be scanned (copy FROM them) and have no reactors to use a pasted value, " +
+                 "e.g. apples and apple trees. The scanner then refuses the paste and keeps the slot.")]
+        [SerializeField] private bool acceptsPastes = true;
 
         private readonly Dictionary<AttributeType, TemporaryOverride> activeOverrides = new Dictionary<AttributeType, TemporaryOverride>();
         private readonly List<AttributeType> expiredBuffer = new List<AttributeType>();
@@ -27,6 +30,9 @@ namespace PhysicsThief.Properties
         private Vector3 launchDirection;
 
         public PhysicalObjectDefinitionSO Definition => definition;
+
+        /// <summary>False for scan-only objects: the scanner does not paste on them (the slot is kept).</summary>
+        public bool AcceptsPastes => acceptsPastes;
 
         /// <summary>Direction chosen when the current Velocity was pasted (zero if none). Read by RigidbodyReactor.</summary>
         public Vector3 LaunchDirection => launchDirection;
