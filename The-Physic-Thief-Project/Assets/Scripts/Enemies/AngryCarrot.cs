@@ -1,3 +1,4 @@
+using PhysicsThief.Core;
 using UnityEngine;
 
 namespace PhysicsThief.Enemies
@@ -5,15 +6,48 @@ namespace PhysicsThief.Enemies
     /// <summary>Si nasconde sotto terra e carica Gino a testa bassa.</summary>
     public class AngryCarrot : EnemyBase
     {
-        [SerializeField] private float chargeSpeed = 9f;
-        [SerializeField] private float chargeCooldown = 3f;
-        private bool isBurrowed;
+        private AngryCarrotData carrotData;
+        private IDamageable targetDamageable;    
+        public AngryCarrotData CarrotData=>carrotData;
 
-        public override IEnemyState CreateIdleState(){
-            return new RoamState();
+        protected override void Awake()
+        {
+            base.Awake();
+            if(!enabled) return;
+            carrotData = data as AngryCarrotData;
+            if(carrotData == null)
+            {
+                Debug.LogError("No AngryCarrot data");
+                enabled = false;
+            }
         }
 
-        public override void Attack() {Debug.Log("AngryCarrot attacca!"); }
-        public void BurrowAndCharge() { }
+        public override IEnemyState CreateIdleState() => new RoamState();
+        public override IEnemyState CreateCombatState()=> new AngryCarrotDashState();
+
+        public bool IsTargetInMeleeReach()
+        {
+            if(target == null) return false;
+            if(DistanceToTarget() > data.AttackRange) return false;
+
+            Vector3 toTarget = target.position - transform.position;
+            toTarget.y =0f;
+            if(toTarget.sqrMagnitude < 0.0001f) return true;
+
+            return Vector3.Angle(transform.forward, toTarget) <= carrotData.MeleeHalfAngle;
+        }
+
+        public override void Attack()
+        {
+            if(!IsTargetInMeleeReach()) return;
+                    
+            if(targetDamageable == null) targetDamageable = target.GetComponentInParent<IDamageable>();
+
+            targetDamageable?.TakeDamage(data.AttackDamage);
+        }
+
+
+
+
     }
 }

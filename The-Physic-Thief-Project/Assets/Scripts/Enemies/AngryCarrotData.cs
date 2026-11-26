@@ -9,15 +9,25 @@ namespace PhysicsThief.Enemies
         [Header("Carica")]
         [SerializeField] private float chargeSpeed = 9f;
         [SerializeField] private float chargeCooldown = 3f;
+        [SerializeField] private float dashTurnSpeed = 90f;
+        [SerializeField] private float dashDuration = 3f;
+         [SerializeField] private float meleeHalfAngle = 60f;
+        
  
         public float ChargeSpeed => chargeSpeed;
         public float ChargeCooldown => chargeCooldown;
+        public float DashTurnSpeed=>dashTurnSpeed;
+        public float DashDuration => dashDuration;
+        public float MeleeHalfAngle => meleeHalfAngle;
  
         protected override void OnValidate()
         {
             base.OnValidate();
             chargeSpeed = Mathf.Max(0f, chargeSpeed);
             chargeCooldown = Mathf.Max(0f, chargeCooldown);
+            dashTurnSpeed = Mathf.Max(0f, dashTurnSpeed);
+            dashDuration = Mathf.Max(0f, dashDuration);
+            meleeHalfAngle = Mathf.Max(0f, meleeHalfAngle);
         }
     }
 }
