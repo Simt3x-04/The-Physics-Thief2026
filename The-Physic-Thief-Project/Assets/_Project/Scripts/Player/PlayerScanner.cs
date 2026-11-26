@@ -143,6 +143,12 @@ namespace PhysicsThief.Player
                 OnMessage?.Invoke("Gino cannot paste on himself");
                 return false;
             }
+            if (!target.AcceptsPastes)
+            {
+                // Checked before anything is consumed: the slots stay as they are.
+                OnMessage?.Invoke(target.DisplayName + " can only be scanned: nothing pasted");
+                return false;
+            }
 
             if (SelectionContainsVelocity())
             {

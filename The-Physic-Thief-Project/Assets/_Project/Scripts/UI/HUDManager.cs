@@ -27,6 +27,8 @@ namespace PhysicsThief.UI
         [SerializeField] private HealthComponent playerHealth;
         [SerializeField] private BriefcaseInventory inventory;
         [SerializeField] private PlayerScanner scanner;
+        [Tooltip("Optional: the E-key interactor (prompt under the crosshair and interaction messages).")]
+        [SerializeField] private PlayerInteractor interactor;
 
         [Header("Health")]
         [SerializeField] private Slider healthBar;
@@ -66,6 +68,10 @@ namespace PhysicsThief.UI
         [SerializeField] private float messageDuration = 2f;
         [SerializeField] private float messageFadeTime = 0.25f;
 
+        [Header("Interaction prompt")]
+        [Tooltip("Optional: stays visible while the player aims at something usable with E (e.g. 'E — Eat apple (+25 HP)').")]
+        [SerializeField] private TMP_Text promptLabel;
+
         private Coroutine messageRoutine;
         private PhysicalObject shownTarget;
         private Image healthFill;
@@ -89,13 +95,15 @@ namespace PhysicsThief.UI
             Unsubscribe();
         }
 
-        /// <summary>Connects the HUD to a player (call it when the player is created).</summary>
-        public void Bind(HealthComponent health, BriefcaseInventory briefcase, PlayerScanner playerScanner)
+        /// <summary>Connects the HUD to a player (call it when the player is created). The interactor is optional.</summary>
+        public void Bind(HealthComponent health, BriefcaseInventory briefcase, PlayerScanner playerScanner,
+            PlayerInteractor playerInteractor = null)
         {
             Unsubscribe();
             playerHealth = health;
             inventory = briefcase;
             scanner = playerScanner;
+            interactor = playerInteractor;
 
             if (isActiveAndEnabled)
             {
@@ -113,6 +121,12 @@ namespace PhysicsThief.UI
                 scanner.OnTargetChanged += HandleTargetChanged;
                 scanner.OnMessage += ShowMessage;
             }
+            if (interactor != null)
+            {
+                interactor.OnPromptChanged += ShowPrompt;
+                interactor.OnMessage += ShowMessage;
+                ShowPrompt(interactor.CurrentPrompt);   // the interactor only reports changes: show what is aimed at now
+            }
         }
 
         private void Unsubscribe()
@@ -124,6 +138,12 @@ namespace PhysicsThief.UI
                 scanner.OnTargetChanged -= HandleTargetChanged;
                 scanner.OnMessage -= ShowMessage;
             }
+            if (interactor != null)
+            {
+                interactor.OnPromptChanged -= ShowPrompt;
+                interactor.OnMessage -= ShowMessage;
+            }
+            ShowPrompt(null);
             if (shownTarget != null) shownTarget.OnPropertyValueChanged -= HandleTargetValueChanged;
             shownTarget = null;
         }
@@ -324,6 +344,19 @@ namespace PhysicsThief.UI
         public void HideScannerOverlay()
         {
             if (scannerPanel != null) scannerPanel.SetActive(false);
+        }
+
+        // ---------- interaction prompt ----------
+
+        /// <summary>Shows the E prompt under the crosshair; null or empty hides it.</summary>
+        public void ShowPrompt(string text)
+        {
+            if (promptLabel == null) return;
+
+            // Toggle the component, not the GameObject: this also runs from OnDisable while the canvas is being deactivated.
+            bool show = !string.IsNullOrEmpty(text);
+            promptLabel.text = show ? text : string.Empty;
+            promptLabel.enabled = show;
         }
 
         // ---------- messages ----------
