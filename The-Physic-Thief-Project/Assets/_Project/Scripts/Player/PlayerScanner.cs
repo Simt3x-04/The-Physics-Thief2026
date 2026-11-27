@@ -40,6 +40,12 @@ namespace PhysicsThief.Player
         /// <summary>Short messages for invalid actions ("No free slot...").</summary>
         public event Action<string> OnMessage;
 
+        /// <summary>An attribute was really copied into the briefcase (drives the hand animation).</summary>
+        public event Action<AttributeType> OnPropertyCopied;
+
+        /// <summary>The selected slots were really pasted onto an object (drives the hand animation).</summary>
+        public event Action OnPropertyPasted;
+
         /// <summary>While aiming a velocity: object position and the point it will be launched towards.</summary>
         public event Action<Vector3, Vector3> OnAimUpdated;
         public event Action OnAimEnded;
@@ -121,6 +127,7 @@ namespace PhysicsThief.Player
             CopyResult result = inventory.Model.TryAdd(new PropertyValue(type, CurrentTarget.GetValue(type)));
             string message = result.ToMessage();
             if (message != null) OnMessage?.Invoke(message);
+            if (result == CopyResult.Success) OnPropertyCopied?.Invoke(type);
             return result == CopyResult.Success;
         }
 
@@ -173,6 +180,7 @@ namespace PhysicsThief.Player
             {
                 target.ApplyProperty(property.type, property.value, inventory.Model.PropertyDuration, launchDirection);
             }
+            OnPropertyPasted?.Invoke();
             return true;
         }
 

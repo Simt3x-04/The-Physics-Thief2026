@@ -144,7 +144,7 @@ Material:
     - _TransNormal: 0.4
     - _TransScattering: 35
     - _TransShadow: 0
-    - _TransStrength: 10
+    - _TransStrength: 2
     - _TransmissionShadow: 0.5
     - _UVSec: 0
     - _Value: 0

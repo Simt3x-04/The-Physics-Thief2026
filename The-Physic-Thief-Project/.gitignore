@@ -87,3 +87,7 @@ KinematicCharacterController.meta
 
 # Unity test results, logs and captures from the apple verification
 /[Tt]est[Rr]esults/
+
+# Local backups (do not upload: they contain map backups over 100 MB)
+/IslandBackup/
+/_to_delete/

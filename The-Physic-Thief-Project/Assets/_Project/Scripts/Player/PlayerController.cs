@@ -86,6 +86,22 @@ namespace PhysicsThief.Player
         private const float CoyoteTime = 0.12f;
         private float coyoteTimer;
 
+        [Header("Action Lock (copy / paste)")]
+        [Tooltip("When true the character cannot move (set by FirstPersonHandsAction while the copy / paste animation plays).")]
+        public bool inputLocked;
+        [Tooltip("When true the view cannot be rotated.")]
+        public bool lookLocked;
+
+        [HideInInspector] public float pitchOverrideWeight;   // 0 = normal view, 1 = use pitchOverride
+        [HideInInspector] public float pitchOverride;
+        [HideInInspector] public float actionForwardShift = 0.03f;
+
+        private Vector2 lastMoveInput;
+
+        /// <summary>On the ground, with no movement input and not sliding.</summary>
+        public bool IsIdleOnGround =>
+            controller != null && controller.isGrounded && !isSliding && lastMoveInput.sqrMagnitude < 0.01f;
+
         [Header("Crouch and Slide")]
         public float slideDuration = 0.75f;
         public float slideHeight = 1.0f;
@@ -154,14 +170,12 @@ namespace PhysicsThief.Player
             // Vertical mouse movement rotates only the camera.
             // UISettings.MouseSensitivity is the multiplier chosen in the Options panel (1.0 = the default feel).
             float sensitivity = mouseSensitivity * UISettings.MouseSensitivity;
-            float mouseX = Input.GetAxis("Mouse X") * sensitivity;
-            float mouseY = Input.GetAxis("Mouse Y") * sensitivity;
+            float mouseX = lookLocked ? 0f : Input.GetAxis("Mouse X") * sensitivity;
+            float mouseY = lookLocked ? 0f : Input.GetAxis("Mouse Y") * sensitivity;
 
             verticalRotation -= mouseY;
             verticalRotation = Mathf.Clamp(verticalRotation, -maxLookUp, maxLookDown);
-
-            cameraTransform.localRotation =
-                Quaternion.Euler(verticalRotation, 0f, 0f);
+            // The final camera angle is set in LateUpdate (an action can temporarily override it).
 
             // Horizontal mouse movement rotates the whole character.
             transform.Rotate(Vector3.up * mouseX);
@@ -179,7 +193,8 @@ namespace PhysicsThief.Player
             if (groundedPlayer) coyoteTimer = CoyoteTime;
             else coyoteTimer -= Time.deltaTime;
 
-            if (currentSpeed.Equals(sprintSpeed)
+            if (!inputLocked
+                && currentSpeed.Equals(sprintSpeed)
                 && Input.GetKeyDown(KeyCode.C)
                 && groundedPlayer
                 && !isSliding)
@@ -227,13 +242,15 @@ namespace PhysicsThief.Player
                         : walkSpeed;
                 }
 
-                float moveX = Input.GetAxis("Horizontal");
-                float moveZ = Input.GetAxis("Vertical");
+                float moveX = inputLocked ? 0f : Input.GetAxis("Horizontal");
+                float moveZ = inputLocked ? 0f : Input.GetAxis("Vertical");
+                lastMoveInput = new Vector2(moveX, moveZ);
 
                 move = transform.right * moveX + transform.forward * moveZ;
             }
 
-            if (Input.GetButtonDown("Jump")
+            if (!inputLocked
+                && Input.GetButtonDown("Jump")
                 && coyoteTimer > 0f
                 && !isSliding)
             {
@@ -251,6 +268,10 @@ namespace PhysicsThief.Player
 
         void LateUpdate()
         {
+            // Final camera pitch: normally the mouse's verticalRotation, blended toward pitchOverride during an action.
+            float effectivePitch = Mathf.Lerp(verticalRotation, pitchOverride, pitchOverrideWeight);
+            cameraTransform.localRotation = Quaternion.Euler(effectivePitch, 0f, 0f);
+
             if (eyeAnchor != null)
             {
                 // The camera follows the eye anchor (it moves with the animation, so a crouch animation lowers the camera too).
@@ -259,13 +280,14 @@ namespace PhysicsThief.Player
 
                 // When looking down, move the eyes forward and down, like bending the neck.
                 float lookDown01 = maxLookDown > 0f
-                    ? Mathf.Clamp01(verticalRotation / maxLookDown)
+                    ? Mathf.Clamp01(effectivePitch / maxLookDown)
                     : 0f;
                 float bend = Mathf.Sin(lookDown01 * Mathf.PI * 0.5f);
+                float forwardShift = Mathf.Lerp(lookDownForwardShift, actionForwardShift, pitchOverrideWeight);
                 Vector3 neckBend = new Vector3(
                     0f,
                     -lookDownDropShift * bend,
-                    lookDownForwardShift * bend
+                    forwardShift * bend
                 );
 
                 cameraTransform.localPosition = anchorLocal + eyeAnchorOffset + neckBend;
