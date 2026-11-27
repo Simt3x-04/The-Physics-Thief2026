@@ -64,7 +64,9 @@ namespace PhysicsThief.UI
         private void Awake()
         {
             physObj = GetComponent<PhysicalObject>();
-            renderers = GetComponentsInChildren<Renderer>();   // collected before the timer UI exists
+            // Only the renderers that are visible to begin with (collected before the timer UI exists). The PO_ prefabs keep
+            // a disabled placeholder cube from their base prefab: the flicker must never switch it back on.
+            renderers = Array.FindAll(GetComponentsInChildren<Renderer>(), r => r.enabled);
             BuildUi();
         }
 
