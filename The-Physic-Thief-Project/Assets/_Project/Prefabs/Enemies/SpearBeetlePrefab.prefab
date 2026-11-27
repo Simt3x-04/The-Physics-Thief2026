@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3950879737859673091
+--- !u!1 &7296909482142685973
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,52 +8,54 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7381342972777432699}
-  - component: {fileID: 8446579874998470420}
-  - component: {fileID: 6965380962541492516}
-  - component: {fileID: 8844966687602793970}
-  - component: {fileID: 5199477583461213576}
-  - component: {fileID: 7810745564820849158}
-  - component: {fileID: 5526525137119442671}
-  - component: {fileID: 2223452948166451586}
-  m_Layer: 3
-  m_Name: HornetPrefab
+  - component: {fileID: 1635168900770573594}
+  - component: {fileID: 6750353318038366656}
+  - component: {fileID: 8279973071918851609}
+  - component: {fileID: 7499142851470518811}
+  - component: {fileID: 5001852421177456092}
+  - component: {fileID: 6172193480660037208}
+  - component: {fileID: 5761647087127931912}
+  - component: {fileID: 6384836297579708525}
+  - component: {fileID: 3349301850930412873}
+  - component: {fileID: 2619949325348908309}
+  - component: {fileID: 3755430712901497385}
+  m_Layer: 0
+  m_Name: SpearBeetlePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7381342972777432699
+--- !u!4 &1635168900770573594
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3950879737859673091}
+  m_GameObject: {fileID: 7296909482142685973}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.04, y: 0.95, z: 6.28}
+  m_LocalPosition: {x: 0.59507, y: 1.01655, z: 0.59507}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 7219164211058933551}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &8446579874998470420
+--- !u!33 &6750353318038366656
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3950879737859673091}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &6965380962541492516
+  m_GameObject: {fileID: 7296909482142685973}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &8279973071918851609
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3950879737859673091}
+  m_GameObject: {fileID: 7296909482142685973}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -96,13 +98,13 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &8844966687602793970
-SphereCollider:
+--- !u!136 &7499142851470518811
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3950879737859673091}
+  m_GameObject: {fileID: 7296909482142685973}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -114,70 +116,88 @@ SphereCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 2
   m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &5199477583461213576
+--- !u!114 &5001852421177456092
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3950879737859673091}
+  m_GameObject: {fileID: 7296909482142685973}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0e884b977bef4f24595fe6acf6e0b4b4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.Core.HealthComponent
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Core.HealthComponent
   maxHP: 0
   currentHP: 0
---- !u!114 &7810745564820849158
+--- !u!114 &6172193480660037208
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3950879737859673091}
+  m_GameObject: {fileID: 7296909482142685973}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c30e3d644085248489e7b63a2519824a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.Properties.PhysicalObject
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Properties.PhysicalObject
   definition: {fileID: 0}
---- !u!114 &5526525137119442671
+  displayName: Spear Beetle
+  material: 7
+  baselineProperties:
+  - type: 0
+    value: 60
+  - type: 1
+    value: 0
+  - type: 2
+    value: 20
+  - type: 3
+    value: 0
+  - type: 4
+    value: 6
+  acceptsPastes: 1
+--- !u!114 &5761647087127931912
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3950879737859673091}
+  m_GameObject: {fileID: 7296909482142685973}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 25eea8e49f9de3a4e88c443517616784, type: 3}
+  m_Script: {fileID: 11500000, guid: 63647812cdec419469d9b738a466b828, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PhysicsThief.Enemies.Hornet
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Enemies.SpearBeetle
   healthComp: {fileID: 0}
   physObj: {fileID: 0}
-  data: {fileID: 11400000, guid: 64ce510ab2ea1284ab179d59a634e0e2, type: 2}
+  data: {fileID: 11400000, guid: 73f91e13e7259bc4689625d94fcb4989, type: 2}
   obstacleMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 9
   eyeHeight: 1
   targetTag: Player
-  firePoint: {fileID: 7219164211058933551}
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 8
-  hoverHeight: 3
---- !u!54 &2223452948166451586
+  groundedMass: 200
+  freezeTemperature: 0
+  ignitionTemperature: 100
+  burnDamagePerSecond: 10
+  deathDelay: 1.5
+  frozenTint: {r: 0.65, g: 0.88, b: 1, a: 1}
+  burningTint: {r: 1, g: 0.55, b: 0.1, a: 1}
+--- !u!54 &6384836297579708525
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3950879737859673091}
+  m_GameObject: {fileID: 7296909482142685973}
   serializedVersion: 5
-  m_Mass: 1
+  m_Mass: 60
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -195,35 +215,75 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 1
---- !u!1 &6045187049007687434
-GameObject:
+  m_CollisionDetection: 0
+--- !u!114 &3349301850930412873
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7219164211058933551}
-  m_Layer: 3
-  m_Name: FirePoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7219164211058933551
-Transform:
+  m_GameObject: {fileID: 7296909482142685973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 046519d6f7c3adb4c86afdb93699721b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Properties.Reactors.RigidbodyReactor
+  physObj: {fileID: 0}
+  rb: {fileID: 0}
+  maxVelocity: 50
+  isLightFlyer: 0
+  groundedMass: 200
+  hoverReturnSpeed: 2
+  hoverMaxSpeed: 3
+--- !u!114 &2619949325348908309
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6045187049007687434}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: 1}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7381342972777432699}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_GameObject: {fileID: 7296909482142685973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb76b5b39d0acf34484c598df4fc9722, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Properties.Reactors.MagnetismReactor
+  physObj: {fileID: 0}
+  minimumField: 0.5
+  radiusPerTesla: 5
+  accelerationPerTesla: 40
+  referenceMass: 1
+  massInfluence: 0.5
+  edgeStrength: 0.3
+  maxAcceleration: 60
+  stopDistance: 0.6
+  attractionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  magnetTint: {r: 0.72, g: 0.6, b: 1, a: 1}
+--- !u!114 &3755430712901497385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7296909482142685973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7abef7da301578544996e3aef6099ba7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.UI.PropertyTimerDisplay
+  heightOffset: 0.25
+  unitsToMeters: 0.006
+  rowWidth: 170
+  rowHeight: 20
+  rowSpacing: 4
+  labelWidth: 62
+  referenceDistance: 6
+  minScaleFactor: 0.5
+  maxScaleFactor: 4
+  maxVisibleDistance: 30
+  warningTime: 1
+  flashSpeed: 8
+  warningColor: {r: 0.94, g: 0.27, b: 0.27, a: 1}
+  barBackgroundColor: {r: 0.06, g: 0.09, b: 0.16, a: 0.85}
+  flickerObject: 1

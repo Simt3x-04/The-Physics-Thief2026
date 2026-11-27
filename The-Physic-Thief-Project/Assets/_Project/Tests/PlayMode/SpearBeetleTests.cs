@@ -8,7 +8,7 @@ using PhysicsThief.Enemies;
 
 public class SpearBeetleTests
 {
-    // Assets/Tests/Resources/Enemies/SpearBeetlePrefab.prefab
+    // Assets/_Project/Tests/PlayMode/Resources/Enemies/SpearBeetlePrefab.prefab
     private const string BeetlePrefabPath = "Enemies/SpearBeetlePrefab";
     private const float PlayerDistance = 5f;
     private const float DamageTolerance = 0.001f;
@@ -38,7 +38,7 @@ public class SpearBeetleTests
         var prefab = Resources.Load<GameObject>(BeetlePrefabPath);
 
         Assert.IsNotNull(prefab,
-            "Prefab not found: expected Assets/Tests/Resources/Enemies/SpearBeetlePrefab.prefab");
+            "Prefab not found: expected Assets/_Project/Tests/PlayMode/Resources/Enemies/SpearBeetlePrefab.prefab");
 
         return Object.Instantiate(
             prefab, position, Quaternion.identity);

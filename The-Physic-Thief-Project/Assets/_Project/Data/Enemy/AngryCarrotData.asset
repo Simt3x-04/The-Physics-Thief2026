@@ -16,7 +16,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   prefab: {fileID: 0}
   maxHP: 50
-  moveSpeed: 3
+  moveSpeed: 2
   damageReduction: 0
   attackDamage: 10
   attackRange: 1.5
@@ -32,7 +32,7 @@ MonoBehaviour:
   hitSfx: {fileID: 0}
   deathSfx: {fileID: 0}
   deathVfx: {fileID: 0}
-  chargeSpeed: 9
+  chargeSpeed: 6
   chargeCooldown: 3
   dashTurnSpeed: 90
   dashDuration: 3

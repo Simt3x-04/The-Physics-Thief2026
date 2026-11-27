@@ -9,7 +9,7 @@ namespace PhysicsThief.Enemies
         void ApplyPoison(float dps, float duration);
     }
 
-    /// <summary>Proiettile di veleno sparato dall'ape.</summary>
+    /// <summary>Poison projectile fired by the hornet.</summary>
     public class PoisonDart : Projectile
     {
         private float poisonDps;

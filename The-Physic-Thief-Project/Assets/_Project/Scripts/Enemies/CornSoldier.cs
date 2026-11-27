@@ -18,7 +18,7 @@ namespace PhysicsThief.Enemies
 
             cornData = data as CornSoldierData;
             if(cornData == null){
-                Debug.LogError($"{name}: serve un CornSoldierData!", this);
+                Debug.LogError($"{name}: a CornSoldierData is required!", this);
                 enabled = false;
                 return;
             }
@@ -45,7 +45,7 @@ namespace PhysicsThief.Enemies
            if(isBursting) return;
            if(cornData.KernelPrefab == null || firePoint == null)
             {
-                Debug.LogWarning($"{name}:KernelPrefab o firePoint missing");
+                Debug.LogWarning($"{name}:KernelPrefab or firePoint missing");
                 return;
             }
             isBursting = true;
@@ -56,7 +56,7 @@ namespace PhysicsThief.Enemies
         {
             for(int i=0; i<cornData.KernelsPerBurst; i++)
             {
-                if(IsDead || target == null) break;
+                if(IsDead || IsFrozen || IsLaunched || target == null) break;
                 shootKernel();
                 bool isLast = i == cornData.KernelsPerBurst-1;
                 if(!isLast && cornData.TimeBetweenKernels >0f)

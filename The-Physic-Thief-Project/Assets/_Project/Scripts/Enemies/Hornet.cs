@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using NUnit.Framework;
 
 namespace PhysicsThief.Enemies
 {
@@ -35,14 +34,12 @@ namespace PhysicsThief.Enemies
                                 groundMask, QueryTriggerInteraction.Ignore))
             {
                 flightBaseY = hit.point.y + hornetData.HoverHeight;
-                Debug.Log($"[Hornet] Raycast OK su '{hit.collider.name}' ground y={hit.point.y} base={flightBaseY}", this);
             }
             else
             {
-                Debug.LogWarning("[Hornet] Raycast NON ha colpito nulla: controlla Layer del Plane e Ground Mask", this);
+                Debug.LogWarning("[Hornet] No ground found below: check the ground layer and the Ground Mask.", this);
             }
             bobPhase = Random.Range(0f, Mathf.PI*2f);
-            Debug.Log($"[Hornet] hover={hornetData.HoverHeight} base={flightBaseY} startY={transform.position.y} data={hornetData.name}", this);
         }
 
         public override IEnemyState CreateIdleState()
@@ -52,7 +49,14 @@ namespace PhysicsThief.Enemies
 
         private void FixedUpdate()
         {
-            if (isStalled || rb == null) return;
+            if (rb == null || IsDead) return;
+            if (IsFrozen || IsPinned)
+            {
+                rb.useGravity = true;   // frozen or too heavy: the wings stall and it falls (GDD 4.2)
+                return;
+            }
+            if (IsLaunched || isStalled) return;
+            rb.useGravity = false;
 
             float bob = Mathf.Sin(Time.time * hornetData.BobFrequency * Mathf.PI * 2f + bobPhase) * hornetData.BobAmplitude;
             float targetY = flightBaseY + bob;
@@ -60,7 +64,6 @@ namespace PhysicsThief.Enemies
             Vector3 v = rb.linearVelocity;
             v.y = Mathf.Clamp((targetY - rb.position.y) * AltitudeGain, -MaxVerticalSpeed, MaxVerticalSpeed);
             rb.linearVelocity = v;
-            Debug.Log($"[Hornet] y={rb.position.y:F2} targetY={targetY:F2} vy={v.y:F2}");
         }
 
         public override void Attack()

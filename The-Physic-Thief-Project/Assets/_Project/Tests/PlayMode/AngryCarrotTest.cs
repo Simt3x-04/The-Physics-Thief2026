@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using PhysicsThief.Enemies;
 
-/// <summary>Muove un oggetto in linea retta a velocita' costante (il "player" che scappa).</summary>
+/// <summary>Moves an object in a straight line at a constant speed (the "player" running away).</summary>
 public class StraightRunner : MonoBehaviour
 {
     public Vector3 Velocity;
@@ -17,7 +17,7 @@ public class StraightRunner : MonoBehaviour
 
 public class AngryCarrotTests
 {
-    // Assets/Tests/Resources/Enemies/AngryCarrotPrefab.prefab
+    // Assets/_Project/Tests/PlayMode/Resources/Enemies/AngryCarrotPrefab.prefab
     private const string CarrotPrefabPath = "Enemies/AngryCarrotPrefab";
     private const float PlayerDistance = 6f;
 
@@ -55,7 +55,7 @@ public class AngryCarrotTests
 
         var prefab = Resources.Load<GameObject>(CarrotPrefabPath);
         Assert.IsNotNull(prefab,
-            "Prefab not found: expected Assets/Tests/Resources/Enemies/AngryCarrotPrefab.prefab");
+            "Prefab not found: expected Assets/_Project/Tests/PlayMode/Resources/Enemies/AngryCarrotPrefab.prefab");
 
         carrotGo = Object.Instantiate(prefab, new Vector3(0f, 0.6f, 0f), Quaternion.identity); // faces +Z
         Physics.SyncTransforms(); // makes the line-of-sight check see the colliders created this frame

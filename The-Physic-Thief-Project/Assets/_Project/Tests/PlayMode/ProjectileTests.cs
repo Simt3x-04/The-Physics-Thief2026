@@ -5,7 +5,7 @@ using UnityEngine.TestTools;
 using PhysicsThief.Core;
 using PhysicsThief.Enemies;
 
-/// <summary>Bersaglio finto: registra i colpi ricevuti.</summary>
+/// <summary>Fake target: records the hits it receives.</summary>
 public class DummyTarget : MonoBehaviour, IDamageable
 {
     public int Hits;
@@ -34,7 +34,7 @@ public class ProjectileTests
 
     private static GameObject CreateBox(string name, Vector3 position)
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Cube); // include un BoxCollider
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube); // includes a BoxCollider
         go.name = name;
         go.transform.position = position;
         return go;
@@ -45,7 +45,7 @@ public class ProjectileTests
         var go = new GameObject("TestProjectile");
         go.transform.position = position;
         go.AddComponent<SphereCollider>().radius = 0.2f;
-        return go.AddComponent<Projectile>(); // RequireComponent aggiunge il Rigidbody
+        return go.AddComponent<Projectile>(); // RequireComponent adds the Rigidbody
     }
 
     [UnityTest]
@@ -59,7 +59,7 @@ public class ProjectileTests
         projectile.Launch(Vector3.forward, owner, 17f);
 
         yield return WaitUntilOrTimeout(() => dummy.Hits > 0, 3f);
-        yield return null; // lascia a Destroy il tempo di completare
+        yield return null; // give Destroy time to complete
 
         Assert.AreEqual(1, dummy.Hits, "Il bersaglio doveva essere colpito una volta");
         Assert.AreEqual(17f, dummy.TotalDamage, 0.001f, "Il danno deve essere quello passato a Launch");
@@ -72,7 +72,7 @@ public class ProjectileTests
         owner = CreateBox("Owner", Vector3.zero);
         var ownerDummy = owner.AddComponent<DummyTarget>();
 
-        // Parte davanti all'owner e viene sparato verso di lui
+        // Starts in front of the owner and is fired towards it
         projectile = CreateProjectile(new Vector3(0f, 0f, 3f));
         projectile.Launch(Vector3.back, owner, 10f);
 

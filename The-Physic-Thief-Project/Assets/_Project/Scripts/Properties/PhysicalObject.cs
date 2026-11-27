@@ -68,10 +68,18 @@ namespace PhysicsThief.Properties
             }
         }
 
-        /// <summary>Current value: the override if there is one, otherwise the base value.</summary>
+        /// <summary>
+        /// Set by objects that move on their own (enemies): it returns their real speed in m/s, so that the scanner
+        /// shows and copies it. The base value stays untouched: it is what drives a RigidbodyReactor.
+        /// </summary>
+        public Func<float> LiveVelocity { get; set; }
+
+        /// <summary>Current value: the override if there is one, otherwise the live speed or the base value.</summary>
         public float GetValue(AttributeType type)
         {
-            return activeOverrides.TryGetValue(type, out TemporaryOverride o) ? o.property.value : GetBaseValue(type);
+            if (activeOverrides.TryGetValue(type, out TemporaryOverride o)) return o.property.value;
+            if (type == AttributeType.Velocity && LiveVelocity != null) return LiveVelocity();
+            return GetBaseValue(type);
         }
 
         public float GetBaseValue(AttributeType type)

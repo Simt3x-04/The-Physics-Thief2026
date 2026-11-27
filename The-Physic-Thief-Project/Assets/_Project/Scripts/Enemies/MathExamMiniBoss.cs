@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace PhysicsThief.Enemies
 {
-    /// <summary>Mini-boss che lancia voti '4' e '5'. I proiettili riflessi con alta velocita'/elasticita' lo danneggiano.</summary>
+    /// <summary>Mini-boss that throws '4' and '5' grades. Projectiles reflected with high velocity/elasticity damage it.</summary>
     public class MathExamMiniBoss : BossBase
     {
         [SerializeField] private Transform firePoint;
@@ -24,7 +24,7 @@ namespace PhysicsThief.Enemies
         }
 
         public void FireGradeProjectiles(int gradeValue){
-            //TODO: shoot examData.GradeProjectilePrefab da firePoint; il danno è examData.GradeFourDamage o Five
+            //TODO: shoot examData.GradeProjectilePrefab from firePoint; the damage is examData.GradeFourDamage or Five
         }
 
         public void TakeReflectedDamage(Projectile reflected) { 

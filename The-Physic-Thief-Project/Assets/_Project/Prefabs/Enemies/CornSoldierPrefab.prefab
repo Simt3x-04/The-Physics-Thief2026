@@ -16,6 +16,10 @@ GameObject:
   - component: {fileID: 7296538066654447981}
   - component: {fileID: 8413676381993560313}
   - component: {fileID: 8248233898591286405}
+  - component: {fileID: 7741482120262423008}
+  - component: {fileID: 6390158578094117351}
+  - component: {fileID: 6372246772256839377}
+  - component: {fileID: 3044579820899504561}
   m_Layer: 0
   m_Name: CornSoldierPrefab
   m_TagString: Untagged
@@ -146,6 +150,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Properties.PhysicalObject
   definition: {fileID: 0}
+  displayName: Corn Soldier
+  material: 7
+  baselineProperties:
+  - type: 0
+    value: 40
+  - type: 1
+    value: 0
+  - type: 2
+    value: 20
+  - type: 3
+    value: 0
+  - type: 4
+    value: 3
+  acceptsPastes: 1
 --- !u!114 &8413676381993560313
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -163,9 +181,16 @@ MonoBehaviour:
   data: {fileID: 11400000, guid: e7a8ae53a6eaf4c698bbcf0bdcc896f3, type: 2}
   obstacleMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 9
   eyeHeight: 1
   targetTag: Player
+  groundedMass: 200
+  freezeTemperature: 0
+  ignitionTemperature: 100
+  burnDamagePerSecond: 10
+  deathDelay: 1.5
+  frozenTint: {r: 0.65, g: 0.88, b: 1, a: 1}
+  burningTint: {r: 1, g: 0.55, b: 0.1, a: 1}
   firePoint: {fileID: 3037675322539276167}
 --- !u!54 &8248233898591286405
 Rigidbody:
@@ -175,7 +200,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 414985237116435234}
   serializedVersion: 5
-  m_Mass: 1
+  m_Mass: 40
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -194,6 +219,95 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &7741482120262423008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414985237116435234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 046519d6f7c3adb4c86afdb93699721b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Properties.Reactors.RigidbodyReactor
+  physObj: {fileID: 0}
+  rb: {fileID: 0}
+  maxVelocity: 50
+  isLightFlyer: 0
+  groundedMass: 200
+  hoverReturnSpeed: 2
+  hoverMaxSpeed: 3
+--- !u!114 &6390158578094117351
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414985237116435234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb76b5b39d0acf34484c598df4fc9722, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Properties.Reactors.MagnetismReactor
+  physObj: {fileID: 0}
+  minimumField: 0.5
+  radiusPerTesla: 5
+  accelerationPerTesla: 40
+  referenceMass: 1
+  massInfluence: 0.5
+  edgeStrength: 0.3
+  maxAcceleration: 60
+  stopDistance: 0.6
+  attractionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  magnetTint: {r: 0.72, g: 0.6, b: 1, a: 1}
+--- !u!114 &6372246772256839377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414985237116435234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9eda10bd61cc7ee47b69e67b5565c54b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Properties.Reactors.HardnessReactor
+  physObj: {fileID: 0}
+  fragileThreshold: 2
+  rigidThreshold: 8
+  shatterImpactSpeed: 4
+  fragileTint: {r: 1, g: 0.8, b: 0.88, a: 1}
+  rigidTint: {r: 0.7, g: 0.95, b: 1, a: 1}
+--- !u!114 &3044579820899504561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414985237116435234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7abef7da301578544996e3aef6099ba7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.UI.PropertyTimerDisplay
+  heightOffset: 0.25
+  unitsToMeters: 0.006
+  rowWidth: 170
+  rowHeight: 20
+  rowSpacing: 4
+  labelWidth: 62
+  referenceDistance: 6
+  minScaleFactor: 0.5
+  maxScaleFactor: 4
+  maxVisibleDistance: 30
+  warningTime: 1
+  flashSpeed: 8
+  warningColor: {r: 0.94, g: 0.27, b: 0.27, a: 1}
+  barBackgroundColor: {r: 0.06, g: 0.09, b: 0.16, a: 0.85}
+  flickerObject: 1
 --- !u!1 &6271629035098429888
 GameObject:
   m_ObjectHideFlags: 0
