@@ -1,3 +1,4 @@
+using PhysicsThief.Core;
 using UnityEngine;
 
 namespace PhysicsThief.Enemies
@@ -6,7 +7,7 @@ namespace PhysicsThief.Enemies
     public class SpearBeetle : EnemyBase
     {
         private SpearBeetleData spearBeetleData;
-        [SerializeField] private Transform firePoint;
+        private IDamageable targetDamageable;
         private bool isArmorShattered;
         public bool IsArmorShattered => isArmorShattered;
 
@@ -22,10 +23,7 @@ namespace PhysicsThief.Enemies
             }
         }
 
-        public override IEnemyState CreateIdleState()
-        {
-            return new RoamState();
-        }
+        public override IEnemyState CreateIdleState() => new RoamState();
 
         public override void TakeDamage(float damage)
         {
@@ -39,13 +37,10 @@ namespace PhysicsThief.Enemies
         }
 
         public override void Attack(){
-            if(target == null||spearBeetleData.ProjectilePrefab == null|| firePoint == null) return;
-            if(DistanceToTarget() > spearBeetleData.ShootRange|| !HasLineOfSight())return;
+          if(target == null || DistanceToTarget() > data.AttackRange) return;
 
-            Vector3 aimPoint = target.position + Vector3.up * eyeHeight;
-            Vector3 direction = (aimPoint - firePoint.position).normalized;
-            Projectile projectile = Instantiate(spearBeetleData.ProjectilePrefab, firePoint.position, Quaternion.LookRotation(direction));
-            projectile.Launch(direction,gameObject ,spearBeetleData.ProjectileDamage);
+          if(targetDamageable == null) targetDamageable = target.GetComponentInParent<IDamageable>();
+          targetDamageable?.TakeDamage(data.AttackDamage);
         }
 
         public void ShatterArmor()

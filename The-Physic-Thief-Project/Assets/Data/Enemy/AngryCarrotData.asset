@@ -21,8 +21,8 @@ MonoBehaviour:
   attackDamage: 10
   attackRange: 1.5
   attackCooldown: 3
-  detectionRange: 5
-  loseTargetRange: 6
+  detectionRange: 8
+  loseTargetRange: 80
   viewAngle: 110
   loseSightTime: 3
   mass: 0.01
@@ -34,3 +34,6 @@ MonoBehaviour:
   deathVfx: {fileID: 0}
   chargeSpeed: 9
   chargeCooldown: 3
+  dashTurnSpeed: 90
+  dashDuration: 3
+  meleeHalfAngle: 60

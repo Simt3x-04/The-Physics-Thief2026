@@ -77,7 +77,7 @@ namespace PhysicsThief.Enemies
 
             Vector3 toTarget = carrot.Target.position - carrot.transform.position;
             toTarget.y = 0f;
-            if(toTarget.sqrMagnitude <= 0.0001f)
+            if(toTarget.sqrMagnitude > 0.0001f)
             {
                 float maxRadians = carrot.CarrotData.DashTurnSpeed*Mathf.Deg2Rad*Time.deltaTime;
                 heading = Vector3.RotateTowards(heading, toTarget.normalized, maxRadians, 0f);

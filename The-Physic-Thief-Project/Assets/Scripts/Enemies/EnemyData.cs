@@ -72,7 +72,11 @@ namespace PhysicsThief.Enemies
         public GameObject DeathVfx => deathVfx;
  
         /// <summary>TODO: restituisci il danno ridotto da damageReduction. Funzione pura, senza stato.</summary>
-        public float ApplyDamageReduction(float incomingDamage) { return 0f; }
+        /// <summary>Restituisce il danno ridotto da damageReduction. Funzione pura, senza stato.</summary>
+        public float ApplyDamageReduction(float incomingDamage)
+        {
+            return Mathf.Max(0f, incomingDamage) * (1f - damageReduction);
+        }
  
         /// <summary>TODO: clamp dei valori (HP >= 1, cooldown >= 0, reduction 0-1, loseTargetRange >= detectionRange).</summary>
         protected virtual void OnValidate() {

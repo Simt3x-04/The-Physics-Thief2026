@@ -30,7 +30,7 @@ namespace PhysicsThief.Core
         }
 
         /// <summary>TODO: sottrai HP, notifica OnHealthChanged, chiama Die() se arriva a 0.</summary>
-        public void TakeDamage(float amount) { }
+        public virtual void TakeDamage(float amount) { }
 
         ///<summary>TODO: When the character is poisoned take damage every x seconds
         public virtual void PoisonDamage(float poisonDps, float poisonDuration) { }

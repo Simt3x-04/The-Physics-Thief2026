@@ -15,24 +15,24 @@ MonoBehaviour:
   displayName: Corn Soldier
   icon: {fileID: 0}
   prefab: {fileID: 0}
-  maxHP: 1
-  moveSpeed: 0
+  maxHP: 50
+  moveSpeed: 3
   damageReduction: 0
-  attackDamage: 0
-  attackRange: 0
-  attackCooldown: 0
-  detectionRange: 0
-  loseTargetRange: 0
+  attackDamage: 10
+  attackRange: 10
+  attackCooldown: 2
+  detectionRange: 15
+  loseTargetRange: 15
+  viewAngle: 120
+  loseSightTime: 3
   mass: 0.01
-  roamRadius: 0.5
-  roamPauseTime: 0
+  roamRadius: 10
+  roamPauseTime: 0.5
   turnSpeed: 1
   hitSfx: {fileID: 0}
   deathSfx: {fileID: 0}
   deathVfx: {fileID: 0}
-  kernelPrefab: {fileID: 0}
+  kernelPrefab: {fileID: 4462929263966746478, guid: c7bd766e0d4380442a83b5dcc0c89fff, type: 3}
   kernelsPerBurst: 3
   timeBetweenKernels: 0.15
   burstCooldown: 2.5
-  startsWithShield: 1
-  shieldBreakMagnetism: 50

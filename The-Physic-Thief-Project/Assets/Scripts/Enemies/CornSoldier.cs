@@ -1,5 +1,6 @@
 using UnityEngine;
 using PhysicsThief.Properties;
+using System.Collections;
 
 namespace PhysicsThief.Enemies
 {
@@ -8,7 +9,7 @@ namespace PhysicsThief.Enemies
     {
         [SerializeField] private Transform firePoint;
         private CornSoldierData cornData;
-        private bool hasShield;
+        private bool isBursting;
         private float nextBurstTime;
 
         protected override void Awake()
@@ -21,25 +22,57 @@ namespace PhysicsThief.Enemies
                 enabled = false;
                 return;
             }
-            hasShield = cornData.StartsWithShield;
+        }
+
+        public override IEnemyState CreateIdleState() => new RoamState();
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            StopAllCoroutines();
+            isBursting = false;
         }
 
         public override void Attack(){
-            //TODO: if in range (cornData.attackRange) e Time.time >= nextBurstTime ==> FireKernelBurst
+           if(IsDead || isBursting) return;
+           if(target == null || DistanceToTarget() > data.AttackRange) return;
+           if(Time.time < nextBurstTime) return;
+
+           FireKernelBurst();
         }
 
         public void FireKernelBurst(){
-            //TODO: spara cornData.KernelsPerBurst proiettili da firePoint(cornData.KernelPrefab),
-            // distanziati di cornData.TimeBetweenKernels
-            //nextBurstTime = Time.time + cornData.BurstCooldown
+           if(isBursting) return;
+           if(cornData.KernelPrefab == null || firePoint == null)
+            {
+                Debug.LogWarning($"{name}:KernelPrefab o firePoint missing");
+                return;
+            }
+            isBursting = true;
+            StartCoroutine(BurstRoutine());
         }
 
-        public void Defend(){
-            //TODO: comportamento diensivo quando hasShield è true
+        private IEnumerator BurstRoutine()
+        {
+            for(int i=0; i<cornData.KernelsPerBurst; i++)
+            {
+                if(IsDead || target == null) break;
+                shootKernel();
+                bool isLast = i == cornData.KernelsPerBurst-1;
+                if(!isLast && cornData.TimeBetweenKernels >0f)
+                    yield return new WaitForSeconds(cornData.TimeBetweenKernels);
+            }
+            nextBurstTime = Time.time + cornData.BurstCooldown;
+            isBursting = false;
         }
 
-        public override void OnPhysicsAltered(AttributeType type, float newValue){
-            //TODO: se type è Magnetism e newValue > cornData.ShieldBreakMagnetism, has shield = false
-        } 
+        private void shootKernel()
+        {
+            Vector3 aimPoint = target.position + Vector3.up*eyeHeight;
+            Vector3 direction = (aimPoint - firePoint.position).normalized;
+
+            Projectile kernel = Instantiate(cornData.KernelPrefab, firePoint.position, Quaternion.LookRotation(direction));
+            kernel.Launch(direction, gameObject, data.AttackDamage);
+        }
     }         
 }
