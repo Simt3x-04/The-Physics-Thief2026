@@ -7,24 +7,7 @@ using UnityEngine.TestTools;
 using PhysicsThief.Core;
 using PhysicsThief.Enemies;
 
-/// <summary>
-/// HealthComponent vero che registra le chiamate a PoisonDamage. Non chiama base:
-/// il veleno non e' ancora implementato, qui si verifica solo che venga invocato.
-/// </summary>
-public class RecordingHealthComponent : HealthComponent
-{
-    public int PoisonCalls;
-    public float LastPoisonDps;
-    public float LastPoisonDuration;
-
-    public override void PoisonDamage(float dps, float duration)
-    {
-        PoisonCalls++;
-        LastPoisonDps = dps;
-        LastPoisonDuration = duration;
-    }
-}
-
+/// <summary>Play Mode integration test using the real HealthComponent.</summary>
 public class HornetTests
 {
     // Assets/Tests/Resources/Enemies/HornetPrefab.prefab
@@ -144,7 +127,7 @@ public class HornetTests
         float flightY = hornetGo.transform.position.y;
         Vector3 hornetPos = hornetGo.transform.position;
 
-        // ---------- 2. The player appears, with a HealthComponent that records poison ----------
+        // ---------- 2. The player appears, with the real HealthComponent ----------
         player = new GameObject("FakePlayer");
         player.tag = "Player";
         player.transform.position = new Vector3(hornetPos.x, 0f, hornetPos.z + PlayerDistance);
@@ -155,8 +138,11 @@ public class HornetTests
         torso.transform.localPosition = new Vector3(0f, 1f, 0f);
         torso.transform.localScale = new Vector3(1f, 2f, 1f);
 
-        var health = player.AddComponent<RecordingHealthComponent>();
-        health.Initialize(100f);
+        var health = player.AddComponent<HealthComponent>();
+        Assert.Greater(data.PoisonDps, 0f);
+        Assert.Greater(data.PoisonDuration, 0f);
+        float expectedPoisonDamage = data.PoisonDps * data.PoisonDuration;
+        health.Initialize(Mathf.Max(100f, expectedPoisonDamage + Mathf.Max(0f, data.AttackDamage) + 10f));
         player.AddComponent<DummyTarget>(); // makes sure there is an IDamageable to hit
 
         hornetGo.transform.rotation = Quaternion.LookRotation(Vector3.forward); // facing the player
@@ -213,9 +199,9 @@ public class HornetTests
         var recorder = dart.gameObject.AddComponent<CollisionRecorder>(); // defined in SpearBeetleShootingTests.cs
         Vector3 lastPosition = dart.transform.position;
 
-        // ---------- 4. The hit calls PoisonDamage on the player's HealthComponent ----------
-        float end = Time.time + 3f;
-        while (health.PoisonCalls == 0 && Time.time < end)
+        // ---------- 4. The hit activates real poison ----------
+        float end = Time.realtimeSinceStartup + 3f;
+        while (!health.IsPoisoned && Time.realtimeSinceStartup < end)
         {
             if (dart != null) lastPosition = dart.transform.position;
             yield return null;
@@ -226,12 +212,44 @@ public class HornetTests
             : $"still alive at {dart.transform.position}";
         string collisions = recorder.Hits.Count == 0 ? "nothing" : string.Join(", ", recorder.Hits);
 
-        Assert.AreEqual(1, health.PoisonCalls,
-            $"PoisonDamage should have been called once on the player's HealthComponent. " +
-            $"Player at {player.transform.position}. Dart {dartState}. Dart collided with: {collisions}.");
-        Assert.AreEqual(data.PoisonDps, health.LastPoisonDps, 0.001f,
-            "PoisonDamage received a different damage per second than HornetData.PoisonDps");
-        Assert.AreEqual(data.PoisonDuration, health.LastPoisonDuration, 0.001f,
-            "PoisonDamage received a different duration than HornetData.PoisonDuration");
+        Assert.IsTrue(health.IsPoisoned,
+            $"The player was not poisoned. Dart {dartState}. Collisions: {collisions}.");
+
+        // Sample after impact, separating poison from any immediate hit damage.
+        float hpAtPoisonStart = health.CurrentHP;
+        float poisonStartTime = Time.time;
+        float firstFrame = Time.deltaTime;
+        float largestFrame = firstFrame;
+        float damageTolerance = Mathf.Max(0.01f, data.PoisonDps * firstFrame + 0.01f);
+        float poisonDeadline = Time.realtimeSinceStartup + data.PoisonDuration + 3f;
+        bool healthDecreasedWhilePoisoned = false;
+
+        // ---------- 5. Real damage over time ----------
+        while (health.IsPoisoned && Time.realtimeSinceStartup < poisonDeadline)
+        {
+            yield return null;
+            largestFrame = Mathf.Max(largestFrame, Time.deltaTime);
+            if (health.IsPoisoned && health.CurrentHP < hpAtPoisonStart)
+                healthDecreasedWhilePoisoned = true;
+        }
+
+        Assert.IsFalse(health.IsPoisoned, "Poison did not expire in time");
+        Assert.IsFalse(health.IsDead, "The test player should survive the attack");
+        float actualPoisonDamage = hpAtPoisonStart - health.CurrentHP;
+        Assert.Greater(actualPoisonDamage, 0f, "Poison did not reduce HP");
+        Assert.AreEqual(expectedPoisonDamage, actualPoisonDamage, damageTolerance,
+            "Unexpected poison damage (allowing one frame of damage before the first sample)");
+        Assert.AreEqual(data.PoisonDuration, Time.time - poisonStartTime,
+            2f * largestFrame + 0.02f, "Unexpected poison duration");
+
+        // Very short effects can finish in a single frame.
+        if (data.PoisonDuration > 2f * largestFrame)
+            Assert.IsTrue(healthDecreasedWhilePoisoned, "HP did not decrease during the poison effect");
+
+        // ---------- 6. No further damage after expiry ----------
+        float finalHP = health.CurrentHP;
+        yield return new WaitForSeconds(0.5f);
+        Assert.AreEqual(finalHP, health.CurrentHP, 0.001f,
+            "Health continued decreasing after poison expired");
     }
 }

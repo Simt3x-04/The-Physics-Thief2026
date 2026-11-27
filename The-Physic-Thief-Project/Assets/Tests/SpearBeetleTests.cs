@@ -1,72 +1,78 @@
+
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using PhysicsThief.Core;
 using PhysicsThief.Enemies;
-using System.Collections.Generic;
-using System.Reflection;
-
-/// <summary>HealthComponent che registra il danno che gli viene chiesto di applicare, senza applicarlo.</summary>
-public class DamageRecordingHealthComponent : HealthComponent
-{
-    public readonly List<float> DamageCalls = new List<float>();
-
-    public override void TakeDamage(float amount)
-    {
-        DamageCalls.Add(amount);
-    }
-}
 
 public class SpearBeetleTests
 {
     // Assets/Tests/Resources/Enemies/SpearBeetlePrefab.prefab
     private const string BeetlePrefabPath = "Enemies/SpearBeetlePrefab";
     private const float PlayerDistance = 5f;
+    private const float DamageTolerance = 0.001f;
 
     private GameObject floor;
     private GameObject beetleGo;
     private GameObject player;
 
-    [TearDown]
-    public void TearDown()
+    [UnityTearDown]
+    public IEnumerator TearDown()
     {
         if (floor != null) Object.Destroy(floor);
         if (beetleGo != null) Object.Destroy(beetleGo);
         if (player != null) Object.Destroy(player);
 
-        foreach (var p in Object.FindObjectsByType<Projectile>(FindObjectsSortMode.None))
+        foreach (var p in Object.FindObjectsByType<Projectile>(
+            FindObjectsSortMode.None))
+        {
             Object.Destroy(p.gameObject);
+        }
+
+        yield return null;
     }
 
     private GameObject SpawnBeetle(Vector3 position)
     {
         var prefab = Resources.Load<GameObject>(BeetlePrefabPath);
+
         Assert.IsNotNull(prefab,
             "Prefab not found: expected Assets/Tests/Resources/Enemies/SpearBeetlePrefab.prefab");
-        return Object.Instantiate(prefab, position, Quaternion.identity); // faces +Z
+
+        return Object.Instantiate(
+            prefab, position, Quaternion.identity);
     }
 
-    private static float ExpectedLoss(SpearBeetleData data, float rawDamage, float shieldReduction)
+    private static float ExpectedLoss(
+        SpearBeetleData data,
+        float rawDamage,
+        float shieldReduction)
     {
-        // Same path as EnemyBase.TakeDamage: shield reduction first, then EnemyData.ApplyDamageReduction
-        return data.ApplyDamageReduction(rawDamage * (1f - shieldReduction));
+        // Shield reduction first, then EnemyData damage reduction.
+        return data.ApplyDamageReduction(
+            rawDamage * (1f - shieldReduction));
     }
 
     // ------------------------------------------------------------------
-    // 1. Melee: the beetle chases the player and hits him with its spear
+    // 1. Melee: the beetle chases the player and hits him with its spear.
+    // The damage is applied to the real HealthComponent.
     // ------------------------------------------------------------------
+
     [UnityTest]
     public IEnumerator SpearBeetle_ChasesThePlayer_AndHitsItInMelee()
     {
-        // Floor
+        // ---------- Setup: floor ----------
+
         floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
         floor.transform.localScale = new Vector3(5f, 1f, 5f);
 
-        // Fake player: pivot at the feet like a real character, in front of the beetle (+Z)
+        // ---------- Setup: fake player ----------
+
         player = new GameObject("FakePlayer");
         player.tag = "Player";
-        player.transform.position = new Vector3(0f, 0f, PlayerDistance);
+        player.transform.position =
+            new Vector3(0f, 0f, PlayerDistance);
 
         var torso = GameObject.CreatePrimitive(PrimitiveType.Cube);
         torso.name = "FakePlayerBody";
@@ -74,99 +80,291 @@ public class SpearBeetleTests
         torso.transform.localPosition = new Vector3(0f, 1f, 0f);
         torso.transform.localScale = new Vector3(1f, 2f, 1f);
 
-        var dummy = player.AddComponent<DummyTarget>();
+        // Use the real HealthComponent.
+        var playerHealth = player.AddComponent<HealthComponent>();
+        playerHealth.Initialize(100f);
 
-        // Real beetle: from here on its AI runs for real (Roam -> spots the player -> CombatState)
+        // Adapter that forwards IDamageable calls to HealthComponent.
+        var target = player.AddComponent<HealthDamageableTestTarget>();
+
+        // ---------- Setup: real beetle ----------
+
         beetleGo = SpawnBeetle(new Vector3(0f, 0.1f, 0f));
         Physics.SyncTransforms();
 
         var beetle = beetleGo.GetComponent<SpearBeetle>();
-        Assert.IsNotNull(beetle, "The prefab has no SpearBeetle component");
+
+        Assert.IsNotNull(beetle,
+            "The prefab has no SpearBeetle component");
 
         var data = beetle.Data as SpearBeetleData;
-        Assert.IsNotNull(data, "The beetle's Data is missing or is not a SpearBeetleData");
 
-        // Sanity checks on the asset: all these default to 0 in EnemyData
-        Assert.Greater(data.MoveSpeed, 0f, "Move Speed is 0 in the SpearBeetleData asset: the beetle cannot chase");
-        Assert.Greater(data.AttackRange, 0f, "Attack Range is 0 in the SpearBeetleData asset: the beetle cannot hit");
-        Assert.Greater(data.AttackDamage, 0f, "Attack Damage is 0 in the SpearBeetleData asset");
+        Assert.IsNotNull(data,
+            "The beetle's Data is missing or is not a SpearBeetleData");
+
+        // ---------- Sanity checks ----------
+
+        Assert.Greater(data.MoveSpeed, 0f,
+            "Move Speed is 0: the beetle cannot chase the player");
+
+        Assert.Greater(data.AttackRange, 0f,
+            "Attack Range is 0: the beetle cannot hit the player");
+
+        Assert.Greater(data.AttackDamage, 0f,
+            "Attack Damage is 0");
+
         Assert.GreaterOrEqual(data.DetectionRange, PlayerDistance,
-            $"Detection Range must be >= {PlayerDistance} so the beetle can see the player");
+            $"Detection Range must be >= {PlayerDistance} " +
+            "so the beetle can see the player");
 
-        float startDistance = Vector3.Distance(beetleGo.transform.position, player.transform.position);
+        // Make sure the player survives the first attack.
+        playerHealth.Initialize(
+            Mathf.Max(100f, data.AttackDamage + 10f));
 
-        // Wait for the first hit
-        float end = Time.time + 8f;
-        while (dummy.Hits == 0 && Time.time < end)
+        float initialHP = playerHealth.CurrentHP;
+
+        float startDistance = Vector3.Distance(
+            beetleGo.transform.position,
+            player.transform.position);
+
+        // ---------- Wait for the first real hit ----------
+
+        float end = Time.realtimeSinceStartup + 8f;
+
+        while (playerHealth.CurrentHP >= initialHP &&
+               Time.realtimeSinceStartup < end)
+        {
             yield return null;
+        }
 
-        float finalDistance = Vector3.Distance(beetleGo.transform.position, player.transform.position);
+        float finalDistance = Vector3.Distance(
+            beetleGo.transform.position,
+            player.transform.position);
 
-        Assert.GreaterOrEqual(dummy.Hits, 1,
-            $"The beetle never hit the player in 8 s. Distance went from {startDistance:F2} to {finalDistance:F2} " +
-            $"(Attack Range {data.AttackRange}). If it did not get closer: check Detection Range, View Angle, " +
-            "Turn Speed and that the Obstacle Mask does not include the player's layer. " +
-            "If it stopped short: Attack Range is smaller than the gap between the two colliders.");
+        // Stop the AI to prevent further attacks.
+        beetle.enabled = false;
 
-        Assert.Less(finalDistance, startDistance, "The beetle should have moved towards the player");
-        Assert.LessOrEqual(finalDistance, data.AttackRange + 0.5f,
-            "The beetle hit the player from farther away than its Attack Range");
-        Assert.AreEqual(dummy.Hits * data.AttackDamage, dummy.TotalDamage, 0.001f,
-            "Each hit should deal the beetle's Attack Damage");
+        float actualDamage =
+            initialHP - playerHealth.CurrentHP;
 
-        // It is a melee enemy now: no projectile may belong to it
-        foreach (var p in Object.FindObjectsByType<Projectile>(FindObjectsSortMode.None))
-            Assert.AreNotEqual(beetleGo, p.Owner, "The beetle should not fire projectiles anymore");
+        // ---------- Verify that the player was hit ----------
+
+        Assert.GreaterOrEqual(target.Hits, 1,
+            $"The beetle never hit the player in 8 seconds. " +
+            $"Distance went from {startDistance:F2} " +
+            $"to {finalDistance:F2} " +
+            $"(Attack Range: {data.AttackRange}). " +
+            "Check Detection Range, View Angle, Turn Speed " +
+            "and Obstacle Mask.");
+
+        Assert.Greater(actualDamage, 0f,
+            "The player's HealthComponent did not receive damage");
+
+        // ---------- Verify movement ----------
+
+        Assert.Less(finalDistance, startDistance,
+            "The beetle should have moved towards the player");
+
+        Assert.LessOrEqual(
+            finalDistance,
+            data.AttackRange + 0.5f,
+            "The beetle hit the player from farther away " +
+            "than its Attack Range");
+
+        // ---------- Verify actual HP loss ----------
+
+        float expectedDamage =
+            target.Hits * data.AttackDamage;
+
+        Assert.AreEqual(
+            expectedDamage,
+            actualDamage,
+            DamageTolerance,
+            "The player did not lose the expected amount of HP");
+
+        Assert.AreEqual(
+            initialHP - expectedDamage,
+            playerHealth.CurrentHP,
+            DamageTolerance,
+            "The player's remaining HP is incorrect");
+
+        Assert.IsFalse(playerHealth.IsDead,
+            "The player should survive the attack");
+
+        // ---------- Verify that no projectiles were fired ----------
+
+        foreach (var p in Object.FindObjectsByType<Projectile>(
+            FindObjectsSortMode.None))
+        {
+            Assert.AreNotEqual(beetleGo, p.Owner,
+                "The beetle is a melee enemy and should not fire projectiles");
+        }
     }
 
     // ------------------------------------------------------------------
-// 2. Shield: the beetle passes the REDUCED damage to its HealthComponent
-// ------------------------------------------------------------------
-[UnityTest]
-public IEnumerator SpearBeetle_Shield_PassesReducedDamage_ToTheHealthComponent()
-{
-    beetleGo = SpawnBeetle(Vector3.zero);
+    // 2. Shield: the beetle receives reduced damage when its shield
+    // is intact, and increased damage when its shield is shattered.
+    // The actual HP loss is measured through the real HealthComponent.
+    // ------------------------------------------------------------------
 
-    var beetle = beetleGo.GetComponent<SpearBeetle>();
-    Assert.IsNotNull(beetle, "The prefab has no SpearBeetle component");
+    [UnityTest]
+    public IEnumerator SpearBeetle_Shield_ReducesActualHealthDamage()
+    {
+        // ---------- Setup: real beetle ----------
 
-    var data = beetle.Data as SpearBeetleData;
-    Assert.IsNotNull(data, "The beetle's Data is missing or is not a SpearBeetleData");
+        beetleGo = SpawnBeetle(Vector3.zero);
 
-    // The beetle talks to this HealthComponent, which only records the damage it is asked to apply
-    var recorder = beetleGo.AddComponent<DamageRecordingHealthComponent>();
-    var healthField = typeof(EnemyBase).GetField("healthComp", BindingFlags.NonPublic | BindingFlags.Instance);
-    Assert.IsNotNull(healthField, "EnemyBase has no field named 'healthComp' (renamed? update the test)");
-    healthField.SetValue(beetle, recorder);
+        var beetle = beetleGo.GetComponent<SpearBeetle>();
 
-    beetle.enabled = false; // no AI: only the damage logic is under test
+        Assert.IsNotNull(beetle,
+            "The prefab has no SpearBeetle component");
 
-    // Sanity checks on the asset
-    Assert.Greater(data.ApplyDamageReduction(10f), 0f,
-        "EnemyData.ApplyDamageReduction returns 0: the test would pass without checking anything");
-    Assert.Less(data.ArmorDamageReduction, 1f, "Armor Damage Reduction of 1 makes the shield absorb everything");
-    Assert.Greater(data.ArmorDamageReduction, data.ShatteredDamageReduction,
-        "The intact shield should reduce more damage than the broken one");
+        var data = beetle.Data as SpearBeetleData;
 
-    const float hit = 10f;
-    Assert.IsFalse(beetle.IsArmorShattered, "The shield should start intact");
+        Assert.IsNotNull(data,
+            "The beetle's Data is missing or is not a SpearBeetleData");
 
-    // 1. Intact shield: the HealthComponent receives the reduced damage
-    beetle.TakeDamage(hit);
-    Assert.AreEqual(1, recorder.DamageCalls.Count,
-        "The beetle should call HealthComponent.TakeDamage exactly once per hit");
-    Assert.AreEqual(ExpectedLoss(data, hit, data.ArmorDamageReduction), recorder.DamageCalls[0], 0.001f,
-        "With the shield intact the HealthComponent should receive the damage reduced by the shield");
+        // Retrieve the real HealthComponent already on the prefab.
+        var health = beetleGo.GetComponent<HealthComponent>();
 
-    // 2. Broken shield: the HealthComponent receives a different amount
-    beetle.ShatterArmor();
-    Assert.IsTrue(beetle.IsArmorShattered, "ShatterArmor should break the shield");
+        Assert.IsNotNull(health,
+            "The beetle prefab has no HealthComponent");
 
-    beetle.TakeDamage(hit);
-    Assert.AreEqual(2, recorder.DamageCalls.Count, "The second hit should call HealthComponent.TakeDamage again");
-    Assert.AreEqual(ExpectedLoss(data, hit, data.ShatteredDamageReduction), recorder.DamageCalls[1], 0.001f,
-        "With the shield broken the HealthComponent should receive the broken-shield damage");
+        // Disable AI: only the damage logic is being tested.
+        beetle.enabled = false;
 
-    yield return null;
+        // ---------- Sanity checks ----------
+
+        Assert.Greater(data.ApplyDamageReduction(10f), 0f,
+            "EnemyData.ApplyDamageReduction returns 0: " +
+            "the test would pass without checking anything");
+
+        Assert.Less(data.ArmorDamageReduction, 1f,
+            "Armor Damage Reduction of 1 makes the shield absorb everything");
+
+        Assert.Greater(
+            data.ArmorDamageReduction,
+            data.ShatteredDamageReduction,
+            "The intact shield should reduce more damage than the broken one");
+
+        const float hit = 10f;
+
+        // Calculate expected damage for both shield conditions.
+        float expectedIntactDamage = ExpectedLoss(
+            data,
+            hit,
+            data.ArmorDamageReduction);
+
+        float expectedShatteredDamage = ExpectedLoss(
+            data,
+            hit,
+            data.ShatteredDamageReduction);
+
+        // Ensure that the beetle survives both attacks.
+        health.Initialize(Mathf.Max(
+            data.MaxHP,
+            expectedIntactDamage + expectedShatteredDamage + 10f));
+
+        float initialHP = health.CurrentHP;
+
+        // ---------- 1. Intact shield ----------
+
+        Assert.IsFalse(beetle.IsArmorShattered,
+            "The shield should start intact");
+
+        float hpBeforeIntactHit = health.CurrentHP;
+
+        beetle.TakeDamage(hit);
+
+        float intactDamage =
+            hpBeforeIntactHit - health.CurrentHP;
+
+        Assert.AreEqual(
+            expectedIntactDamage,
+            intactDamage,
+            DamageTolerance,
+            "With the shield intact, the HealthComponent " +
+            "should receive damage reduced by the shield");
+
+        Assert.AreEqual(
+            initialHP - expectedIntactDamage,
+            health.CurrentHP,
+            DamageTolerance,
+            "Incorrect remaining HP after the intact-shield hit");
+
+        Assert.IsFalse(health.IsDead,
+            "The beetle should survive the first hit");
+
+        // ---------- 2. Shatter the shield ----------
+
+        beetle.ShatterArmor();
+
+        Assert.IsTrue(beetle.IsArmorShattered,
+            "ShatterArmor should break the shield");
+
+        // ---------- 3. Broken shield ----------
+
+        float hpBeforeShatteredHit = health.CurrentHP;
+
+        beetle.TakeDamage(hit);
+
+        float shatteredDamage =
+            hpBeforeShatteredHit - health.CurrentHP;
+
+        Assert.AreEqual(
+            expectedShatteredDamage,
+            shatteredDamage,
+            DamageTolerance,
+            "With the shield broken, the HealthComponent " +
+            "should receive the broken-shield damage");
+
+        // ---------- 4. Compare both hits ----------
+
+        Assert.Greater(
+            shatteredDamage,
+            intactDamage,
+            "The beetle should receive more damage " +
+            "after its shield is shattered");
+
+        float expectedFinalHP =
+            initialHP
+            - expectedIntactDamage
+            - expectedShatteredDamage;
+
+        Assert.AreEqual(
+            expectedFinalHP,
+            health.CurrentHP,
+            DamageTolerance,
+            "Incorrect final HP after both attacks");
+
+        Assert.IsFalse(health.IsDead,
+            "The beetle should survive both hits");
+
+        yield return null;
+    }
 }
+
+// ------------------------------------------------------------------
+// Test helper: connects IDamageable to the real HealthComponent.
+// This component does not simulate damage: it forwards every hit
+// to the actual health system.
+// ------------------------------------------------------------------
+
+[RequireComponent(typeof(HealthComponent))]
+public class HealthDamageableTestTarget : MonoBehaviour, IDamageable
+{
+    private HealthComponent health;
+
+    public int Hits { get; private set; }
+
+    private void Awake()
+    {
+        health = GetComponent<HealthComponent>();
+    }
+
+    public void TakeDamage(float amount)
+    {
+        Hits++;
+        health.TakeDamage(amount);
+    }
 }
