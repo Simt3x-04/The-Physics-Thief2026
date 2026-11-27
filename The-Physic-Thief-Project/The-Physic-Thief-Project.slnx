@@ -1,4 +1,7 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="PhysicsThief.csproj" />
+  <Project Path="Tests.csproj" />
+  <Project Path="PhysicsThief.Editor.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
 </Solution>

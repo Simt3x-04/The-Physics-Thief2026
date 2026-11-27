@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace PhysicsThief.Core
@@ -15,6 +16,9 @@ namespace PhysicsThief.Core
         public float MaxHP => maxHP;
         public float CurrentHP => currentHP;
         public bool IsDead { get; private set; }
+        public bool IsPoisoned => poisonCoroutine != null;
+
+        private Coroutine poisonCoroutine;
 
         /// <summary>Arguments: current HP, max HP.</summary>
         public event Action<float, float> OnHealthChanged;
@@ -23,6 +27,15 @@ namespace PhysicsThief.Core
         private void Awake()
         {
             currentHP = maxHP;
+        }
+
+        public void Initialize(float maxHealth)
+        {
+            maxHP = Mathf.Max(1f, maxHealth);
+            currentHP = maxHP;
+            IsDead = false;
+
+            OnHealthChanged?.Invoke(currentHP, maxHP);
         }
 
         public void TakeDamage(float amount)
@@ -60,6 +73,60 @@ namespace PhysicsThief.Core
             IsDead = false;
             currentHP = maxHP;
             OnHealthChanged?.Invoke(currentHP, maxHP);
+        }
+
+         public void PoisonDamage(float dps, float duration)
+        {
+            if (IsDead || dps <= 0f || duration <= 0f)
+                return;
+
+            if (!isActiveAndEnabled)
+                return;
+
+            StopPoison();
+
+            poisonCoroutine = StartCoroutine(
+                PoisonRoutine(dps, duration)
+            );
+        }
+
+        private IEnumerator PoisonRoutine(
+            float dps, float duration)
+        {
+            float elapsed = 0f;
+
+            while (elapsed < duration && !IsDead)
+            {
+                yield return null;
+
+                float delta = Mathf.Min(
+                    Time.deltaTime,
+                    duration - elapsed
+                );
+
+                elapsed += delta;
+
+                TakeDamage(dps * delta);
+            }
+
+            poisonCoroutine = null;
+        }
+
+        /// <summary>
+        /// Removes the active poison effect.
+        /// </summary>
+        public void StopPoison()
+        {
+            if (poisonCoroutine != null)
+            {
+                StopCoroutine(poisonCoroutine);
+                poisonCoroutine = null;
+            }
+        }
+
+        private void OnDisable()
+        {
+            StopPoison();
         }
     }
 }
