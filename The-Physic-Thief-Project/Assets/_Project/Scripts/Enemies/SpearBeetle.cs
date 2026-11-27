@@ -1,4 +1,5 @@
 using PhysicsThief.Core;
+using PhysicsThief.Properties;
 using UnityEngine;
 
 namespace PhysicsThief.Enemies
@@ -41,6 +42,13 @@ namespace PhysicsThief.Enemies
 
           if(targetDamageable == null) targetDamageable = target.GetComponentInParent<IDamageable>();
           targetDamageable?.TakeDamage(data.AttackDamage);
+        }
+
+        /// <summary>A pasted hardness of 2 or less shatters the shell (GDD 4.2).</summary>
+        public override void OnPhysicsAltered(AttributeType type, float newValue)
+        {
+            base.OnPhysicsAltered(type, newValue);
+            if (type == AttributeType.Hardness && physObj.HasOverride(type) && newValue <= 2f) ShatterArmor();
         }
 
         public void ShatterArmor()

@@ -3,7 +3,7 @@ using PhysicsThief.Core;
 
 namespace PhysicsThief.Enemies
 {
-    /// <summary>Solo per i test: mostra sopra il nemico lo stato corrente e gli HP (visibile nella Game view).</summary>
+    /// <summary>For testing only: shows the current state and HP above the enemy (visible in the Game view).</summary>
     [RequireComponent(typeof(EnemyBase))]
     public class EnemyDebugLabel : MonoBehaviour
     {
@@ -26,7 +26,7 @@ namespace PhysicsThief.Enemies
 
             string state = enemy.StateMachine.Current != null
                 ? enemy.StateMachine.Current.GetType().Name
-                : "(nessuno)";
+                : "(none)";
             string hp = health != null ? $"{health.CurrentHP}/{health.MaxHP}" : "?";
 
             GUI.Label(new Rect(screen.x - 60f, Screen.height - screen.y, 160f, 40f), $"{state}\nHP {hp}");

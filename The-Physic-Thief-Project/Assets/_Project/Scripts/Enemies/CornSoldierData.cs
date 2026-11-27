@@ -6,7 +6,7 @@ namespace PhysicsThief.Enemies
 
     public class CornSoldierData : EnemyData
     {
-        [Header("Mais")]
+        [Header("Corn")]
         [SerializeField] private Projectile kernelPrefab;
         [SerializeField] private int kernelsPerBurst = 3;
         [SerializeField] private float timeBetweenKernels = 0.15f;

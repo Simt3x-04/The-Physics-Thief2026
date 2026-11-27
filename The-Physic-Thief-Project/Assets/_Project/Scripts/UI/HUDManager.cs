@@ -21,7 +21,7 @@ namespace PhysicsThief.UI
     public class HUDManager : MonoBehaviour
     {
         private const float ScannerRefreshInterval = 0.1f;
-        private static readonly Color LockedTextColor = new Color(0.39f, 0.45f, 0.55f, 1f);
+        private static readonly Color LockedTextColor = new Color(0.47f, 0.53f, 0.63f, 1f);
 
         [Header("Data sources")]
         [SerializeField] private HealthComponent playerHealth;
@@ -282,7 +282,10 @@ namespace PhysicsThief.UI
             if (shownTarget != null) ShowScannerOverlay(shownTarget);
         }
 
-        /// <summary>While a pasted property is active, refresh the panel a few times per second so its countdown is live.</summary>
+        /// <summary>
+        /// While a pasted property is active, or the object has a live speed (a moving enemy), refresh the panel a few
+        /// times per second so that the countdown and the speed are up to date.
+        /// </summary>
         private void RefreshScannerTimers(float dt)
         {
             if (shownTarget == null) return;
@@ -290,6 +293,12 @@ namespace PhysicsThief.UI
             scannerRefreshTimer -= dt;
             if (scannerRefreshTimer > 0f) return;
             scannerRefreshTimer = ScannerRefreshInterval;
+
+            if (shownTarget.LiveVelocity != null)
+            {
+                ShowScannerOverlay(shownTarget);
+                return;
+            }
 
             foreach (AttributeType type in Enum.GetValues(typeof(AttributeType)))
             {

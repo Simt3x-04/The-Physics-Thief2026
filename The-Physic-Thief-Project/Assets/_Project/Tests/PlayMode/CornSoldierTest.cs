@@ -7,7 +7,7 @@ using UnityEngine.TestTools;
 using PhysicsThief.Core;
 using PhysicsThief.Enemies;
 
-/// <summary>Bersaglio finto che registra quando riceve ogni colpo.</summary>
+/// <summary>Fake target that records when it receives each hit.</summary>
 public class HitLogTarget : MonoBehaviour, IDamageable
 {
     public readonly List<float> HitTimes = new List<float>();
@@ -23,7 +23,7 @@ public class HitLogTarget : MonoBehaviour, IDamageable
 
 public class CornSoldierTests
 {
-    // Assets/Tests/Resources/Enemies/CornSoldierPrefab.prefab
+    // Assets/_Project/Tests/PlayMode/Resources/Enemies/CornSoldierPrefab.prefab
     private const string SoldierPrefabPath = "Enemies/CornSoldierPrefab";
     private const float PlayerDistance = 6f;
     private const float SettleTime = 0.7f; // the soldier falls onto the floor and stops moving
@@ -65,7 +65,7 @@ public class CornSoldierTests
 
         var prefab = Resources.Load<GameObject>(SoldierPrefabPath);
         Assert.IsNotNull(prefab,
-            "Prefab not found: expected Assets/Tests/Resources/Enemies/CornSoldierPrefab.prefab");
+            "Prefab not found: expected Assets/_Project/Tests/PlayMode/Resources/Enemies/CornSoldierPrefab.prefab");
 
         // Spawned a bit above the floor: it falls and settles during SettleTime
         soldierGo = Object.Instantiate(prefab, new Vector3(0f, 1f, 0f), Quaternion.identity); // faces +Z
@@ -100,7 +100,7 @@ public class CornSoldierTests
         Assert.IsNotNull(field, "CornSoldier has no field named 'firePoint' (renamed? update the test)");
 
         var firePoint = field.GetValue(soldier) as Transform;
-        Assert.IsNotNull(firePoint, "Fire Point is not assigned on Assets/Tests/Resources/Enemies/CornSoldierPrefab");
+        Assert.IsNotNull(firePoint, "Fire Point is not assigned on Assets/_Project/Tests/PlayMode/Resources/Enemies/CornSoldierPrefab");
         return firePoint;
     }
 

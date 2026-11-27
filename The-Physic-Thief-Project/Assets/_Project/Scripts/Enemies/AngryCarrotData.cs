@@ -2,11 +2,11 @@ using UnityEngine;
  
 namespace PhysicsThief.Enemies
 {
-    /// <summary>Parametri specifici di AngryCarrot.</summary>
+    /// <summary>Parameters specific to AngryCarrot.</summary>
     [CreateAssetMenu(menuName = "Physics Thief/AngryCarrotData", fileName = "AngryCarrotData")]
     public class AngryCarrotData : EnemyData
     {
-        [Header("Carica")]
+        [Header("Charge")]
         [SerializeField] private float chargeSpeed = 9f;
         [SerializeField] private float chargeCooldown = 3f;
         [SerializeField] private float dashTurnSpeed = 90f;

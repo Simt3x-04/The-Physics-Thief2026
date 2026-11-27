@@ -11,7 +11,7 @@ namespace PhysicsThief.Player
     /// Does not handle scanning (PlayerScanner) or inventory (BriefcaseInventory).
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerController : MonoBehaviour
+    public class PlayerController : MonoBehaviour, IDamageable
     {
 
         [Header("Movement")]

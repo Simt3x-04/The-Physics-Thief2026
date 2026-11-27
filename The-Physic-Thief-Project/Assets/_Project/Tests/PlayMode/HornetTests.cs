@@ -10,7 +10,7 @@ using PhysicsThief.Enemies;
 /// <summary>Play Mode integration test using the real HealthComponent.</summary>
 public class HornetTests
 {
-    // Assets/Tests/Resources/Enemies/HornetPrefab.prefab
+    // Assets/_Project/Tests/PlayMode/Resources/Enemies/HornetPrefab.prefab
     private const string HornetPrefabPath = "Enemies/HornetPrefab";
     private const float PlayerDistance = 6f;
 
@@ -54,7 +54,7 @@ public class HornetTests
         // ---------- Setup: prefab and floor ----------
         var prefab = Resources.Load<GameObject>(HornetPrefabPath);
         Assert.IsNotNull(prefab,
-            "Prefab not found: expected Assets/Tests/Resources/Enemies/HornetPrefab.prefab");
+            "Prefab not found: expected Assets/_Project/Tests/PlayMode/Resources/Enemies/HornetPrefab.prefab");
 
         var prefabHornet = prefab.GetComponent<Hornet>();
         Assert.IsNotNull(prefabHornet, "The prefab has no Hornet component");
@@ -161,7 +161,7 @@ public class HornetTests
         var firePointField = typeof(Hornet).GetField("firePoint", BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.IsNotNull(firePointField, "Hornet has no field named 'firePoint' (renamed? update the test)");
         Assert.IsNotNull(firePointField.GetValue(hornet) as Transform,
-            "Fire Point is not assigned on Assets/Tests/Resources/Enemies/HornetPrefab");
+            "Fire Point is not assigned on Assets/_Project/Tests/PlayMode/Resources/Enemies/HornetPrefab");
 
         Assert.GreaterOrEqual(data.AttackRange, distanceToPlayer,
             $"Attack Range in HornetData must be >= {distanceToPlayer:F1} (the distance to the player)");

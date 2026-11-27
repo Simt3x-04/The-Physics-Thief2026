@@ -1,6 +1,7 @@
 using UnityEngine;
 using PhysicsThief.Core;
 using PhysicsThief.Properties;
+using PhysicsThief.Properties.Reactors;
 
 namespace PhysicsThief.Enemies
 {
@@ -19,7 +20,28 @@ namespace PhysicsThief.Enemies
         [SerializeField] protected float eyeHeight = 1f;
         [SerializeField] protected string targetTag ="Player";
 
+        [Header("Pasted properties (GDD 3.2 and 4.2)")]
+        [Tooltip("A pasted mass of at least this much pins the enemy down: it cannot walk or charge.")]
+        [SerializeField] protected float groundedMass = 200f;
+        [Tooltip("A pasted temperature of at most this freezes the enemy: no movement and no attacks.")]
+        [SerializeField] protected float freezeTemperature = 0f;
+        [Tooltip("A pasted temperature of at least this sets a flammable enemy (Organic, Wood, Paper) on fire. It burns until it dies.")]
+        [SerializeField] protected float ignitionTemperature = 100f;
+        [SerializeField] protected float burnDamagePerSecond = 10f;
+        [Tooltip("Seconds between death and the enemy disappearing.")]
+        [SerializeField] protected float deathDelay = 1.5f;
+        [SerializeField] private Color frozenTint = new Color(0.65f, 0.88f, 1f, 1f);
+        [SerializeField] private Color burningTint = new Color(1f, 0.55f, 0.1f, 1f);
+
+        private readonly RaycastHit[] sightHits = new RaycastHit[16];
         private float nextAttackTime;
+
+        public bool IsFrozen { get; private set; }
+        /// <summary>Too heavy to move, because of a pasted mass.</summary>
+        public bool IsPinned { get; private set; }
+        public bool IsBurning { get; private set; }
+        /// <summary>A velocity is pasted: physics (RigidbodyReactor) moves the enemy, so the AI must not touch it.</summary>
+        public bool IsLaunched => physObj != null && physObj.HasOverride(AttributeType.Velocity);
 
         protected EnemyStateMachine stateMachine = new EnemyStateMachine();
         protected Transform target;
@@ -33,11 +55,12 @@ namespace PhysicsThief.Enemies
 
         public bool IsDead { get; protected set; }
 
-        /// <summary>TODO: recupera i riferimenti mancanti con GetComponent.</summary>
+        /// <summary>Fetches the missing references and sets up the health from the enemy data.</summary>
         protected virtual void Awake() { 
             if(healthComp == null) healthComp = GetComponent<HealthComponent>();
             if (physObj == null) physObj = GetComponent<PhysicalObject>();
             rb = GetComponent<Rigidbody>();
+            physObj.LiveVelocity = CurrentSpeed;   // copying the Velocity of an enemy takes how fast it is going right now
             HomePosition = transform.position;
 
             if(data == null){
@@ -62,26 +85,41 @@ namespace PhysicsThief.Enemies
             return new CombatState();
         }
 
-        /// <summary>TODO: iscriviti a physObj.OnPropertyValueChanged e healthComp.OnDied.</summary>
-        protected virtual void OnEnable() { 
-            if(healthComp != null) healthComp.OnDied += Die; 
-            // TODO: iscriviti a physObj.OnPropertyValueChanged
+        protected virtual void OnEnable()
+        {
+            if (healthComp != null) healthComp.OnDied += Die;
+            if (physObj != null) physObj.OnPropertyValueChanged += OnPhysicsAltered;
         }
 
-        protected virtual void OnDisable() { 
-            if(healthComp != null) healthComp.OnDied -=Die; 
-            // TODO: iscriviti a physObj.OnPropertyValueChanged
+        protected virtual void OnDisable()
+        {
+            if (healthComp != null) healthComp.OnDied -= Die;
+            if (physObj != null) physObj.OnPropertyValueChanged -= OnPhysicsAltered;
         }
 
-        /// <summary>TODO: stateMachine.Tick(this).</summary>
-        protected virtual void Update() { 
+        /// <summary>Runs the AI. It pauses while the enemy is frozen or flying with a pasted velocity.</summary>
+        protected virtual void Update()
+        {
+            if (IsDead) return;
+            if (IsBurning) healthComp.TakeDamage(burnDamagePerSecond * Time.deltaTime);   // fire ignores armor
+            if (IsDead || IsFrozen || IsLaunched) return;
             stateMachine.Tick(this);
         }
 
-        /// <summary>TODO: applica eventuali riduzioni (scudo, armatura) e poi healthComp.TakeDamage.</summary>
-        public virtual void TakeDamage(float amount) { 
-            if(IsDead) return;
+        /// <summary>Applies the damage reduction of the enemy data (armor), then damages the health.</summary>
+        public virtual void TakeDamage(float amount)
+        {
+            if (IsDead) return;
             healthComp.TakeDamage(data.ApplyDamageReduction(amount));
+        }
+
+        // Horizontal speed (falling does not count), rounded so that the scanner shows a clean number.
+        private float CurrentSpeed()
+        {
+            if (rb == null || IsDead) return 0f;
+            Vector3 velocity = rb.linearVelocity;
+            velocity.y = 0f;
+            return Mathf.Round(velocity.magnitude * 10f) / 10f;
         }
 
         protected void AcquireTarget(){
@@ -94,11 +132,22 @@ namespace PhysicsThief.Enemies
             return target == null ? float.MaxValue : Vector3.Distance(transform.position, target.position);
         }
 
-        public bool HasLineOfSight(){
-            if(target == null) return false;
+        /// <summary>True if nothing on the obstacle layers stands between the eyes. The enemy and the target never block.</summary>
+        public bool HasLineOfSight()
+        {
+            if (target == null) return false;
             Vector3 from = transform.position + Vector3.up * eyeHeight;
-            Vector3 to = target.position + Vector3.up * eyeHeight;
-            return !Physics.Linecast(from, to, obstacleMask);
+            Vector3 toEyes = target.position + Vector3.up * eyeHeight - from;
+            float distance = toEyes.magnitude;
+            if (distance < 0.0001f) return true;
+
+            int count = Physics.RaycastNonAlloc(from, toEyes / distance, sightHits, distance, obstacleMask, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                Transform hit = sightHits[i].collider.transform;
+                if (!hit.IsChildOf(transform) && !hit.IsChildOf(target)) return false;
+            }
+            return true;
         }
 
         public bool TrySpotTarget(){
@@ -119,7 +168,7 @@ namespace PhysicsThief.Enemies
         }
 
         public void FaceTarget(float turnSpeed){
-            if(target == null) return;
+            if(target == null || IsFrozen) return;
 
             Vector3 dir = target.position - transform.position;
             dir.y = 0f;
@@ -129,13 +178,18 @@ namespace PhysicsThief.Enemies
         }
 
         public bool TryAttack(){
-            if(IsDead || Time.time < nextAttackTime) return false;
+            if(IsDead || IsFrozen || IsLaunched || Time.time < nextAttackTime) return false;
             nextAttackTime = Time.time + data.AttackCooldown;
             Attack();
             return true;
         }
 
         public void MoveTowards(Vector3 destination, float speed){
+            if(IsLaunched) return;
+            if(IsFrozen || IsPinned){
+                Stop();
+                return;
+            }
             Vector3 dir = destination - transform.position;
             dir.y = 0f;
             if(dir.sqrMagnitude < 0.0001f){
@@ -158,19 +212,77 @@ namespace PhysicsThief.Enemies
 
         public void Stop()
         {
-            if (rb != null) rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            if (rb != null && !IsLaunched) rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
         }
 
         public abstract void Attack();
 
-        /// <summary>TODO: disattiva IA, SFX spaziale di morte, distruggi o pooling.</summary>
-        protected virtual void Die() { 
+        /// <summary>Switches the AI off, lets the body drop and removes the enemy after 'deathDelay'.</summary>
+        protected virtual void Die()
+        {
+            if (IsDead) return;
             IsDead = true;
-            //TODO: disattiva IA, death SFX and VFX 
+            IsBurning = false;
+            IsFrozen = false;
+            IsPinned = false;
+            UpdateTint();
+
+            stateMachine.ChangeState(null, this);
+            StopAllCoroutines();
+            if (rb != null)
+            {
+                rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+                rb.useGravity = true;
+            }
+            enabled = false;
+            Destroy(gameObject, deathDelay);
+            // TODO: death sound and effects (EnemyData.DeathSfx / DeathVfx).
         }
 
-        /// <summary>Called by the reactors or by PhysicalObject when a property of the enemy changes.</summary>
-        public virtual void OnPhysicsAltered(AttributeType type, float newValue) { }
+        /// <summary>
+        /// Called whenever a property of this enemy changes (pasted, or back to its base value when the paste expires).
+        /// As with the reactors, only a PASTED value has an effect. Mass and velocity also reach the Rigidbody through
+        /// RigidbodyReactor; magnetism and hardness are handled by their reactors.
+        /// </summary>
+        public virtual void OnPhysicsAltered(AttributeType type, float newValue)
+        {
+            if (IsDead) return;
+            bool pasted = physObj.HasOverride(type);
+
+            if (type == AttributeType.Mass)
+            {
+                IsPinned = pasted && newValue >= groundedMass;
+                if (IsPinned) Stop();
+            }
+            else if (type == AttributeType.Temperature)
+            {
+                IsFrozen = pasted && newValue <= freezeTemperature;
+                if (IsFrozen) Stop();
+                if (pasted && newValue >= ignitionTemperature && IsFlammable) IsBurning = true;
+                UpdateTint();
+            }
+        }
+
+        private bool IsFlammable
+        {
+            get
+            {
+                MaterialTag material = physObj.GetMaterial();
+                return material == MaterialTag.Organic || material == MaterialTag.Wood || material == MaterialTag.Paper;
+            }
+        }
+
+        // Placeholder visuals until there are real frost and fire effects.
+        private void UpdateTint()
+        {
+            if (IsBurning) ObjectTint.For(gameObject).Set(this, burningTint);
+            else if (IsFrozen) ObjectTint.For(gameObject).Set(this, frozenTint);
+            else
+            {
+                ObjectTint tint = GetComponent<ObjectTint>();
+                if (tint != null) tint.Clear(this);
+            }
+        }
 
         protected virtual void OnDrawGizmosSelected(){
             if(data == null) return;
