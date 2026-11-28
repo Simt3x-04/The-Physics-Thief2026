@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 8603161060760643643}
   - component: {fileID: 6193558195163935551}
   - component: {fileID: 4992512037344641565}
+  - component: {fileID: 7273581543957043721}
   m_Layer: 0
   m_Name: AngryCarrotPrefab
   m_TagString: Untagged
@@ -246,6 +247,39 @@ MonoBehaviour:
   warningColor: {r: 0.94, g: 0.27, b: 0.27, a: 1}
   barBackgroundColor: {r: 0.06, g: 0.09, b: 0.16, a: 0.85}
   flickerObject: 1
+--- !u!114 &7273581543957043721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6824403114791419374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfd1aab0b199b4190ae748a314289ad1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhysicsThief::PhysicsThief.Enemies.AngryCarrotAnimator
+  visual: {fileID: 0}
+  playSpawnOnStart: 1
+  spawnDuration: 0.8
+  spawnDepth: 1.4
+  walkHopsPerSecond: 2.2
+  walkHopHeight: 0.08
+  walkWaddleAngle: 9
+  walkLean: 6
+  runHopsPerSecond: 4.5
+  runHopHeight: 0.14
+  runLean: 28
+  runWaddleAngle: 4
+  landingSquash: 0.12
+  airStretch: 0.08
+  attackDuration: 0.45
+  attackWindupLean: -18
+  attackStrikeLean: 45
+  attackLunge: 0.35
+  angryShakeAngle: 4
+  deathFallDuration: 0.45
+  movingThreshold: 0.25
 --- !u!1 &7051553096292113122
 GameObject:
   m_ObjectHideFlags: 0

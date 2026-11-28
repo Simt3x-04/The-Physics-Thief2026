@@ -177,10 +177,14 @@ namespace PhysicsThief.Enemies
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir), turnSpeed*Time.deltaTime);
         }
 
+        /// <summary>Raised every time the enemy attacks (used by the animation scripts).</summary>
+        public event System.Action OnAttack;
+
         public bool TryAttack(){
             if(IsDead || IsFrozen || IsLaunched || Time.time < nextAttackTime) return false;
             nextAttackTime = Time.time + data.AttackCooldown;
             Attack();
+            OnAttack?.Invoke();
             return true;
         }
 
